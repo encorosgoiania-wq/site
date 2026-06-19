@@ -5,480 +5,107 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VII ENCoros 2026 — Encontro Nacional de Coros de Goiânia</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --azul-petroleo:#0F2027;
     --azul-petroleo-2:#16323B;
     --dourado:#D4AF37;
-    --bronze:#C5A059;
-    --bg-claro:#F8F9FA;
   }
-  *{box-sizing:border-box;}
-  body{font-family:'Inter',sans-serif; background:#FFFFFF; color:#1A2326;}
-  .font-serif-display{font-family:'Playfair Display',serif;}
-  .font-logo{
-    font-family:'Montserrat',sans-serif;
-    font-weight:700;
-    letter-spacing:.02em;
-  }
-  .font-logo-thin{
-    font-family:'Montserrat',sans-serif;
-    font-weight:800;
-  }
-  .text-gradient-gold{
-    background:linear-gradient(135deg,#E9CD7A 0%,#D4AF37 45%,#A9802E 100%);
-    -webkit-background-clip:text;
-    background-clip:text;
-    color:transparent;
-  }
+  body { font-family: 'Inter', sans-serif; }
   .bg-petroleo{background-color:var(--azul-petroleo);}
   .bg-petroleo-2{background-color:var(--azul-petroleo-2);}
-  .border-gold{border-color:var(--dourado);}
   .text-gold{color:var(--dourado);}
-  .bg-gold{background-color:var(--dourado);}
-  .btn-gold{
-    background:linear-gradient(135deg,#E9CD7A 0%,#D4AF37 60%,#C5A059 100%);
-    color:#0F2027;
-    font-weight:700;
-    transition:all .25s ease;
-    box-shadow:0 6px 18px rgba(212,175,55,.25);
-  }
-  .btn-gold:hover{
-    transform:translateY(-2px);
-    box-shadow:0 10px 24px rgba(212,175,55,.4);
-  }
-  .btn-disabled{
-    background:#D9D9D9;
-    color:#8A8A8A;
-    cursor:not-allowed;
-    box-shadow:none;
-  }
-  .nav-link{
-    position:relative;
-    color:#E8E8E8;
-    font-weight:600;
-    letter-spacing:.03em;
-    transition:color .2s ease;
-  }
-  .nav-link:hover{color:var(--dourado);}
-  .nav-link.active{color:var(--dourado);}
-  .nav-link.active::after{
-    content:'';
-    position:absolute;
-    left:0; right:0; bottom:-10px;
-    height:2px;
-    background:var(--dourado);
-  }
-  .section-fade{animation:fadeIn .45s ease both;}
-  @keyframes fadeIn{
-    from{opacity:0; transform:translateY(8px);}
-    to{opacity:1; transform:translateY(0);}
-  }
-  .card-soft{
-    background:#FFFFFF;
-    border:1px solid #ECECEC;
-    border-radius:1rem;
-    box-shadow:0 4px 12px rgba(15,32,39,.03);
-  }
-  .hero-bg{
-    background:
-      radial-gradient(circle at 15% 20%, rgba(212,175,55,.12), transparent 40%),
-      radial-gradient(circle at 85% 75%, rgba(212,175,55,.08), transparent 45%),
-      linear-gradient(160deg,#0F2027 0%, #16323B 55%, #0F2027 100%);
-  }
-  .carousel-container {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-  }
-  .carousel-track {
-    display: flex;
-    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    width: 100%;
-  }
-  .carousel-slide {
-    flex: 0 0 100%;
-    width: 100%;
-    padding: 4px;
-  }
-  .input-field {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid #DCDCDC;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    outline: none;
-    transition: border-color 0.2s ease;
-  }
-  .input-field:focus {
-    border-color: var(--dourado);
-  }
-  .label-field {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #4A5568;
-    margin-bottom: 0.35rem;
-    letter-spacing: 0.05em;
-  }
+  .btn-gold{background:linear-gradient(135deg,#E9CD7A 0%,#D4AF37 60%,#C5A059 100%); color:#0F2027; font-weight:700;}
+  .nav-link{color:#E8E8E8; font-weight:600; transition:color .2s ease;}
+  .nav-link:hover, .nav-link.active{color:var(--dourado);}
+  .hero-bg{background:linear-gradient(160deg,#0F2027 0%, #16323B 55%, #0F2027 100%);}
+  .card-soft{background:#FFFFFF; border:1px solid #ECECEC; border-radius:1rem;}
+  .input-field{width:100%; padding:0.75rem 1rem; border:1px solid #DCDCDC; border-radius:0.5rem;}
+  .carousel-container { position: relative; overflow: hidden; width: 100%; }
+  .carousel-track { display: flex; transition: transform 0.4s ease; width: 100%; }
+  .carousel-slide { flex: 0 0 100%; width: 100%; padding: 4px; }
 </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-50/50">
+<body class="bg-slate-50">
 
-<header class="bg-petroleo sticky top-0 z-50 shadow-lg shadow-black/20">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-20">
-      <a href="#" data-nav="home" class="nav-trigger flex items-center gap-3 group">
-        <div class="w-12 h-12 rounded-full border border-[#D4AF37]/40 flex items-center justify-center bg-[#16323B]/30 group-hover:border-[#D4AF37] transition duration-200">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 22C12 22 9.5 20 9.5 17.5C9.5 15.5 11 14.5 12.5 14.5C14 14.5 15 15.5 15 17C15 19 13 20.5 11 20.5M13.5 2.5V17M13.5 2.5C13.5 2.5 15 4.5 15 6.5C15 8.5 13 10 11 11C9 12 8 13.5 8 15.5C8 18 10 19.5 12.5 19.5C15 19.5 16.5 17.5 16.5 15C16.5 12 14.5 9.5 13.5 8.5" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="leading-tight">
-          <div class="font-logo text-2xl">
-            <span class="text-gradient-gold font-logo-thin">VII EN</span><span class="text-white font-logo-thin">Coros</span>
-          </div>
-          <div class="text-[9px] text-gray-400 tracking-[0.22em] uppercase font-logo" style="font-weight:600">Goiânia · 2026</div>
-        </div>
-      </a>
-
-      <nav class="hidden md:flex items-center gap-8 text-sm">
-        <a href="#" data-nav="home" class="nav-trigger nav-link active">Início</a>
-        <a href="#" data-nav="regulamento" class="nav-trigger nav-link">Regulamento</a>
-        <a href="#" data-nav="programacao" class="nav-trigger nav-link">Programação</a>
-
-        <div class="relative" id="editionsDropdownWrap">
-          <button id="editionsDropdownBtn" type="button" class="nav-link flex items-center gap-1 focus:outline-none">
-            Edições Anteriores
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div id="editionsDropdownMenu" class="hidden absolute left-1/2 -translate-x-1/2 mt-4 w-44 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden z-50">
-            <a href="https://encoros-2025.webnode.page" target="_blank" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">VI ENCoros 2025</a>
-            <a href="https://encoros-2024.webnode.page" target="_blank" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">V ENCoros 2024</a>
-            <a href="https://encoros-2023.webnode.page" target="_blank" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">IV ENCoros 2023</a>
-            <a href="https://encoros-2022.webnode.page" target="_blank" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">III ENCoros 2022</a>
-            <a href="https://encoros-2021.webnode.page" target="_blank" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">II ENCoros 2021</a>
-            <a href="https://encoros-2019.webnode.page" target="_blank" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">I ENCoros 2019</a>
-          </div>
-        </div>
-        <a href="#" data-nav="admin" class="nav-trigger nav-link text-xs opacity-50 hover:opacity-100">Administração</a>
-      </nav>
-
-      <a href="#" data-nav="inscricao" class="nav-trigger hidden md:inline-flex btn-gold px-6 py-2.5 rounded-full text-sm">
-        Inscrever meu Coro
-      </a>
-
-      <button id="mobileMenuBtn" class="md:hidden text-white p-2">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <div id="mobileMenu" class="hidden md:hidden bg-petroleo-2 border-t border-white/10 px-4 py-4 flex flex-col gap-2">
-    <a href="#" data-nav="home" class="nav-trigger nav-link py-2">Início</a>
-    <a href="#" data-nav="regulamento" class="nav-trigger nav-link py-2">Regulamento</a>
-    <a href="#" data-nav="programacao" class="nav-trigger nav-link py-2">Programação</a>
-    <a href="#" data-nav="inscricao" class="nav-trigger text-gold font-bold py-2">Inscrever meu Coro</a>
+<header class="bg-petroleo sticky top-0 z-50 shadow-lg">
+  <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+    <a href="#" data-nav="home" class="nav-trigger flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full border border-[#D4AF37]/40 flex items-center justify-center bg-[#16323B]">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><path d="M12 22c0 0-2.5-2-2.5-4.5 0-2 1.5-3 3-3 1.5 0 2.5 1 2.5 2.5 0 2-2 3.5-4 3.5M13.5 2.5v14.5c0 0 1.5 2 1.5 4 0 2-2 3.5-4 3.5-2.5 0-4-2-4-4.5 0-3 2-5.5 3.5-6.5"/></svg>
+      </div>
+      <div class="text-white font-bold text-xl">VII ENCoros</div>
+    </a>
+    <nav class="hidden md:flex gap-8">
+      <a href="#" data-nav="home" class="nav-trigger nav-link active">Início</a>
+      <a href="#" data-nav="regulamento" class="nav-trigger nav-link">Regulamento</a>
+      <a href="#" data-nav="programacao" class="nav-trigger nav-link">Programação</a>
+      <a href="#" data-nav="admin" class="nav-trigger nav-link opacity-50">Admin</a>
+    </nav>
+    <a href="#" data-nav="inscricao" class="nav-trigger btn-gold px-5 py-2 rounded-full text-sm">Inscrever</a>
   </div>
 </header>
 
-<main class="flex-1">
-
-  <section id="view-home" class="view section-fade">
-    <div class="hero-bg text-white relative overflow-hidden">
-      <div class="max-w-5xl mx-auto px-6 py-28 sm:py-36 text-center relative z-10">
-        <span class="text-gold text-xs font-bold tracking-[0.3em] uppercase bg-white/5 border border-gold/30 rounded-full px-5 py-2">
-          03 A 07 DE SETEMBRO DE 2026
-        </span>
-        <h1 class="font-serif-display text-5xl sm:text-7xl leading-tight mt-8">
-          O Grande Encontro da <br><span class="text-gradient-gold font-normal italic">Música Coral</span> em Goiânia
-        </h1>
-        <p class="mt-6 text-lg sm:text-xl text-gray-300 font-light max-w-2xl mx-auto">
-          Integração artística, concertos de gala e fomento à tradição do canto coral nacional e internacional.
-        </p>
-        <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-          <a href="#" data-nav="inscricao" class="nav-trigger btn-gold px-8 py-4 rounded-full text-base shadow-lg">
-            Quero Cadastrar meu Coro
-          </a>
-          <a href="#" data-nav="programacao" class="nav-trigger border border-white/30 hover:border-gold hover:text-gold text-white px-8 py-4 rounded-full text-base transition">
-            Ver Cronograma Completo
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="max-w-6xl mx-auto px-6 py-24">
-      <div class="text-center max-w-2xl mx-auto mb-16">
-        <span class="text-gold font-bold tracking-[0.2em] text-xs uppercase">Convergência Artística</span>
-        <h2 class="font-serif-display text-3xl sm:text-4xl mt-2 text-petroleo font-bold">União Interinstitucional Extraordinária</h2>
-        <p class="text-gray-500 mt-3 text-sm sm:text-base">O VII ENCoros consolida-se através da colaboração técnica e artística entre grandes pilares da cultura e educação musical.</p>
-      </div>
-      
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="card-soft p-8 bg-white text-center hover:shadow-xl transition duration-300">
-          <div class="w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-5 text-gold font-serif-display text-2xl font-bold">EFG</div>
-          <h3 class="font-bold text-lg text-petroleo mb-2">Escola do Futuro de Goiás</h3>
-          <p class="text-sm text-gray-600 leading-relaxed">Em Artes Basileu França — Centro de excelência responsável pela formação, infraestrutura e realização pedagógica.</p>
-        </div>
-        <div class="card-soft p-8 bg-white text-center hover:shadow-xl transition duration-300">
-          <div class="w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-5 text-gold font-serif-display text-2xl font-bold">OSG</div>
-          <h3 class="font-bold text-lg text-petroleo mb-2">Orquestra Sinfônica</h3>
-          <p class="text-sm text-gray-600 leading-relaxed">De Goiânia (Secult / Prefeitura) — Atuação conjunta na Temporada de Concertos Oficiais, aberturas e galas sinfônicas.</p>
-        </div>
-        <div class="card-soft p-8 bg-white text-center hover:shadow-xl transition duration-300">
-          <div class="w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-5 text-gold font-serif-display text-2xl font-bold">ONX</div>
-          <h3 class="font-bold text-lg text-petroleo mb-2">Onix Brasil Vocal</h3>
-          <p class="text-sm text-gray-600 leading-relaxed">Internacional — Parceria estratégica na difusão da rede de coros e intercâmbios artísticos entre corporações musicais de fora.</p>
-        </div>
-      </div>
+<main>
+  <section id="view-home" class="view">
+    <div class="hero-bg text-white py-24 text-center">
+      <h1 class="text-5xl font-bold">VII ENCoros 2026</h1>
+      <p class="mt-4 text-gray-300">Encontro Nacional de Coros de Goiânia</p>
+      <a href="#" data-nav="inscricao" class="nav-trigger mt-8 inline-block btn-gold px-8 py-3 rounded-full">Inscrever meu Coro</a>
     </div>
   </section>
 
-  <section id="view-regulamento" class="view hidden section-fade">
-    <div class="bg-petroleo text-white py-16">
-      <div class="max-w-4xl mx-auto px-6 text-center">
-        <span class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">Diretrizes Oficiais</span>
-        <h1 class="font-serif-display text-4xl mt-2">Regulamento Técnico 2026</h1>
-      </div>
-    </div>
-    <div class="max-w-3xl mx-auto px-6 py-16 bg-white card-soft my-10 p-8 space-y-6">
-      <div>
-        <h3 class="font-bold text-petroleo text-xl mb-2">Normas para Coros de Fora (Presencial)</h3>
-        <p class="text-gray-700 leading-relaxed text-sm">
-          Os coros amadores e independentes que realizarem a inscrição pelo portal terão direito a um tempo rigoroso de <strong>15 minutos de palco</strong> para sua apresentação técnica. O cronograma de escolha de dias é inteiramente automatizado por nossa infraestrutura e encerra-se assim que o limite técnico de vagas fixado pela direção artística for atingido em cada noite.
-        </p>
-      </div>
-      <div class="border-t pt-4">
-        <h3 class="font-bold text-petroleo text-lg mb-2">Limitações e Travamentos de Palco</h3>
-        <p class="text-gray-700 leading-relaxed text-sm">
-          A distribuição máxima foi calibrada pelo Maestro Eliseu da seguinte forma: Sexta-feira (limite de 4 coros de fora), Sábado (limite de 3 coros de fora devido à extensa grade acadêmica) e Domingo (limite de 4 coros de fora). Uma vez atingidos esses tetos, o sistema remove a opção imediatamente para novos proponentes.
-        </p>
-      </div>
-    </div>
+  <section id="view-regulamento" class="view hidden p-10 max-w-3xl mx-auto">
+    <h2 class="text-3xl font-bold text-petroleo">Regulamento</h2>
+    <p class="mt-4 text-gray-700">Regras estabelecidas para o VII ENCoros 2026...</p>
   </section>
 
-  <section id="view-programacao" class="view hidden section-fade">
-    <div class="bg-petroleo text-white py-16">
-      <div class="max-w-4xl mx-auto px-6 text-center">
-        <span class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">Festival Completo</span>
-        <h1 class="font-serif-display text-4xl mt-2">Programação Oficial do VII ENCoros</h1>
-      </div>
+  <section id="view-programacao" class="view hidden p-10 max-w-4xl mx-auto">
+    <h2 class="text-3xl font-bold mb-8">Programação</h2>
+    <div class="grid grid-cols-5 gap-2 mb-10 text-center text-xs font-bold">
+      <div class="p-2 bg-amber-100 rounded">QUI<br>03/09</div>
+      <div class="p-2 bg-gray-200 rounded">SEX<br>04/09</div>
+      <div class="p-2 bg-gray-200 rounded">SÁB<br>05/09</div>
+      <div class="p-2 bg-gray-200 rounded">DOM<br>06/09</div>
+      <div class="p-2 bg-blue-100 rounded">SEG<br>07/09</div>
     </div>
-
-    <div class="max-w-5xl mx-auto px-4 pt-12">
-      <div class="text-center mb-8">
-        <h2 class="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase">Visão Geral do Festival</h2>
-        <p class="text-slate-600 font-serif-display text-lg italic mt-1">A estrutura macro de toda a grade cronológica</p>
-      </div>
-
-      <div class="grid sm:grid-cols-5 gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
-        <div class="p-3 bg-amber-50/60 rounded-xl border border-amber-100 flex flex-col justify-between">
-          <div>
-            <div class="text-xs font-bold text-amber-800 uppercase">QUI · 03/09</div>
-            <div class="text-xs text-gray-500 mt-1">Abertura Oficial</div>
-          </div>
-          <div class="text-xs font-bold text-slate-800 mt-3 border-t pt-2">Homenagem Especial (Templo/Igreja)</div>
-        </div>
-
-        <div class="p-3 bg-slate-50 rounded-xl border border-gray-200/60 flex flex-col justify-between">
-          <div>
-            <div class="text-xs font-bold text-slate-700 uppercase">SEX · 04/09</div>
-            <div class="text-xs text-gray-500 mt-1">19h30 · Teatro</div>
-          </div>
-          <div class="text-xs font-bold text-slate-800 mt-3 border-t pt-2">CSUFG + 4 Coros de Fora</div>
-        </div>
-
-        <div class="p-3 bg-slate-50 rounded-xl border border-gray-200/60 flex flex-col justify-between">
-          <div>
-            <div class="text-xs font-bold text-slate-700 uppercase">SÁB · 05/09</div>
-            <div class="text-xs text-gray-500 mt-1">19h30 · Teatro</div>
-          </div>
-          <div class="text-xs font-bold text-slate-800 mt-3 border-t pt-2">CSJGOIÁS + CJGOIÂNIA + 3 Coros Amadores</div>
-        </div>
-
-        <div class="p-3 bg-slate-50 rounded-xl border border-gray-200/60 flex flex-col justify-between">
-          <div>
-            <div class="text-xs font-bold text-slate-700 uppercase">DOM · 06/09</div>
-            <div class="text-xs text-gray-500 mt-1">11h00 · Matinal</div>
-          </div>
-          <div class="text-xs font-bold text-slate-800 mt-3 border-t pt-2">Gala CSGOIÂNIA + 4 Coros Amadores</div>
-        </div>
-
-        <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 flex flex-col justify-between">
-          <div>
-            <div class="text-xs font-bold text-blue-800 uppercase">SEG · 07/09</div>
-            <div class="text-xs text-gray-500 mt-1">Feriado · Digital</div>
-          </div>
-          <div class="text-xs font-bold text-blue-900 mt-3 border-t pt-2">Mostra Internacional Virtual</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="max-w-5xl mx-auto px-4 py-12">
-      <div class="text-center mb-6">
-        <h2 class="text-xs font-bold text-gold tracking-[0.2em] uppercase">Cronograma Detalhado por Dia</h2>
-        <p class="text-gray-400 text-xs mt-1">Navegue usando as setas para ver os detalhes e grupos inscritos</p>
-      </div>
-
-      <div class="flex items-center justify-between mb-6 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-        <button id="prevBtn" class="p-2.5 rounded-full border bg-gray-50 hover:bg-gold hover:text-white transition">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <div class="text-center">
-          <span class="text-xs font-bold text-gold tracking-widest uppercase">Dia Selecionado</span>
-          <h2 id="carouselIndicatorTitle" class="font-serif-display text-lg font-bold text-petroleo">Quinta-feira (03/09)</h2>
-        </div>
-        <button id="nextBtn" class="p-2.5 rounded-full border bg-gray-50 hover:bg-gold hover:text-white transition">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-        </button>
-      </div>
-
-      <div class="carousel-container">
-        <div id="carouselTrack" class="carousel-track">
-          
-          <div class="carousel-slide">
-            <div class="card-soft p-8 bg-white border-t-4 border-gold min-h-[300px]">
-              <div class="flex justify-between items-start border-b pb-4 mb-4">
-                <div>
-                  <span class="text-xs font-bold text-gray-400 uppercase">03 de Setembro · Quinta-feira</span>
-                  <h3 class="text-2xl font-serif-display font-bold text-petroleo mt-1">Concerto de Abertura & Homenagens</h3>
-                </div>
-                <span class="bg-amber-50 text-gold text-xs px-3 py-1 rounded-full font-bold">Templo/Igreja</span>
-              </div>
-              <p class="text-gray-700 text-sm leading-relaxed mb-4">
-                Abertura oficial com o grande concerto em memória às trajetórias de <strong>Heloísa Barra e Honorina Barra</strong>.
-              </p>
-              <div class="bg-slate-50 p-4 rounded-xl border border-dashed">
-                <h4 class="text-xs font-bold uppercase text-gray-500 tracking-wider mb-2">Grupos Institucionais Confirmados:</h4>
-                <ul class="text-sm text-petroleo space-y-1 font-medium">
-                  <li>• Coro Sinfônico Jovem de Goiás</li>
-                  <li>• Coro Juvenil do Basileu França</li>
-                  <li>• Coro Sinfônico de Goiânia</li>
-                  <li>• Orquestra Sinfônica de Goiânia (OSGO)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div class="carousel-slide">
-            <div class="card-soft p-8 bg-white border-t-4 border-petroleo min-h-[300px]">
-              <div class="flex justify-between items-start border-b pb-4 mb-4">
-                <div>
-                  <span class="text-xs font-bold text-gray-400 uppercase">04 de Setembro · Sexta-feira às 19h30</span>
-                  <h3 class="text-2xl font-serif-display font-bold text-petroleo mt-1">Primeira Noite de Mostra</h3>
-                </div>
-                <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">Teatro Principal</span>
-              </div>
-              <div class="mb-4 text-sm"><strong class="text-petroleo">Abertura Especial:</strong> <span class="text-gray-600">CSUFG — Coro da Universidade Federal de Goiás (20 min)</span></div>
-              <div class="bg-slate-50 p-4 rounded-xl border">
-                <h4 class="text-xs font-bold uppercase text-gold tracking-wider mb-2">Grade Técnica de Coros de Fora (15 min cada — Max 4):</h4>
-                <div id="prog-sexta" class="text-sm text-gray-700 italic space-y-1.5">Nenhum coro amador confirmado para esta noite ainda.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="carousel-slide">
-            <div class="card-soft p-8 bg-white border-t-4 border-petroleo min-h-[300px]">
-              <div class="flex justify-between items-start border-b pb-4 mb-4">
-                <div>
-                  <span class="text-xs font-bold text-gray-400 uppercase">05 de Setembro · Sábado às 19h30</span>
-                  <h3 class="text-2xl font-serif-display font-bold text-petroleo mt-1">Segunda Noite de Mostra</h3>
-                </div>
-                <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">Teatro Principal</span>
-              </div>
-              <div class="mb-4 text-sm space-y-1">
-                <div><strong class="text-petroleo">Grupo Convidado 1:</strong> <span class="text-gray-600">CSJGOIÁS (20 minutos)</span></div>
-                <div><strong class="text-petroleo">Grupo Convidado 2:</strong> <span class="text-gray-600">CJGOIÂNIA (20 minutos)</span></div>
-              </div>
-              <div class="bg-slate-50 p-4 rounded-xl border">
-                <h4 class="text-xs font-bold uppercase text-gold tracking-wider mb-2">Grade Técnica de Coros de Fora (15 min cada — Max 3):</h4>
-                <div id="prog-sabado" class="text-sm text-gray-700 italic space-y-1.5">Nenhum coro amador confirmado para esta noite ainda.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="carousel-slide">
-            <div class="card-soft p-8 bg-white border-t-4 border-red-500 min-h-[300px]">
-              <div class="flex justify-between items-start border-b pb-4 mb-4">
-                <div>
-                  <span class="text-xs font-bold text-gray-400 uppercase">06 de Setembro · Domingo às 11h00</span>
-                  <h3 class="text-2xl font-serif-display font-bold text-petroleo mt-1">Encerramento da Fase Presencial</h3>
-                </div>
-                <span class="bg-red-50 text-red-700 text-xs px-3 py-1 rounded-full font-bold">Grande Matinal</span>
-              </div>
-              <div class="mb-4 text-sm"><strong class="text-petroleo">Grande Concerto de Fechamento:</strong> <span class="text-gray-600">CSGOIÂNIA — Coro Sinfônico de Goiânia (30 min)</span></div>
-              <div class="bg-slate-50 p-4 rounded-xl border">
-                <h4 class="text-xs font-bold uppercase text-gold tracking-wider mb-2">Grade Técnica de Coros de Fora (15 min cada — Max 4):</h4>
-                <div id="prog-domingo" class="text-sm text-gray-700 italic space-y-1.5">Nenhum coro amador confirmado para esta manhã ainda.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="carousel-slide">
-            <div class="card-soft p-8 bg-white border-t-4 border-blue-600 min-h-[300px]">
-              <div class="flex justify-between items-start border-b pb-4 mb-4">
-                <div>
-                  <span class="text-xs font-bold text-gray-400 uppercase">07 de Setembro · Segunda-feira (Feriado)</span>
-                  <h3 class="text-2xl font-serif-display font-bold text-petroleo mt-1">VII ENCoros Virtual Digital</h3>
-                </div>
-                <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">Plataformas Digitais</span>
-              </div>
-              <p class="text-gray-600 text-sm mb-4">
-                Mostra tecnológica para coros de longa distância através de exibições digitais coordenadas.
-              </p>
-              <div class="bg-slate-50 p-4 rounded-xl border">
-                <h4 class="text-xs font-bold uppercase text-blue-600 tracking-wider mb-2">Grade de Coros Virtuais Inscritos:</h4>
-                <div id="prog-virtual" class="text-sm text-gray-700 italic space-y-1.5">Nenhum coro digital inserido até o momento.</div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
+    <div class="carousel-container"><div id="carouselTrack" class="carousel-track">
+      <div class="carousel-slide"><div class="card-soft p-6"><h3>Quinta-feira</h3><p>Abertura na Igreja</p></div></div>
+      <div class="carousel-slide"><div class="card-soft p-6"><h3>Sexta-feira</h3><p>Mostra presencial</p></div></div>
+      <div class="carousel-slide"><div class="card-soft p-6"><h3>Sábado</h3><p>Mostra presencial</p></div></div>
+      <div class="carousel-slide"><div class="card-soft p-6"><h3>Domingo</h3><p>Encerramento</p></div></div>
+      <div class="carousel-slide"><div class="card-soft p-6"><h3>Segunda-feira</h3><p>Mostra Virtual</p></div></div>
+    </div></div>
   </section>
 
-  <section id="view-inscricao" class="view hidden section-fade">
-    <div class="bg-petroleo text-white py-16">
-      <div class="max-w-4xl mx-auto px-6 text-center">
-        <span class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">Formulário de Inscrições</span>
-        <h1 class="font-serif-display text-4xl mt-2">Cadastrar Novo Grupo Coral</h1>
-      </div>
-    </div>
+  <section id="view-inscricao" class="view hidden p-10 max-w-2xl mx-auto">
+    <h2 class="text-3xl font-bold mb-6">Inscrição</h2>
+    <form id="formInscricao" class="space-y-4">
+      <label class="label-field">Nome do Regente</label><input type="text" name="nome" class="input-field">
+      <button type="submit" class="btn-gold w-full py-3 rounded-full">Enviar Inscrição</button>
+    </form>
+  </section>
 
-    <div class="max-w-3xl mx-auto px-6 py-12">
-      <form id="formInscricao" class="space-y-6" novalidate>
-        <div class="card-soft p-6 bg-white space-y-4">
-          <h2 class="font-serif-display text-lg text-petroleo font-bold">1. Informações Editoriais</h2>
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div><label class="label-field">Nome do Regente / Diretor *</label><input required type="text" name="nomeRegente" class="input-field"></div>
-            <div><label class="label-field">Nome Oficial do Coro *</label><input required type="text" name="nomeCoro" class="input-field"></div>
-            <div><label class="label-field">Cidade / UF de Origem *</label><input required type="text" name="cidadeEstado" class="input-field"></div>
-            <div><label class="label-field">E-mail de Contato Direto *</label><input required type="email" name="emailRegente" class="input-field"></div>
-          </div>
-        </div>
+  <section id="view-admin" class="view hidden p-10 max-w-4xl mx-auto">
+    <h2 class="text-3xl font-bold mb-6">Administração</h2>
+    <div id="adminPanelContent"><p>Acesso restrito.</p></div>
+  </section>
+</main>
 
-        <div class="card-soft p-6 bg-white space-y-4">
-          <h2 class="font-serif-display text-lg text-petroleo font-bold">2. Alocação de Modalidade e Datas</h2>
-          <div>
-            <label class="label-field">Formato de Apresentação *</label>
-            <select required id="selectModalidade" name="modalidade" class="input-field bg-white">
-              <option value="" disabled selected>Selecione uma opção...</option>
-              <option value="Presencial">Presencial (Concertos em Goiânia)</option>
-              <option value="Virtual">Virtual (Mostra Digital em 07/09)</option>
-            </select>
-          </div>
-
-          <div id="wrapperCronograma" class="hidden space-y-2 bg-amber-50/50 p-4 border rounded-xl">
-            <label class="label-field text-amber-900">Escolha o Dia para sua Apresentação (Sujeito a Vagas) *</label>
-            <select id="selectDia" name="diaApresentacao" class="input-field bg-white"></select>
-          </div>
-        </div>
-
-        <div class="card-soft p-6 bg-white space-y-4">
-          <h2 class="font-serif-display text-lg text-petroleo font-bold">3. Repertório e Acervo Digital</h2>
-          <div>
-            <label class="label-field">Lista
+<script>
+  // Script de navegação e carrossel básico
+  const views = { home: document.getElementById('view-home'), regulamento: document.getElementById('view-regulamento'), programacao: document.getElementById('view-programacao'), inscricao: document.getElementById('view-inscricao'), admin: document.getElementById('view-admin') };
+  document.querySelectorAll('.nav-trigger').forEach(l=>l.addEventListener('click', (e)=>{
+    e.preventDefault();
+    Object.values(views).forEach(v=>v.classList.add('hidden'));
+    views[l.dataset.nav].classList.remove('hidden');
+  }));
+  
+  let slide = 0;
+  const track = document.getElementById('carouselTrack');
+  document.getElementById('prevBtn')?.addEventListener('click',()=>track.style.transform = `translateX(${(slide = Math.max(slide-1, 0))*-100}%)`);
+  document.getElementById('nextBtn')?.addEventListener('click',()=>track.style.transform = `translateX(${(slide = Math.min(slide+1, 4))*-100}%)`);
+</script>
+</body>
+</html>
