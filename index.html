@@ -76,32 +76,6 @@
     from{opacity:0; transform:translateY(8px);}
     to{opacity:1; transform:translateY(0);}
   }
-  .staff-divider{
-    height:18px;
-    background-image:repeating-linear-gradient(to bottom, rgba(212,175,55,.55) 0px, rgba(212,175,55,.55) 1px, transparent 1px, transparent 4px);
-  }
-  .input-field{
-    width:100%;
-    border:1px solid #D9D9D9;
-    background:#FFFFFF;
-    border-radius:.5rem;
-    padding:.75rem 1rem;
-    font-size:.95rem;
-    transition:border-color .2s ease, box-shadow .2s ease;
-  }
-  .input-field:focus{
-    outline:none;
-    border-color:var(--dourado);
-    box-shadow:0 0 0 3px rgba(212,175,55,.18);
-  }
-  .label-field{
-    display:block;
-    font-weight:600;
-    font-size:.85rem;
-    color:var(--azul-petroleo);
-    margin-bottom:.35rem;
-    letter-spacing:.02em;
-  }
   .card-soft{
     background:#FFFFFF;
     border:1px solid #ECECEC;
@@ -114,7 +88,6 @@
       radial-gradient(circle at 85% 75%, rgba(212,175,55,.08), transparent 45%),
       linear-gradient(160deg,#0F2027 0%, #16323B 55%, #0F2027 100%);
   }
-  /* Estilos do Carrossel */
   .carousel-container {
     position: relative;
     overflow: hidden;
@@ -139,6 +112,12 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-20">
       <a href="#" data-nav="home" class="nav-trigger flex items-center gap-3 group">
+        <!-- ÍCONE CLAVE DE SOL ELEGANTE -->
+        <div class="w-12 h-12 rounded-full border border-[#D4AF37]/40 flex items-center justify-center bg-[#16323B]/30 group-hover:border-[#D4AF37] transition duration-200">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C12 22 9.5 20 9.5 17.5C9.5 15.5 11 14.5 12.5 14.5C14 14.5 15 15.5 15 17C15 19 13 20.5 11 20.5M13.5 2.5V17M13.5 2.5C13.5 2.5 15 4.5 15 6.5C15 8.5 13 10 11 11C9 12 8 13.5 8 15.5C8 18 10 19.5 12.5 19.5C15 19.5 16.5 17.5 16.5 15C16.5 12 14.5 9.5 13.5 8.5" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
         <div class="leading-tight">
           <div class="font-logo text-2xl">
             <span class="text-gradient-gold font-logo-thin">VII EN</span><span class="text-white font-logo-thin">Coros</span>
@@ -163,7 +142,7 @@
             <a href="https://encoros-2023.webnode.page" target="_blank" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition">2023</a>
           </div>
         </div>
-        <a href="#" data-nav="admin" class="nav-trigger nav-link text-xs opacity-50 hover:opacity-100">Painel</a>
+        <a href="#" data-nav="admin" class="nav-trigger nav-link text-xs opacity-50 hover:opacity-100">Administração</a>
       </nav>
 
       <a href="#" data-nav="inscricao" class="nav-trigger hidden md:inline-flex btn-gold px-6 py-2.5 rounded-full text-sm">
@@ -186,7 +165,7 @@
 
 <main class="flex-1">
 
-  <!-- ###################### ABA 1: HOME (MODELO MUITO VISUAL E GERAL) ###################### -->
+  <!-- ###################### ABA 1: HOME ###################### -->
   <section id="view-home" class="view section-fade">
     <div class="hero-bg text-white relative overflow-hidden">
       <div class="max-w-5xl mx-auto px-6 py-28 sm:py-36 text-center relative z-10">
@@ -210,7 +189,6 @@
       </div>
     </div>
 
-    <!-- Visão Geral Interinstitucional -->
     <div class="max-w-6xl mx-auto px-6 py-24">
       <div class="text-center max-w-2xl mx-auto mb-16">
         <span class="text-gold font-bold tracking-[0.2em] text-xs uppercase">Convergência Artística</span>
@@ -248,38 +226,91 @@
     </div>
     <div class="max-w-3xl mx-auto px-6 py-16 bg-white card-soft my-10 p-8">
       <h3 class="font-bold text-petroleo text-xl mb-4">Normas para Coros de Fora</h3>
-      <p class="text-gray-700 leading-relaxed text-sm space-y-4">
+      <p class="text-gray-700 leading-relaxed text-sm">
         Os coros amadores e independentes que realizarem a inscrição pelo portal terão direito a um tempo rigoroso de 15 minutos de palco. O cronograma de escolha de dias é automatizado e encerra-se assim que o limite técnico de vagas fixado pela direção artística do Maestro Eliseu for atingido em cada noite.
       </p>
     </div>
   </section>
 
-  <!-- ###################### ABA 3: PROGRAMAÇÃO DETALHADA EM MODELO CARROSSEL ###################### -->
+  <!-- ###################### ABA 3: PROGRAMAÇÃO COMPLETA ###################### -->
   <section id="view-programacao" class="view hidden section-fade">
     <div class="bg-petroleo text-white py-16">
       <div class="max-w-4xl mx-auto px-6 text-center">
-        <span class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">Cronograma Geral</span>
-        <h1 class="font-serif-display text-4xl mt-2">Navegue Pelos Dias do Festival</h1>
-        <p class="text-gray-400 text-xs mt-2">Use as setas para alternar a data e ver os grupos escalados</p>
+        <span class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">Festival Completo</span>
+        <h1 class="font-serif-display text-4xl mt-2">Programação Oficial do VII ENCoros</h1>
       </div>
     </div>
 
+    <!-- 1️⃣ MODELO GERAL BEM VISUAL TOTAL (LINHA DO TEMPO) -->
+    <div class="max-w-4xl mx-auto px-4 pt-12">
+      <div class="text-center mb-8">
+        <h2 class="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase">Visão Geral do Festival</h2>
+        <p class="text-slate-600 font-serif-display text-lg italic mt-1">A estrutura macro de toda a grade cronológica</p>
+      </div>
+
+      <div class="grid sm:grid-cols-5 gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
+        <div class="p-3 bg-amber-50/60 rounded-xl border border-amber-100 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold text-amber-800 uppercase">QUI · 03/09</div>
+            <div class="text-xs text-gray-500 mt-1">Abertura</div>
+          </div>
+          <div class="text-xs font-bold text-slate-800 mt-3 border-t pt-2">Homenagem Especial (Igreja)</div>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-gray-200/60 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold text-slate-700 uppercase">SEX · 04/09</div>
+            <div class="text-xs text-gray-500 mt-1">19h30</div>
+          </div>
+          <div class="text-xs font-bold text-slate-800 mt-3 border-t pt-2">CSUFG + 4 Coros de Fora</div>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-gray-200/60 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold text-slate-700 uppercase">SÁB · 05/09</div>
+            <div class="text-xs text-gray-500 mt-1">19h30</div>
+          </div>
+          <div class="text-xs font-bold text-slate-800 mt-3 border-t pt-2">CSJGOIÁS + CJGOIÂNIA + 3 Coros Amadores</div>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-gray-200/60 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold text-slate-700 uppercase">DOM · 06/09</div>
+            <div class="text-xs text-gray-500 mt-1">11h00</div>
+          </div>
+          <div class="text-xs font-bold text-slate-800 mt-3 border-t pt-2">Gala CSGOIÂNIA + 4 Coros Amadores</div>
+        </div>
+
+        <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold text-blue-800 uppercase">SEG · 07/09</div>
+            <div class="text-xs text-gray-500 mt-1">Feriado</div>
+          </div>
+          <div class="text-xs font-bold text-blue-900 mt-3 border-t pt-2">Mostra Internacional Virtual</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2️⃣ MODELO DETALHADO EM CARROSSEL INTERATIVO -->
     <div class="max-w-4xl mx-auto px-4 py-12">
-      <!-- Controles Superiores do Carrossel -->
+      <div class="text-center mb-6">
+        <h2 class="text-xs font-bold text-gold tracking-[0.2em] uppercase">Cronograma Detalhado por Dia</h2>
+        <p class="text-gray-400 text-xs mt-1">Navegue usando as setas para ver os detalhes e grupos inscritos</p>
+      </div>
+
       <div class="flex items-center justify-between mb-6 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-        <button id="prevBtn" class="p-2.5 rounded-full border bg-gray-50 hover:bg-gold hover:text-white transition group">
+        <button id="prevBtn" class="p-2.5 rounded-full border bg-gray-50 hover:bg-gold hover:text-white transition">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         </button>
         <div class="text-center">
           <span class="text-xs font-bold text-gold tracking-widest uppercase">Dia Selecionado</span>
           <h2 id="carouselIndicatorTitle" class="font-serif-display text-lg font-bold text-petroleo">Quinta-feira (03/09)</h2>
         </div>
-        <button id="nextBtn" class="p-2.5 rounded-full border bg-gray-50 hover:bg-gold hover:text-white transition group">
+        <button id="nextBtn" class="p-2.5 rounded-full border bg-gray-50 hover:bg-gold hover:text-white transition">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </button>
       </div>
 
-      <!-- Janela do Carrossel -->
       <div class="carousel-container">
         <div id="carouselTrack" class="carousel-track">
           
@@ -294,7 +325,7 @@
                 <span class="bg-amber-50 text-gold text-xs px-3 py-1 rounded-full font-bold">Templo/Igreja</span>
               </div>
               <p class="text-gray-700 text-sm leading-relaxed mb-4">
-                Abertura oficial com o grande concerto em memória às trajetórias emblemáticas de <strong>Heloísa Barra e Honorina Barra</strong>.
+                Abertura oficial com o grande concerto em memória às trajetórias de <strong>Heloísa Barra e Honorina Barra</strong>.
               </p>
               <div class="bg-slate-50 p-4 rounded-xl border border-dashed">
                 <h4 class="text-xs font-bold uppercase text-gray-500 tracking-wider mb-2">Grupos Institucionais Confirmados:</h4>
@@ -376,7 +407,7 @@
                 <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">Plataformas Digitais</span>
               </div>
               <p class="text-gray-600 text-sm mb-4">
-                Mostra tecnológica exclusiva para coros nacionais de longa distância e internacionais através de exibições digitais coordenadas.
+                Mostra tecnológica para coros de longa distância através de exibições digitais coordenadas.
               </p>
               <div class="bg-slate-50 p-4 rounded-xl border">
                 <h4 class="text-xs font-bold uppercase text-blue-600 tracking-wider mb-2">Grade de Coros Virtuais Inscritos:</h4>
@@ -515,7 +546,7 @@
   const STORAGE_KEY = 'encoros2026_vagas_db';
   const LIMITS = { 'Sexta': 4, 'Sábado': 3, 'Domingo': 4 };
 
-  // CARROSSEL DINÂMICO
+  // CONTROLE DO CARROSSEL
   let currentSlide = 0;
   const totalSlides = 5;
   const slideTitles = [
@@ -545,7 +576,7 @@
     updateCarousel();
   });
 
-  // NAVEGAÇÃO ENTRE ABAS
+  // TRANSIÇÕES ENTRE ABAS
   const views = { home: document.getElementById('view-home'), regulamento: document.getElementById('view-regulamento'), programacao: document.getElementById('view-programacao'), inscricao: document.getElementById('view-inscricao'), admin: document.getElementById('view-admin') };
   document.querySelectorAll('.nav-trigger').forEach(l=>{
     l.addEventListener('click', function(e){ e.preventDefault(); const t = this.dataset.nav; if(t) goTo(t); });
@@ -560,7 +591,7 @@
     window.scrollTo({top:0, behavior:'smooth'});
   }
 
-  // CONTROLE DE VAGAS DO FORMULÁRIO
+  // REGRAS DE INSCRIÇÃO
   const selectModalidade = document.getElementById('selectModalidade');
   const wrapperCronograma = document.getElementById('wrapperCronograma');
   const selectDia = document.getElementById('selectDia');
@@ -599,7 +630,6 @@
     selectDia.innerHTML = html;
   }
 
-  // HABILIAR BOTÃO ENVIAR
   const checkbox = document.getElementById('aceiteRegulamento');
   const btnEnviar = document.getElementById('btnEnviar');
   checkbox.addEventListener('change', function(){
@@ -607,7 +637,6 @@
     btnEnviar.className = this.checked ? 'btn-gold w-full py-4 rounded-full text-sm font-bold shadow-md' : 'btn-disabled w-full py-4 rounded-full text-sm font-bold';
   });
 
-  // SUBMISSÃO
   document.getElementById('formInscricao').addEventListener('submit', function(e){
     e.preventDefault();
     const fd = new FormData(this);
@@ -643,7 +672,7 @@
     setTimeout(() => msg.classList.add('hidden'), 5000);
   });
 
-  // EXIBIR INSCRITOS DENTRO DOS SLIDES DO CARROSSEL
+  // MONTAGEM DINÂMICA DENTRO DO CARROSSEL
   function buildPublicSchedule(){
     const list = getInscricoes();
     const sec = { 'Sexta': document.getElementById('prog-sexta'), 'Sábado': document.getElementById('prog-sabado'), 'Domingo': document.getElementById('prog-domingo'), 'Virtual': document.getElementById('prog-virtual') };
@@ -661,7 +690,7 @@
     });
   }
 
-  // SESSÃO ADMIN
+  // SISTEMA DO PAINEL ADMIN
   function checkAdminSession(){
     const logged = sessionStorage.getItem('encoros2026_admin_key') === 'true';
     document.getElementById('adminLoginScreen').classList.toggle('hidden', logged);
@@ -709,7 +738,6 @@
     if(confirm('Deseja apagar permanentemente todas as inscrições?')) { localStorage.removeItem(STORAGE_KEY); renderAdminDashboard(); }
   });
 
-  // MENUS AUXILIARES
   document.getElementById('mobileMenuBtn').addEventListener('click', function(){ document.getElementById('mobileMenu').classList.toggle('hidden'); });
   document.getElementById('editionsDropdownBtn').addEventListener('click', function(){ document.getElementById('editionsDropdownMenu').classList.toggle('hidden'); });
 
