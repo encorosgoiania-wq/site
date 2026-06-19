@@ -1530,8 +1530,13 @@
   btnFluxoConvidado.addEventListener('click', () => setFluxo('convidado'));
 
   function popularDiaConvidado(){
+    // Mostra apenas dias com apresentações presenciais de coros (Sexta, Sábado, Domingo).
+    // Quinta é só a cerimônia de abertura institucional e Segunda é a Mostra Virtual —
+    // nenhum dos dois recebe coros convidados no formato presencial deste formulário.
+    const diasValidos = PROGRAMACAO_DATA.filter(dia => dia.vagasInscricao);
+
     selectDiaConvidado.innerHTML = '<option value="" disabled selected>Selecione o dia</option>' +
-      PROGRAMACAO_DATA.map(dia => `<option value="${dia.id}">${dia.diaSemana} (${dia.data})</option>`).join('');
+      diasValidos.map(dia => `<option value="${dia.id}">${dia.diaSemana} (${dia.data}) — ${dia.horario}</option>`).join('');
   }
 
   // ---------- SELEÇÃO DE DIA E TRAVAMENTO DE VAGAS (Fluxo Novo) ----------
@@ -1542,7 +1547,7 @@
       diasComVagas.map(dia=>{
         const restantes = vagasRestantes(dia);
         const esgotado = restantes === 0;
-        return `<option value="${dia.id}" ${esgotado ? 'disabled' : ''}>${dia.diaSemana} (${dia.data})${esgotado ? ' — Esgotado' : ' — ' + restantes + ' vaga(s)'}</option>`;
+        return `<option value="${dia.id}" ${esgotado ? 'disabled' : ''}>${dia.diaSemana} (${dia.data}) — ${dia.horario}${esgotado ? ' — Esgotado' : ' — ' + restantes + ' vaga(s)'}</option>`;
       }).join('');
   }
 
