@@ -974,6 +974,7 @@
       titulo: 'Concerto de Abertura',
       descricao: 'Cerimônia oficial de abertura do VII ENCoros, com apresentação institucional, homenagem especial a Heloisa Barra e Honorina Barra, e concerto de abertura conduzido pelo corpo estável do evento.',
       fixos: ['Cerimônia de Abertura'],
+      corosFixos: [],
       maxAmadores: 0,
       vagasInscricao: false
     },
@@ -983,9 +984,13 @@
       data: '04 de Setembro',
       horario: 'Início às 19h30',
       titulo: 'Concerto Coral — Noite de Sexta',
-      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSUFG.',
+      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSUFG. Inclui coros infantis.',
       fixos: ['CSUFG'],
-      maxAmadores: 4,
+      // Coros institucionais fixos: sempre presentes no cronograma, com duração própria definida pelo Maestro Eliseu
+      corosFixos: [
+        { nomeCoro: 'CSUFG', duracaoMinutos: 20 }
+      ],
+      maxAmadores: 4, // 4 coros amadores de 15min cada (inclui coros infantis)
       vagasInscricao: true
     },
     {
@@ -994,9 +999,13 @@
       data: '05 de Setembro',
       horario: 'Início às 19h30',
       titulo: 'Concerto Coral — Noite de Sábado',
-      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSJGOIÁS e do CJGOIÂNIA.',
+      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSJGOIÁS e do CJGOIÂNIA. O Onix Brasil Vocal Internacional ocupa uma das vagas amadoras deste dia.',
       fixos: ['CSJGOIÁS', 'CJGOIÂNIA'],
-      maxAmadores: 3,
+      corosFixos: [
+        { nomeCoro: 'CSJGOIÁS', duracaoMinutos: 20 },
+        { nomeCoro: 'CJGOIÂNIA', duracaoMinutos: 20 }
+      ],
+      maxAmadores: 3, // 3 vagas de 15min — uma delas reservada ao Onix Brasil Vocal Internacional
       vagasInscricao: true
     },
     {
@@ -1007,7 +1016,10 @@
       titulo: 'Concerto Coral — Manhã de Domingo',
       descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSGOIÂNIA.',
       fixos: ['CSGOIÂNIA'],
-      maxAmadores: 4,
+      corosFixos: [
+        { nomeCoro: 'CSGOIÂNIA', duracaoMinutos: 30 }
+      ],
+      maxAmadores: 4, // 4 coros amadores de 15min cada
       vagasInscricao: true
     },
     {
@@ -1018,12 +1030,56 @@
       titulo: 'Mostra de Coros Virtuais',
       descricao: 'Mostra de Coros Virtuais Nacionais e Internacionais, concentrada neste dia, transmitida pelos canais oficiais do evento. Modalidade exclusiva para inscrições Virtuais.',
       fixos: [],
+      corosFixos: [],
       maxAmadores: null,
       vagasInscricao: false
     }
   ];
 
   const STORAGE_KEY_INSCRICOES = 'encoros2026_inscricoes';
+
+  // ID fixo e previsível para a inscrição-seed do Onix Brasil Vocal Internacional,
+  // garantindo que ela nunca seja duplicada mesmo se a função de seed rodar de novo
+  const ONIX_SEED_ID = 999000001;
+
+  // Garante que o Onix Brasil Vocal Internacional sempre apareça como uma vaga
+  // ocupada no sábado (15 min), conforme definido pela organização — sem precisar
+  // que alguém preencha o formulário público para ele.
+  function garantirSeedOnix(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY_INSCRICOES);
+      const lista = raw ? JSON.parse(raw) : [];
+      const jaExiste = lista.some(i => i.id === ONIX_SEED_ID);
+      if(!jaExiste){
+        lista.push({
+          id: ONIX_SEED_ID,
+          dataEnvio: new Date().toISOString(),
+          fluxoInscricao: 'convidado',
+          nomeRegente: 'Organização VII ENCoros',
+          emailRegente: '',
+          telefoneRegente: '',
+          curriculoRegente: '',
+          nomeCoro: 'Onix Brasil Vocal Internacional',
+          cidadeEstado: '',
+          modalidade: 'Presencial',
+          diaApresentacao: 'sabado',
+          historicoCoro: '',
+          obrasRepertorio: [],
+          duracaoTotalRepertorio: 15,
+          levaEquipamento: false,
+          linkVideo: '',
+          linkDrive: '',
+          status: 'Aprovado',
+          cronogramaDuracao: null,
+          isSeed: true
+        });
+        localStorage.setItem(STORAGE_KEY_INSCRICOES, JSON.stringify(lista));
+      }
+    }catch(e){
+      console.error('Erro ao garantir seed do Onix', e);
+    }
+  }
+  garantirSeedOnix();
 
   function getInscricoesData(){
     try{
@@ -1049,14 +1105,17 @@
 
   // ======================================================================
   // CRONOGRAMA — Blocos de apresentação por dia
-  // Cada dia tem um array ordenado de itens: abertura (fixa, 10min),
-  // coros (15/20/30min, vindos das inscrições) e encerramento (fixo, 10min).
-  // Tempo útil para coros = 1h20 (80min), dentro de um bloco total de 1h30-1h40.
+  // Cada bloco é montado a partir de 3 partes, todas editáveis pelo admin:
+  //   1. Abertura (item fixo, duração editável, padrão 10min)
+  //   2. Coros — institucionais (pré-carregados automaticamente a partir de
+  //      PROGRAMACAO_DATA.corosFixos) + amadores (adicionados das inscrições)
+  //   3. Encerramento (item fixo, duração editável, padrão 10min)
+  // O limite de tempo disponível para coros é calculado por dia, somando os
+  // institucionais fixos definidos pelo Maestro + (maxAmadores × 15min).
   // ======================================================================
   const STORAGE_KEY_CRONOGRAMA = 'encoros2026_cronograma';
-  const CRONOGRAMA_TEMPO_ABERTURA = 10;
-  const CRONOGRAMA_TEMPO_ENCERRAMENTO = 10;
-  const CRONOGRAMA_TEMPO_UTIL_COROS = 80; // minutos disponíveis para coros (1h20)
+  const CRONOGRAMA_DURACAO_PADRAO_ABERTURA = 10;
+  const CRONOGRAMA_DURACAO_PADRAO_ENCERRAMENTO = 10;
   const CRONOGRAMA_DURACOES_VALIDAS = [15, 20, 30];
 
   function getCronogramaData(){
@@ -1077,6 +1136,34 @@
   function getCronogramaDoDia(diaId){
     const todos = getCronogramaData();
     return todos[diaId] || null;
+  }
+
+  // Tempo total disponível para coros (institucionais + amadores) em um dia,
+  // calculado a partir dos dados oficiais definidos pelo Maestro Eliseu
+  function calcularTempoUtilCoros(dia){
+    const tempoFixos = (dia.corosFixos || []).reduce((acc, c) => acc + c.duracaoMinutos, 0);
+    const tempoAmadores = (dia.maxAmadores || 0) * 15;
+    return tempoFixos + tempoAmadores;
+  }
+
+  // Gera a estrutura inicial (seed) de um bloco: abertura + coros institucionais
+  // fixos já carregados automaticamente + encerramento. Usado na primeira vez
+  // que um dia é aberto no admin, antes de qualquer customização salva.
+  function gerarCronogramaSeed(diaId){
+    const dia = PROGRAMACAO_DATA.find(d => d.id === diaId);
+    const coros = (dia.corosFixos || []).map(c => ({
+      inscricaoId: null, // institucional fixo, não vem de uma inscrição
+      nomeCoro: c.nomeCoro,
+      duracaoMinutos: c.duracaoMinutos,
+      fixo: true
+    }));
+    return {
+      diaId: diaId,
+      duracaoAbertura: CRONOGRAMA_DURACAO_PADRAO_ABERTURA,
+      duracaoEncerramento: CRONOGRAMA_DURACAO_PADRAO_ENCERRAMENTO,
+      coros: coros,
+      atualizadoEm: null
+    };
   }
 
   // ---------- NAVEGAÇÃO SPA ----------
@@ -1261,18 +1348,22 @@
     let sequenciaBlock = '';
     const cronogramaSalvo = getCronogramaDoDia(dia.id);
     if(cronogramaSalvo && cronogramaSalvo.coros && cronogramaSalvo.coros.length > 0){
-      let cursorMin = CRONOGRAMA_TEMPO_ABERTURA;
+      const durAbertura = cronogramaSalvo.duracaoAbertura ?? 10;
+      const durEncerramento = cronogramaSalvo.duracaoEncerramento ?? 10;
+      let cursorMin = durAbertura;
       const linhas = [`
         <div class="flex items-center gap-3 text-xs text-gray-500 py-2 border-b border-gray-100">
           <span class="font-mono w-12 shrink-0">00:00</span>
           <span class="flex-1">Abertura</span>
+          <span class="text-gray-400">${durAbertura} min</span>
         </div>
       `];
       cronogramaSalvo.coros.forEach(c=>{
+        const fixoTag = c.fixo ? '<span class="text-[10px] font-bold uppercase text-blue-600 ml-1">· fixo</span>' : '';
         linhas.push(`
           <div class="flex items-center gap-3 text-sm py-2 border-b border-gray-100">
             <span class="font-mono w-12 shrink-0 text-gray-500">${minutosParaHHMM(cursorMin)}</span>
-            <span class="flex-1 font-medium text-left" style="color:var(--azul-petroleo)">${c.nomeCoro}</span>
+            <span class="flex-1 font-medium text-left" style="color:var(--azul-petroleo)">${c.nomeCoro}${fixoTag}</span>
             <span class="text-xs text-gray-400 shrink-0">${c.duracaoMinutos} min</span>
           </div>
         `);
@@ -1282,6 +1373,7 @@
         <div class="flex items-center gap-3 text-xs text-gray-500 py-2">
           <span class="font-mono w-12 shrink-0">${minutosParaHHMM(cursorMin)}</span>
           <span class="flex-1">Encerramento</span>
+          <span class="text-gray-400">${durEncerramento} min</span>
         </div>
       `);
 
@@ -1915,9 +2007,10 @@
   const btnSalvarCronograma = document.getElementById('btnSalvarCronograma');
   const cronogramaSalvoMsg = document.getElementById('cronogramaSalvoMsg');
 
-  // Estado em memória do bloco sendo editado (lista de coros, na ordem),
-  // sincronizado com localStorage apenas ao clicar "Salvar Cronograma"
-  let cronogramaEdicaoAtual = [];
+  // Estado em memória do bloco sendo editado, sincronizado com localStorage
+  // apenas ao clicar "Salvar Cronograma". Inclui abertura/encerramento (editáveis)
+  // e a lista de coros (institucionais fixos + amadores), na ordem de apresentação.
+  let cronogramaEdicaoAtual = { duracaoAbertura: 10, duracaoEncerramento: 10, coros: [] };
   let cronogramaDiaAtual = null;
 
   function popularSelectDiaCronograma(){
@@ -1933,18 +2026,32 @@
     return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
   }
 
-  // Carrega o cronograma salvo do dia (ou começa vazio) para a área de edição
+  // Carrega o cronograma para edição: usa o salvo se existir, senão gera o seed
+  // (abertura/encerramento padrão + coros institucionais fixos do dia)
   function carregarCronogramaParaEdicao(diaId){
     cronogramaDiaAtual = diaId;
     const salvo = getCronogramaDoDia(diaId);
-    cronogramaEdicaoAtual = salvo ? salvo.coros.map(c => ({...c})) : [];
+    if(salvo){
+      cronogramaEdicaoAtual = {
+        duracaoAbertura: salvo.duracaoAbertura ?? 10,
+        duracaoEncerramento: salvo.duracaoEncerramento ?? 10,
+        coros: salvo.coros.map(c => ({...c}))
+      };
+    } else {
+      const seed = gerarCronogramaSeed(diaId);
+      cronogramaEdicaoAtual = {
+        duracaoAbertura: seed.duracaoAbertura,
+        duracaoEncerramento: seed.duracaoEncerramento,
+        coros: seed.coros.map(c => ({...c}))
+      };
+    }
   }
 
   // Lista os coros inscritos (Presencial, status != Rejeitado) para o dia selecionado,
   // que ainda não foram adicionados ao bloco em edição
   function renderCorosDisponiveis(){
     const inscricoes = getInscricoes();
-    const idsNoBloco = new Set(cronogramaEdicaoAtual.map(c => c.inscricaoId));
+    const idsNoBloco = new Set(cronogramaEdicaoAtual.coros.filter(c => c.inscricaoId).map(c => c.inscricaoId));
 
     const disponiveis = inscricoes.filter(i =>
       i.modalidade === 'Presencial' &&
@@ -1982,10 +2089,11 @@
           duracaoSugerida = CRONOGRAMA_DURACOES_VALIDAS.find(d => d >= inscricao.duracaoTotalRepertorio) || 30;
         }
 
-        cronogramaEdicaoAtual.push({
+        cronogramaEdicaoAtual.coros.push({
           inscricaoId: inscricao.id,
           nomeCoro: inscricao.nomeCoro,
-          duracaoMinutos: duracaoSugerida
+          duracaoMinutos: duracaoSugerida,
+          fixo: false
         });
 
         renderCorosDisponiveis();
@@ -1994,92 +2102,129 @@
     });
   }
 
-  // Calcula o tempo total ocupado pelos coros (não inclui abertura/encerramento, que são fixos à parte)
+  // Calcula o tempo total ocupado pelos coros (institucionais + amadores),
+  // sem contar abertura/encerramento
   function calcularTempoCorosBloco(){
-    return cronogramaEdicaoAtual.reduce((acc, c) => acc + (c.duracaoMinutos || 0), 0);
+    return cronogramaEdicaoAtual.coros.reduce((acc, c) => acc + (c.duracaoMinutos || 0), 0);
   }
 
-  // Renderiza a lista de ordem: Abertura (fixa) + coros (arrastáveis, com select de duração) + Encerramento (fixo)
+  // Renderiza a lista de ordem: Abertura (editável) + coros (arrastáveis,
+  // institucionais marcados como Fixo + amadores) + Encerramento (editável)
   function renderOrdemBloco(){
+    const dia = PROGRAMACAO_DATA.find(d => d.id === cronogramaDiaAtual);
+    const limiteCoros = calcularTempoUtilCoros(dia);
     const tempoCoros = calcularTempoCorosBloco();
-    const tempoTotalBloco = CRONOGRAMA_TEMPO_ABERTURA + tempoCoros + CRONOGRAMA_TEMPO_ENCERRAMENTO;
-    const limiteMaximoBloco = CRONOGRAMA_TEMPO_ABERTURA + CRONOGRAMA_TEMPO_UTIL_COROS + CRONOGRAMA_TEMPO_ENCERRAMENTO; // 100 min = 1h40
-    const estourou = tempoCoros > CRONOGRAMA_TEMPO_UTIL_COROS;
+    const tempoTotalBloco = cronogramaEdicaoAtual.duracaoAbertura + tempoCoros + cronogramaEdicaoAtual.duracaoEncerramento;
+    const limiteMaximoBloco = cronogramaEdicaoAtual.duracaoAbertura + limiteCoros + cronogramaEdicaoAtual.duracaoEncerramento;
+    const estourou = tempoCoros > limiteCoros;
 
     cronogramaTempoLabel.textContent = minutosParaHHMM(tempoTotalBloco) + ' / ' + minutosParaHHMM(limiteMaximoBloco);
     const pct = Math.min((tempoTotalBloco / limiteMaximoBloco) * 100, 100);
     cronogramaTempoBarra.style.width = pct + '%';
     cronogramaTempoBarra.style.backgroundColor = estourou ? '#DC2626' : 'var(--dourado)';
     cronogramaTempoAviso.classList.toggle('hidden', !estourou);
+    if(estourou){
+      cronogramaTempoAviso.textContent = '⚠ O tempo dos coros (' + tempoCoros + ' min) ultrapassa o limite de ' + limiteCoros + ' min definido para ' + dia.diaSemana + '.';
+    }
 
     // Monta a sequência com horários calculados, começando em 00:00 relativo ao início do bloco
     let cursorMin = 0;
     const itensHtml = [];
 
-    // ABERTURA (fixa)
+    // ABERTURA (editável)
     itensHtml.push(`
       <div class="flex items-center gap-3 bg-bg-claro border border-gray-200 rounded-lg p-3" style="background-color:var(--bg-claro)">
         <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin)}</span>
         <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Abertura</span>
-        <span class="text-xs text-gray-500">${CRONOGRAMA_TEMPO_ABERTURA} min</span>
+        <input type="number" min="0" max="60" step="5" id="inputDuracaoAbertura" value="${cronogramaEdicaoAtual.duracaoAbertura}" class="w-16 text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 text-center">
+        <span class="text-xs text-gray-500">min</span>
       </div>
     `);
-    cursorMin += CRONOGRAMA_TEMPO_ABERTURA;
+    cursorMin += cronogramaEdicaoAtual.duracaoAbertura;
 
-    // COROS (arrastáveis)
-    cronogramaEdicaoAtual.forEach((c, idx) => {
+    // COROS (arrastáveis — institucionais fixos e amadores)
+    cronogramaEdicaoAtual.coros.forEach((c, idx) => {
       const horaInicio = minutosParaHHMM(cursorMin);
+      const badgeFixo = c.fixo
+        ? '<span class="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 shrink-0">Fixo</span>'
+        : '';
+      const removerBtn = c.fixo
+        ? ''
+        : `<button type="button" data-idx="${idx}" class="btnRemoverDoBloco text-gray-400 hover:text-red-600 transition shrink-0" aria-label="Remover">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+           </button>`;
       itensHtml.push(`
         <div class="cronograma-coro-item flex items-center gap-3 bg-white border-2 rounded-lg p-3 cursor-grab active:cursor-grabbing" style="border-color:#E5E7EB" draggable="true" data-idx="${idx}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-gray-300 shrink-0"><circle cx="8" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
           <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${horaInicio}</span>
           <span class="text-sm font-semibold flex-1 truncate" style="color:var(--azul-petroleo)">${escapeHtml(c.nomeCoro)}</span>
+          ${badgeFixo}
           <select data-idx="${idx}" class="cronograma-duracao-select text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 cursor-pointer">
             ${CRONOGRAMA_DURACOES_VALIDAS.map(d => `<option value="${d}" ${d === c.duracaoMinutos ? 'selected' : ''}>${d} min</option>`).join('')}
           </select>
-          <button type="button" data-idx="${idx}" class="btnRemoverDoBloco text-gray-400 hover:text-red-600 transition shrink-0" aria-label="Remover">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
+          ${removerBtn}
         </div>
       `);
       cursorMin += c.duracaoMinutos;
     });
 
-    // ENCERRAMENTO (fixo)
+    // ENCERRAMENTO (editável)
     itensHtml.push(`
       <div class="flex items-center gap-3 bg-bg-claro border border-gray-200 rounded-lg p-3" style="background-color:var(--bg-claro)">
         <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin)}</span>
         <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Encerramento</span>
-        <span class="text-xs text-gray-500">${CRONOGRAMA_TEMPO_ENCERRAMENTO} min</span>
+        <input type="number" min="0" max="60" step="5" id="inputDuracaoEncerramento" value="${cronogramaEdicaoAtual.duracaoEncerramento}" class="w-16 text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 text-center">
+        <span class="text-xs text-gray-500">min</span>
       </div>
     `);
 
-    if(cronogramaEdicaoAtual.length === 0){
+    if(cronogramaEdicaoAtual.coros.length === 0){
       itensHtml.splice(1, 0, '<p class="text-sm text-gray-400 italic text-center py-4">Adicione coros da lista ao lado para montar o bloco.</p>');
     }
 
     cronogramaOrdemLista.innerHTML = itensHtml.join('');
 
-    // listeners: alterar duração
+    // listeners: editar duração da Abertura
+    const inputAbertura = document.getElementById('inputDuracaoAbertura');
+    if(inputAbertura){
+      inputAbertura.addEventListener('change', function(){
+        const v = Math.max(0, Number(this.value) || 0);
+        cronogramaEdicaoAtual.duracaoAbertura = v;
+        renderOrdemBloco();
+      });
+    }
+
+    // listeners: editar duração do Encerramento
+    const inputEncerramento = document.getElementById('inputDuracaoEncerramento');
+    if(inputEncerramento){
+      inputEncerramento.addEventListener('change', function(){
+        const v = Math.max(0, Number(this.value) || 0);
+        cronogramaEdicaoAtual.duracaoEncerramento = v;
+        renderOrdemBloco();
+      });
+    }
+
+    // listeners: alterar duração de um coro
     cronogramaOrdemLista.querySelectorAll('.cronograma-duracao-select').forEach(sel=>{
       sel.addEventListener('change', function(){
         const idx = Number(this.dataset.idx);
-        cronogramaEdicaoAtual[idx].duracaoMinutos = Number(this.value);
+        cronogramaEdicaoAtual.coros[idx].duracaoMinutos = Number(this.value);
         renderOrdemBloco();
       });
     });
 
-    // listeners: remover do bloco
+    // listeners: remover do bloco (apenas coros não-fixos)
     cronogramaOrdemLista.querySelectorAll('.btnRemoverDoBloco').forEach(btn=>{
       btn.addEventListener('click', function(){
         const idx = Number(this.dataset.idx);
-        cronogramaEdicaoAtual.splice(idx, 1);
+        cronogramaEdicaoAtual.coros.splice(idx, 1);
         renderOrdemBloco();
         renderCorosDisponiveis();
       });
     });
 
-    // drag-and-drop para reordenar
+    // drag-and-drop para reordenar (inclui fixos — a ordem de exibição é livre,
+    // mesmo que a duração de um fixo não possa ser removida)
     let dragSrcIdx = null;
     cronogramaOrdemLista.querySelectorAll('.cronograma-coro-item').forEach(item=>{
       item.addEventListener('dragstart', function(e){
@@ -2098,8 +2243,8 @@
         e.preventDefault();
         const targetIdx = Number(this.dataset.idx);
         if(dragSrcIdx === null || dragSrcIdx === targetIdx) return;
-        const [moved] = cronogramaEdicaoAtual.splice(dragSrcIdx, 1);
-        cronogramaEdicaoAtual.splice(targetIdx, 0, moved);
+        const [moved] = cronogramaEdicaoAtual.coros.splice(dragSrcIdx, 1);
+        cronogramaEdicaoAtual.coros.splice(targetIdx, 0, moved);
         dragSrcIdx = null;
         renderOrdemBloco();
       });
@@ -2132,16 +2277,20 @@
 
   if(btnSalvarCronograma){
     btnSalvarCronograma.addEventListener('click', function(){
+      const dia = PROGRAMACAO_DATA.find(d => d.id === cronogramaDiaAtual);
+      const limiteCoros = calcularTempoUtilCoros(dia);
       const tempoCoros = calcularTempoCorosBloco();
-      if(tempoCoros > CRONOGRAMA_TEMPO_UTIL_COROS){
-        alert('Não é possível salvar: a soma dos tempos dos coros (' + tempoCoros + ' min) ultrapassa o limite de ' + CRONOGRAMA_TEMPO_UTIL_COROS + ' min disponíveis para o bloco.');
+      if(tempoCoros > limiteCoros){
+        alert('Não é possível salvar: a soma dos tempos dos coros (' + tempoCoros + ' min) ultrapassa o limite de ' + limiteCoros + ' min definido para ' + dia.diaSemana + '.');
         return;
       }
 
       const todosCronogramas = getCronogramaData();
       todosCronogramas[cronogramaDiaAtual] = {
         diaId: cronogramaDiaAtual,
-        coros: cronogramaEdicaoAtual,
+        duracaoAbertura: cronogramaEdicaoAtual.duracaoAbertura,
+        duracaoEncerramento: cronogramaEdicaoAtual.duracaoEncerramento,
+        coros: cronogramaEdicaoAtual.coros,
         atualizadoEm: new Date().toISOString()
       };
       salvarCronogramaData(todosCronogramas);
