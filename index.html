@@ -1,111 +1,53 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VII ENCoros 2026 — Encontro Nacional de Coros de Goiânia</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --azul-petroleo:#0F2027;
-    --azul-petroleo-2:#16323B;
-    --dourado:#D4AF37;
-  }
-  body { font-family: 'Inter', sans-serif; }
-  .bg-petroleo{background-color:var(--azul-petroleo);}
-  .bg-petroleo-2{background-color:var(--azul-petroleo-2);}
-  .text-gold{color:var(--dourado);}
-  .btn-gold{background:linear-gradient(135deg,#E9CD7A 0%,#D4AF37 60%,#C5A059 100%); color:#0F2027; font-weight:700;}
-  .nav-link{color:#E8E8E8; font-weight:600; transition:color .2s ease;}
-  .nav-link:hover, .nav-link.active{color:var(--dourado);}
-  .hero-bg{background:linear-gradient(160deg,#0F2027 0%, #16323B 55%, #0F2027 100%);}
-  .card-soft{background:#FFFFFF; border:1px solid #ECECEC; border-radius:1rem;}
-  .input-field{width:100%; padding:0.75rem 1rem; border:1px solid #DCDCDC; border-radius:0.5rem;}
-  .carousel-container { position: relative; overflow: hidden; width: 100%; }
-  .carousel-track { display: flex; transition: transform 0.4s ease; width: 100%; }
-  .carousel-slide { flex: 0 0 100%; width: 100%; padding: 4px; }
-</style>
-</head>
-<body class="bg-slate-50">
-
-<header class="bg-petroleo sticky top-0 z-50 shadow-lg">
-  <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-    <a href="#" data-nav="home" class="nav-trigger flex items-center gap-3">
-      <div class="w-12 h-12 rounded-full border border-[#D4AF37]/40 flex items-center justify-center bg-[#16323B]">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2"><path d="M12 22c0 0-2.5-2-2.5-4.5 0-2 1.5-3 3-3 1.5 0 2.5 1 2.5 2.5 0 2-2 3.5-4 3.5M13.5 2.5v14.5c0 0 1.5 2 1.5 4 0 2-2 3.5-4 3.5-2.5 0-4-2-4-4.5 0-3 2-5.5 3.5-6.5"/></svg>
+<!-- ###################### ABA 3: PROGRAMAÇÃO ###################### -->
+  <section id="view-programacao" class="view hidden section-fade">
+    <div class="bg-petroleo text-white py-16">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <span class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">Festival Completo</span>
+        <h1 class="font-serif-display text-4xl mt-3">Programação Oficial</h1>
       </div>
-      <div class="text-white font-bold text-xl">VII ENCoros</div>
-    </a>
-    <nav class="hidden md:flex gap-8">
-      <a href="#" data-nav="home" class="nav-trigger nav-link active">Início</a>
-      <a href="#" data-nav="regulamento" class="nav-trigger nav-link">Regulamento</a>
-      <a href="#" data-nav="programacao" class="nav-trigger nav-link">Programação</a>
-      <a href="#" data-nav="admin" class="nav-trigger nav-link opacity-50">Admin</a>
-    </nav>
-    <a href="#" data-nav="inscricao" class="nav-trigger btn-gold px-5 py-2 rounded-full text-sm">Inscrever</a>
-  </div>
-</header>
+    </div>
 
-<main>
-  <section id="view-home" class="view">
-    <div class="hero-bg text-white py-24 text-center">
-      <h1 class="text-5xl font-bold">VII ENCoros 2026</h1>
-      <p class="mt-4 text-gray-300">Encontro Nacional de Coros de Goiânia</p>
-      <a href="#" data-nav="inscricao" class="nav-trigger mt-8 inline-block btn-gold px-8 py-3 rounded-full">Inscrever meu Coro</a>
+    <div class="max-w-5xl mx-auto px-6 py-12">
+      
+      <!-- 1. PAINEL MACRO (GRID 5 COLUNAS) -->
+      <div class="grid grid-cols-5 gap-2 mb-10 text-center">
+        <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+          <div class="text-[10px] font-bold text-amber-800 uppercase">QUI · 03/09</div>
+          <div class="text-[10px] text-gray-600 mt-1 truncate">Abertura</div>
+        </div>
+        <div class="p-3 bg-gray-100 rounded-lg border border-gray-200">
+          <div class="text-[10px] font-bold text-gray-700 uppercase">SEX · 04/09</div>
+          <div class="text-[10px] text-gray-600 mt-1 truncate">Mostra</div>
+        </div>
+        <div class="p-3 bg-gray-100 rounded-lg border border-gray-200">
+          <div class="text-[10px] font-bold text-gray-700 uppercase">SÁB · 05/09</div>
+          <div class="text-[10px] text-gray-600 mt-1 truncate">Mostra</div>
+        </div>
+        <div class="p-3 bg-gray-100 rounded-lg border border-gray-200">
+          <div class="text-[10px] font-bold text-gray-700 uppercase">DOM · 06/09</div>
+          <div class="text-[10px] text-gray-600 mt-1 truncate">Gala</div>
+        </div>
+        <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <div class="text-[10px] font-bold text-blue-800 uppercase">SEG · 07/09</div>
+          <div class="text-[10px] text-gray-600 mt-1 truncate">Digital</div>
+        </div>
+      </div>
+
+      <!-- 2. CARROSSEL DE DETALHES -->
+      <div class="carousel-container">
+        <div id="carouselTrack" class="carousel-track">
+          <div class="carousel-slide"><div class="card-soft p-8"><h3>Quinta (03/09)</h3><p class="text-sm text-gray-600">Abertura oficial e homenagens.</p></div></div>
+          <div class="carousel-slide"><div class="card-soft p-8"><h3>Sexta (04/09)</h3><p class="text-sm text-gray-600">Concerto CSUFG e Coros convidados.</p></div></div>
+          <div class="carousel-slide"><div class="card-soft p-8"><h3>Sábado (05/09)</h3><p class="text-sm text-gray-600">Apresentações técnicas.</p></div></div>
+          <div class="carousel-slide"><div class="card-soft p-8"><h3>Domingo (06/09)</h3><p class="text-sm text-gray-600">Gala de encerramento.</p></div></div>
+          <div class="carousel-slide"><div class="card-soft p-8"><h3>Segunda (07/09)</h3><p class="text-sm text-gray-600">Mostra virtual internacional.</p></div></div>
+        </div>
+      </div>
+      
+      <!-- CONTROLES DO CARROSSEL -->
+      <div class="flex justify-center gap-4 mt-6">
+        <button id="prevBtn" class="px-4 py-2 bg-gray-100 rounded-full text-xs font-bold hover:bg-gold hover:text-white transition">Anterior</button>
+        <button id="nextBtn" class="px-4 py-2 bg-gray-100 rounded-full text-xs font-bold hover:bg-gold hover:text-white transition">Próximo</button>
+      </div>
     </div>
   </section>
-
-  <section id="view-regulamento" class="view hidden p-10 max-w-3xl mx-auto">
-    <h2 class="text-3xl font-bold text-petroleo">Regulamento</h2>
-    <p class="mt-4 text-gray-700">Regras estabelecidas para o VII ENCoros 2026...</p>
-  </section>
-
-  <section id="view-programacao" class="view hidden p-10 max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold mb-8">Programação</h2>
-    <div class="grid grid-cols-5 gap-2 mb-10 text-center text-xs font-bold">
-      <div class="p-2 bg-amber-100 rounded">QUI<br>03/09</div>
-      <div class="p-2 bg-gray-200 rounded">SEX<br>04/09</div>
-      <div class="p-2 bg-gray-200 rounded">SÁB<br>05/09</div>
-      <div class="p-2 bg-gray-200 rounded">DOM<br>06/09</div>
-      <div class="p-2 bg-blue-100 rounded">SEG<br>07/09</div>
-    </div>
-    <div class="carousel-container"><div id="carouselTrack" class="carousel-track">
-      <div class="carousel-slide"><div class="card-soft p-6"><h3>Quinta-feira</h3><p>Abertura na Igreja</p></div></div>
-      <div class="carousel-slide"><div class="card-soft p-6"><h3>Sexta-feira</h3><p>Mostra presencial</p></div></div>
-      <div class="carousel-slide"><div class="card-soft p-6"><h3>Sábado</h3><p>Mostra presencial</p></div></div>
-      <div class="carousel-slide"><div class="card-soft p-6"><h3>Domingo</h3><p>Encerramento</p></div></div>
-      <div class="carousel-slide"><div class="card-soft p-6"><h3>Segunda-feira</h3><p>Mostra Virtual</p></div></div>
-    </div></div>
-  </section>
-
-  <section id="view-inscricao" class="view hidden p-10 max-w-2xl mx-auto">
-    <h2 class="text-3xl font-bold mb-6">Inscrição</h2>
-    <form id="formInscricao" class="space-y-4">
-      <label class="label-field">Nome do Regente</label><input type="text" name="nome" class="input-field">
-      <button type="submit" class="btn-gold w-full py-3 rounded-full">Enviar Inscrição</button>
-    </form>
-  </section>
-
-  <section id="view-admin" class="view hidden p-10 max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold mb-6">Administração</h2>
-    <div id="adminPanelContent"><p>Acesso restrito.</p></div>
-  </section>
-</main>
-
-<script>
-  // Script de navegação e carrossel básico
-  const views = { home: document.getElementById('view-home'), regulamento: document.getElementById('view-regulamento'), programacao: document.getElementById('view-programacao'), inscricao: document.getElementById('view-inscricao'), admin: document.getElementById('view-admin') };
-  document.querySelectorAll('.nav-trigger').forEach(l=>l.addEventListener('click', (e)=>{
-    e.preventDefault();
-    Object.values(views).forEach(v=>v.classList.add('hidden'));
-    views[l.dataset.nav].classList.remove('hidden');
-  }));
-  
-  let slide = 0;
-  const track = document.getElementById('carouselTrack');
-  document.getElementById('prevBtn')?.addEventListener('click',()=>track.style.transform = `translateX(${(slide = Math.max(slide-1, 0))*-100}%)`);
-  document.getElementById('nextBtn')?.addEventListener('click',()=>track.style.transform = `translateX(${(slide = Math.min(slide+1, 4))*-100}%)`);
-</script>
-</body>
-</html>
