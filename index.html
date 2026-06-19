@@ -516,25 +516,56 @@
       <div class="max-w-4xl mx-auto px-6 text-center">
         <span class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">VII ENCoros 2026</span>
         <h1 class="font-serif-display text-4xl mt-3">Programação</h1>
-        <p class="text-gray-300 mt-3">04 a 06 de setembro de 2026 · Goiânia, Goiás</p>
+        <p class="text-gray-300 mt-3">Quinta a Segunda · Goiânia, Goiás</p>
       </div>
     </div>
 
-    <div class="max-w-3xl mx-auto px-6 py-24 text-center">
-      <svg width="56" height="56" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-6 opacity-70">
-        <circle cx="19" cy="19" r="17" stroke="#D4AF37" stroke-width="1.5"/>
-        <path d="M19 11v9l6 4" stroke="#D4AF37" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span class="inline-block text-xs font-semibold tracking-[0.2em] uppercase border border-gold/40 text-gold rounded-full px-4 py-1.5 mb-6">
-        Em construção
-      </span>
-      <h2 class="font-serif-display text-3xl mb-4" style="color:var(--azul-petroleo)">A grade de apresentações está sendo finalizada</h2>
-      <p class="text-gray-600 leading-relaxed max-w-xl mx-auto">
-        Em breve, esta página trará a programação completa do VII ENCoros 2026: horários de apresentação por palco, ensaios e a Mostra de Coros Virtuais. Acompanhe as novidades ou inscreva já o seu coro para garantir um lugar na grade.
-      </p>
-      <a href="#" data-nav="inscricao" class="nav-trigger inline-block btn-gold px-10 py-4 rounded-full text-base mt-10">
-        [ Inscrever meu Coro ]
-      </a>
+    <div class="max-w-6xl mx-auto px-6 py-16">
+
+      <!-- PAINEL MACRO: GRADE 5 COLUNAS -->
+      <div class="mb-16">
+        <h2 class="font-serif-display text-2xl mb-6 text-center" style="color:var(--azul-petroleo)">Visão Geral da Semana</h2>
+        <div id="painelMacro" class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
+          <!-- preenchido via JS a partir de PROGRAMACAO_DATA -->
+        </div>
+      </div>
+
+      <!-- CARROSSEL INTERATIVO -->
+      <div>
+        <h2 class="font-serif-display text-2xl mb-6 text-center" style="color:var(--azul-petroleo)">Detalhes do Dia</h2>
+
+        <div class="card-soft p-6 sm:p-10 relative">
+          <div class="flex items-center justify-between mb-6 gap-3">
+            <button id="carrosselPrev" type="button" aria-label="Dia anterior" class="shrink-0 w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:border-gold hover:text-gold transition">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+            </button>
+
+            <div class="text-center flex-1">
+              <span id="carrosselDiaSemana" class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">Quinta-feira</span>
+              <h3 id="carrosselData" class="font-serif-display text-2xl sm:text-3xl mt-1" style="color:var(--azul-petroleo)">03 de Setembro</h3>
+            </div>
+
+            <button id="carrosselNext" type="button" aria-label="Próximo dia" class="shrink-0 w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:border-gold hover:text-gold transition">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+
+          <!-- indicador de pontos -->
+          <div id="carrosselDots" class="flex items-center justify-center gap-2 mb-8">
+            <!-- preenchido via JS -->
+          </div>
+
+          <div id="carrosselConteudo" class="section-fade">
+            <!-- preenchido via JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-14 text-center">
+        <a href="#" data-nav="inscricao" class="nav-trigger inline-block btn-gold px-10 py-4 rounded-full text-base">
+          [ Inscrever meu Coro ]
+        </a>
+      </div>
     </div>
   </section>
 
@@ -592,12 +623,22 @@
             </div>
             <div class="sm:col-span-2">
               <label class="label-field">Modalidade *</label>
-              <select required name="modalidade" class="input-field bg-white">
+              <select required name="modalidade" id="selectModalidade" class="input-field bg-white">
                 <option value="" disabled selected>Selecione a modalidade</option>
                 <option value="Presencial">Presencial</option>
                 <option value="Virtual">Virtual — Mostra Nacional/Internacional</option>
               </select>
             </div>
+
+            <!-- CAMPO CONDICIONAL: DIA DE APRESENTAÇÃO (somente Presencial) -->
+            <div class="sm:col-span-2 hidden" id="wrapperDiaApresentacao">
+              <label class="label-field">Dia de Apresentação *</label>
+              <select name="diaApresentacao" id="selectDiaApresentacao" class="input-field bg-white">
+                <option value="" disabled selected>Selecione o dia</option>
+              </select>
+              <p id="vagasFeedback" class="text-xs mt-1.5"></p>
+            </div>
+
             <div class="sm:col-span-2">
               <label class="label-field">Histórico Resumido do Coro *</label>
               <textarea required name="historicoCoro" rows="4" class="input-field" placeholder="Ano de fundação, trajetória, premiações, contexto do grupo..."></textarea>
@@ -716,6 +757,14 @@
 
     <div class="max-w-7xl mx-auto px-6 py-10">
 
+      <!-- CONTROLE DE VAGAS POR DIA -->
+      <div class="mb-10">
+        <h2 class="font-serif-display text-xl mb-4" style="color:var(--azul-petroleo)">Vagas — Coros Amadores Presenciais</h2>
+        <div id="painelVagasAdmin" class="grid sm:grid-cols-3 gap-4">
+          <!-- preenchido via JS -->
+        </div>
+      </div>
+
       <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div class="text-sm text-gray-600">
           <span id="totalInscricoes" class="font-semibold text-petroleo" style="color:var(--azul-petroleo)">0</span> inscrição(ões) registrada(s)
@@ -738,6 +787,7 @@
               <th class="px-4 py-3">Regente</th>
               <th class="px-4 py-3">Cidade</th>
               <th class="px-4 py-3">Modalidade</th>
+              <th class="px-4 py-3">Dia</th>
               <th class="px-4 py-3">Vídeo</th>
               <th class="px-4 py-3">Drive (Fotos)</th>
               <th class="px-4 py-3">Status</th>
@@ -786,6 +836,94 @@
 (function(){
   "use strict";
 
+  // ======================================================================
+  // DADOS DA PROGRAMAÇÃO — VII ENCoros 2026
+  // Estrutura fixa definida pelo Maestro Eliseu. Os horários/atrações e os
+  // limites de vagas (maxAmadores) ficam aqui; o admin lê e atualiza as
+  // vagas ocupadas em tempo real a partir das inscrições salvas.
+  // ======================================================================
+  const PROGRAMACAO_DATA = [
+    {
+      id: 'quinta',
+      diaSemana: 'Quinta-feira',
+      data: '03 de Setembro',
+      horario: 'A definir',
+      titulo: 'Concerto de Abertura',
+      descricao: 'Cerimônia oficial de abertura do VII ENCoros, com apresentação institucional, homenagem especial a Heloisa Barra e Honorina Barra, e concerto de abertura conduzido pelo corpo estável do evento.',
+      fixos: ['Cerimônia de Abertura'],
+      maxAmadores: 0,
+      vagasInscricao: false
+    },
+    {
+      id: 'sexta',
+      diaSemana: 'Sexta-feira',
+      data: '04 de Setembro',
+      horario: 'Início às 19h30',
+      titulo: 'Concerto Coral — Noite de Sexta',
+      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSUFG.',
+      fixos: ['CSUFG'],
+      maxAmadores: 4,
+      vagasInscricao: true
+    },
+    {
+      id: 'sabado',
+      diaSemana: 'Sábado',
+      data: '05 de Setembro',
+      horario: 'Início às 19h30',
+      titulo: 'Concerto Coral — Noite de Sábado',
+      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSJGOIÁS e do CJGOIÂNIA.',
+      fixos: ['CSJGOIÁS', 'CJGOIÂNIA'],
+      maxAmadores: 3,
+      vagasInscricao: true
+    },
+    {
+      id: 'domingo',
+      diaSemana: 'Domingo',
+      data: '06 de Setembro',
+      horario: 'Início às 11h',
+      titulo: 'Concerto Coral — Manhã de Domingo',
+      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSGOIÂNIA.',
+      fixos: ['CSGOIÂNIA'],
+      maxAmadores: 4,
+      vagasInscricao: true
+    },
+    {
+      id: 'segunda',
+      diaSemana: 'Segunda-feira',
+      data: '07 de Setembro',
+      horario: 'Dia 100% digital',
+      titulo: 'Mostra de Coros Virtuais',
+      descricao: 'Mostra de Coros Virtuais Nacionais e Internacionais, concentrada neste dia, transmitida pelos canais oficiais do evento. Modalidade exclusiva para inscrições Virtuais.',
+      fixos: [],
+      maxAmadores: null,
+      vagasInscricao: false
+    }
+  ];
+
+  const STORAGE_KEY_INSCRICOES = 'encoros2026_inscricoes';
+
+  function getInscricoesData(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY_INSCRICOES);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){
+      console.error('Erro ao ler localStorage', e);
+      return [];
+    }
+  }
+
+  // Conta quantas inscrições Presenciais já ocupam vagas de coro amador em cada dia
+  function contarVagasOcupadas(diaId){
+    const lista = getInscricoesData();
+    return lista.filter(i => i.modalidade === 'Presencial' && i.diaApresentacao === diaId).length;
+  }
+
+  function vagasRestantes(dia){
+    if(!dia.vagasInscricao) return null;
+    const ocupadas = contarVagasOcupadas(dia.id);
+    return Math.max(dia.maxAmadores - ocupadas, 0);
+  }
+
   // ---------- NAVEGAÇÃO SPA ----------
   const views = {
     home: document.getElementById('view-home'),
@@ -821,6 +959,11 @@
 
     if(viewName === 'admin'){
       checkAdminSession();
+    }
+
+    if(viewName === 'programacao'){
+      renderPainelMacro();
+      renderCarrosselDia();
     }
 
     window.scrollTo({top:0, behavior:'smooth'});
@@ -881,11 +1024,132 @@
     editionsChevronMobile.classList.toggle('rotate-180');
   });
 
+  // ---------- PROGRAMAÇÃO: PAINEL MACRO ----------
+  const painelMacroEl = document.getElementById('painelMacro');
+
+  function renderPainelMacro(){
+    if(!painelMacroEl) return;
+
+    painelMacroEl.innerHTML = PROGRAMACAO_DATA.map((dia, idx)=>{
+      let vagasHtml = '';
+      if(dia.vagasInscricao){
+        const restantes = vagasRestantes(dia);
+        const corVagas = restantes === 0 ? 'text-red-600' : 'text-green-700';
+        vagasHtml = `<p class="text-[11px] font-semibold mt-2 ${corVagas}">${restantes} vaga(s)</p>`;
+      } else if(dia.id === 'segunda'){
+        vagasHtml = `<p class="text-[11px] font-semibold mt-2 text-blue-600">100% Virtual</p>`;
+      } else {
+        vagasHtml = `<p class="text-[11px] font-semibold mt-2 text-gray-400">—</p>`;
+      }
+
+      return `
+        <button type="button" data-dia-idx="${idx}" class="painel-macro-card text-left bg-white border border-gray-200 rounded-xl p-4 hover:border-gold hover:shadow-md transition cursor-pointer">
+          <span class="text-[10px] font-semibold tracking-[0.12em] uppercase text-gold block">${dia.diaSemana}</span>
+          <span class="block text-sm font-semibold mt-1" style="color:var(--azul-petroleo)">${dia.data}</span>
+          <span class="block text-xs text-gray-500 mt-1.5">${dia.horario}</span>
+          <span class="block text-xs text-gray-700 font-medium mt-2 leading-snug">${dia.titulo}</span>
+          ${vagasHtml}
+        </button>
+      `;
+    }).join('');
+
+    painelMacroEl.querySelectorAll('.painel-macro-card').forEach(card=>{
+      card.addEventListener('click', function(){
+        carrosselIndex = Number(this.dataset.diaIdx);
+        renderCarrosselDia();
+        document.getElementById('carrosselDiaSemana').scrollIntoView({behavior:'smooth', block:'center'});
+      });
+    });
+  }
+
+  // ---------- PROGRAMAÇÃO: CARROSSEL INTERATIVO ----------
+  let carrosselIndex = 0;
+  const carrosselDiaSemanaEl = document.getElementById('carrosselDiaSemana');
+  const carrosselDataEl = document.getElementById('carrosselData');
+  const carrosselConteudoEl = document.getElementById('carrosselConteudo');
+  const carrosselDotsEl = document.getElementById('carrosselDots');
+  const carrosselPrevBtn = document.getElementById('carrosselPrev');
+  const carrosselNextBtn = document.getElementById('carrosselNext');
+
+  function renderCarrosselDia(){
+    if(!carrosselConteudoEl) return;
+
+    const dia = PROGRAMACAO_DATA[carrosselIndex];
+
+    carrosselDiaSemanaEl.textContent = dia.diaSemana;
+    carrosselDataEl.textContent = dia.data;
+
+    let vagasBlock = '';
+    if(dia.vagasInscricao){
+      const restantes = vagasRestantes(dia);
+      const ocupadas = dia.maxAmadores - restantes;
+      const corBg = restantes === 0 ? 'bg-red-50 border-red-300 text-red-700' : 'bg-green-50 border-green-300 text-green-700';
+      vagasBlock = `
+        <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border ${corBg}">
+          ${restantes === 0 ? '⛔ Vagas esgotadas' : `✓ ${restantes} vaga(s) disponível(eis)`}
+          <span class="opacity-60 font-normal">(${ocupadas}/${dia.maxAmadores} coros amadores)</span>
+        </div>
+      `;
+    } else if(dia.id === 'segunda'){
+      vagasBlock = `<div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border bg-blue-50 border-blue-300 text-blue-700">🎥 Modalidade exclusivamente Virtual</div>`;
+    }
+
+    const fixosBlock = dia.fixos.length
+      ? `<div class="mt-6"><span class="text-xs font-semibold tracking-[0.12em] uppercase text-gray-500">Participação fixa</span>
+           <div class="flex flex-wrap gap-2 mt-2">
+             ${dia.fixos.map(f=>`<span class="text-xs font-semibold bg-bg-claro text-petroleo border border-gray-200 rounded-full px-3 py-1.5" style="background-color:var(--bg-claro); color:var(--azul-petroleo)">${f}</span>`).join('')}
+           </div>
+         </div>`
+      : '';
+
+    carrosselConteudoEl.innerHTML = `
+      <div class="text-center">
+        <span class="inline-block text-xs font-semibold tracking-[0.15em] uppercase text-gold border border-gold/40 rounded-full px-3 py-1 mb-3">${dia.horario}</span>
+        <h4 class="font-serif-display text-2xl" style="color:var(--azul-petroleo)">${dia.titulo}</h4>
+        <p class="text-gray-600 leading-relaxed max-w-xl mx-auto mt-4">${dia.descricao}</p>
+        ${fixosBlock}
+        ${vagasBlock}
+      </div>
+    `;
+    // reinicia animação de entrada
+    carrosselConteudoEl.classList.remove('section-fade');
+    void carrosselConteudoEl.offsetWidth;
+    carrosselConteudoEl.classList.add('section-fade');
+
+    // dots
+    carrosselDotsEl.innerHTML = PROGRAMACAO_DATA.map((_, idx)=>{
+      const active = idx === carrosselIndex;
+      return `<span data-dot-idx="${idx}" class="carrossel-dot cursor-pointer rounded-full transition-all ${active ? 'w-6 h-2 bg-gold' : 'w-2 h-2 bg-gray-300'}" style="${active ? 'background-color:var(--dourado)' : ''}"></span>`;
+    }).join('');
+
+    carrosselDotsEl.querySelectorAll('.carrossel-dot').forEach(dot=>{
+      dot.addEventListener('click', function(){
+        carrosselIndex = Number(this.dataset.dotIdx);
+        renderCarrosselDia();
+      });
+    });
+  }
+
+  if(carrosselPrevBtn){
+    carrosselPrevBtn.addEventListener('click', function(){
+      carrosselIndex = (carrosselIndex - 1 + PROGRAMACAO_DATA.length) % PROGRAMACAO_DATA.length;
+      renderCarrosselDia();
+    });
+    carrosselNextBtn.addEventListener('click', function(){
+      carrosselIndex = (carrosselIndex + 1) % PROGRAMACAO_DATA.length;
+      renderCarrosselDia();
+    });
+  }
+
   // ---------- FORMULÁRIO DE INSCRIÇÃO ----------
   const form = document.getElementById('formInscricao');
   const checkbox = document.getElementById('aceiteRegulamento');
   const btnEnviar = document.getElementById('btnEnviar');
   const formMsg = document.getElementById('formMsg');
+  const selectModalidade = document.getElementById('selectModalidade');
+  const wrapperDiaApresentacao = document.getElementById('wrapperDiaApresentacao');
+  const selectDiaApresentacao = document.getElementById('selectDiaApresentacao');
+  const vagasFeedback = document.getElementById('vagasFeedback');
 
   function atualizarBotao(){
     if(checkbox.checked){
@@ -907,25 +1171,63 @@
     if(tipo === 'sucesso'){
       formMsg.classList.add('bg-green-50','text-green-700','border','border-green-300');
     } else {
-      formMsg.classList.add('bg-red-50','text-red-700','border','border-red-300');
+      formMsg.classList.add('bg-red-50','text-red-700','border-red-300');
     }
   }
 
-  const STORAGE_KEY = 'encoros2026_inscricoes';
+  const STORAGE_KEY = STORAGE_KEY_INSCRICOES;
 
   function getInscricoes(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){
-      console.error('Erro ao ler localStorage', e);
-      return [];
-    }
+    return getInscricoesData();
   }
 
   function salvarInscricoes(lista){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
   }
+
+  // ---------- SELEÇÃO DE DIA E TRAVAMENTO DE VAGAS ----------
+  function popularDiasDisponiveis(){
+    const diasComVagas = PROGRAMACAO_DATA.filter(d => d.vagasInscricao);
+
+    selectDiaApresentacao.innerHTML = '<option value="" disabled selected>Selecione o dia</option>' +
+      diasComVagas.map(dia=>{
+        const restantes = vagasRestantes(dia);
+        const esgotado = restantes === 0;
+        return `<option value="${dia.id}" ${esgotado ? 'disabled' : ''}>${dia.diaSemana} (${dia.data})${esgotado ? ' — Esgotado' : ' — ' + restantes + ' vaga(s)'}</option>`;
+      }).join('');
+  }
+
+  function atualizarFeedbackVagas(){
+    const diaId = selectDiaApresentacao.value;
+    if(!diaId){
+      vagasFeedback.textContent = '';
+      return;
+    }
+    const dia = PROGRAMACAO_DATA.find(d => d.id === diaId);
+    const restantes = vagasRestantes(dia);
+    if(restantes === 0){
+      vagasFeedback.textContent = dia.diaSemana + ' — vagas esgotadas para coros amadores.';
+      vagasFeedback.className = 'text-xs mt-1.5 text-red-600 font-medium';
+    } else {
+      vagasFeedback.textContent = dia.diaSemana + ' — ' + restantes + ' vaga(s) disponível(eis).';
+      vagasFeedback.className = 'text-xs mt-1.5 text-green-700 font-medium';
+    }
+  }
+
+  selectModalidade.addEventListener('change', function(){
+    if(this.value === 'Presencial'){
+      wrapperDiaApresentacao.classList.remove('hidden');
+      selectDiaApresentacao.setAttribute('required', 'required');
+      popularDiasDisponiveis();
+    } else {
+      wrapperDiaApresentacao.classList.add('hidden');
+      selectDiaApresentacao.removeAttribute('required');
+      selectDiaApresentacao.value = '';
+      vagasFeedback.textContent = '';
+    }
+  });
+
+  selectDiaApresentacao.addEventListener('change', atualizarFeedbackVagas);
 
   form.addEventListener('submit', function(e){
     e.preventDefault();
@@ -941,6 +1243,24 @@
     }
 
     const fd = new FormData(form);
+    const modalidade = fd.get('modalidade');
+    const diaApresentacao = fd.get('diaApresentacao') || '';
+
+    // Revalida vagas no momento do envio, para evitar condição de corrida
+    // (ex: duas pessoas preenchendo o formulário ao mesmo tempo)
+    if(modalidade === 'Presencial'){
+      const diaEscolhido = PROGRAMACAO_DATA.find(d => d.id === diaApresentacao);
+      if(!diaEscolhido){
+        mostrarMensagem('Selecione um dia de apresentação válido.', 'erro');
+        return;
+      }
+      if(vagasRestantes(diaEscolhido) === 0){
+        mostrarMensagem('As vagas para ' + diaEscolhido.diaSemana + ' acabaram de se esgotar. Por favor, escolha outro dia.', 'erro');
+        popularDiasDisponiveis();
+        return;
+      }
+    }
+
     const inscricao = {
       id: Date.now(),
       dataEnvio: new Date().toISOString(),
@@ -950,7 +1270,8 @@
       curriculoRegente: fd.get('curriculoRegente')?.trim(),
       nomeCoro: fd.get('nomeCoro')?.trim(),
       cidadeEstado: fd.get('cidadeEstado')?.trim(),
-      modalidade: fd.get('modalidade'),
+      modalidade: modalidade,
+      diaApresentacao: modalidade === 'Presencial' ? diaApresentacao : '',
       historicoCoro: fd.get('historicoCoro')?.trim(),
       repertorio: fd.get('repertorio')?.trim(),
       linkVideo: fd.get('linkVideo')?.trim(),
@@ -965,9 +1286,12 @@
     mostrarMensagem('✓ Inscrição enviada com sucesso! Em breve entraremos em contato.', 'sucesso');
     form.reset();
     atualizarBotao();
+    wrapperDiaApresentacao.classList.add('hidden');
+    vagasFeedback.textContent = '';
 
     setTimeout(()=>{ formMsg.classList.add('hidden'); }, 6000);
   });
+
 
   // ---------- AUTENTICAÇÃO DO PAINEL ADMIN ----------
   // ATENÇÃO: login simulado no front-end, apenas para fins de teste/demonstração.
@@ -1025,6 +1349,7 @@
   const emptyState = document.getElementById('emptyState');
   const btnExportar = document.getElementById('btnExportar');
   const btnLimpar = document.getElementById('btnLimpar');
+  const painelVagasAdminEl = document.getElementById('painelVagasAdmin');
 
   function escapeHtml(str){
     if(!str) return '';
@@ -1041,9 +1366,45 @@
     }
   }
 
+  function diaLabel(diaId){
+    if(!diaId) return '<span class="text-gray-400">—</span>';
+    const dia = PROGRAMACAO_DATA.find(d => d.id === diaId);
+    return dia ? escapeHtml(dia.diaSemana) : escapeHtml(diaId);
+  }
+
+  // Renderiza os cards de contagem de vagas (0/4, 0/3, 0/4) em tempo real
+  function renderPainelVagasAdmin(){
+    if(!painelVagasAdminEl) return;
+
+    const diasComVagas = PROGRAMACAO_DATA.filter(d => d.vagasInscricao);
+
+    painelVagasAdminEl.innerHTML = diasComVagas.map(dia=>{
+      const ocupadas = contarVagasOcupadas(dia.id);
+      const cheio = ocupadas >= dia.maxAmadores;
+      const corBarra = cheio ? '#DC2626' : '#D4AF37';
+      const pct = Math.min((ocupadas / dia.maxAmadores) * 100, 100);
+
+      return `
+        <div class="card-soft p-5">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-semibold" style="color:var(--azul-petroleo)">${dia.diaSemana}</span>
+            <span class="text-sm font-bold ${cheio ? 'text-red-600' : 'text-gray-700'}">${ocupadas}/${dia.maxAmadores}</span>
+          </div>
+          <p class="text-xs text-gray-500 mb-3">${dia.data} · ${dia.horario}</p>
+          <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all" style="width:${pct}%; background-color:${corBarra}"></div>
+          </div>
+          ${cheio ? '<p class="text-xs text-red-600 font-semibold mt-2">Vagas esgotadas</p>' : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
   function renderAdminTable(){
     const lista = getInscricoes();
     totalInscricoesEl.textContent = lista.length;
+
+    renderPainelVagasAdmin();
 
     if(lista.length === 0){
       adminTableBody.innerHTML = '';
@@ -1063,6 +1424,7 @@
               ${escapeHtml(item.modalidade)}
             </span>
           </td>
+          <td class="px-4 py-3 text-gray-600 text-xs">${diaLabel(item.diaApresentacao)}</td>
           <td class="px-4 py-3">
             <a href="${escapeHtml(item.linkVideo)}" target="_blank" rel="noopener" class="text-gold underline text-xs">Ver vídeo</a>
           </td>
