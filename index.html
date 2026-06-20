@@ -1227,6 +1227,14 @@
   const fbApp = initializeApp(firebaseConfig);
   const db = getFirestore(fbApp);
 
+  // Segunda instância do Firestore, apontando para o banco de dados
+  // "email-banco" (região nam5), criado especificamente para a extensão
+  // "Trigger Email" — essa extensão só funciona corretamente quando o
+  // Firestore e a Cloud Function estão em regiões compatíveis, e o banco
+  // "(default)" do projeto está em southamerica-east1, incompatível com
+  // a extensão. Por isso, e-mails são escritos neste banco separado.
+  const dbEmail = getFirestore(fbApp, 'email-banco');
+
   const COL_INSCRICOES = 'encoros2026_inscricoes';
   const COL_CRONOGRAMA = 'encoros2026_cronograma';
 
@@ -1295,6 +1303,22 @@
     });
   }
 
+  // ---------- E-MAIL (Firebase Extension "Trigger Email") ----------
+  // A extensão "Trigger Email" (instalada no Firebase Console) monitora a
+  // coleção "mail" e envia automaticamente um e-mail real sempre que um
+  // documento é criado nela, no formato { to, message: { subject, html } }.
+  // Não precisamos de nenhum serviço externo (EmailJS, etc.) — o envio
+  // acontece inteiramente dentro do mesmo projeto Firebase já configurado.
+  async function fsEnviarEmail(destinatario, assunto, corpoHtml){
+    await addDoc(collection(dbEmail, 'mail'), {
+      to: [destinatario],
+      message: {
+        subject: assunto,
+        html: corpoHtml
+      }
+    });
+  }
+
   // Expõe as funções no escopo global (window), para que o script principal
   // (não-módulo, mais abaixo) consiga chamá-las normalmente.
   window.firebaseDataLayer = {
@@ -1307,6 +1331,7 @@
     getCronogramaData: fsGetCronogramaData,
     salvarCronogramaDoDia: fsSalvarCronogramaDoDia,
     escutarInscricoes: fsEscutarInscricoes,
+    enviarEmail: fsEnviarEmail,
     pronto: true
   };
 
@@ -2280,7 +2305,7 @@
       nomeCoro: fd.get('nomeCoro')?.trim(),
       cidadeEstado: fd.get('cidadeEstado')?.trim(),
       modalidade: modalidade,
-      diaApresentacao: diaApresentacao, // já escolhido na Etapa 1 (a vaga conta a partir daqui, mesmo Pendente)
+      diaApresentacao: diaApresentacao, // já escolhido na Etapa 1 (a vaga conta a partir daqui)
       historicoCoro: fd.get('historicoCoro')?.trim(),
       linkVideo: fd.get('linkVideo')?.trim() || '',
       redesSociaisCoro: redesCoro,
@@ -2290,15 +2315,70 @@
       duracaoTotalRepertorio: null,
       levaEquipamento: false,
       linkDrive: '',
-      status: 'Pendente',
+      // Aprovação automática: toda inscrição preliminar já entra liberada
+      // para a Etapa 2, sem curadoria manual prévia da organização.
+      status: 'Aprovado',
       cronogramaDuracao: null
     };
 
     btnEnviar.disabled = true;
     btnEnviar.textContent = 'Enviando...';
     try{
-      await window.firebaseDataLayer.addInscricao(inscricao);
-      mostrarMensagem(formMsg, '✓ Inscrição preliminar enviada com sucesso! Em breve entraremos em contato com o link para a Etapa 2.', 'sucesso');
+      const novoId = await window.firebaseDataLayer.addInscricao(inscricao);
+
+      // Dispara o e-mail de confirmação com o link da Etapa 2 já incluso.
+      // Falha no envio do e-mail não deve travar a inscrição (que já foi
+      // salva com sucesso) — por isso fica num try/catch separado.
+      if(inscricao.emailRegente){
+        try{
+          const linkEtapa2 = getLinkConfirmacao(novoId);
+          const corpoEmail = `
+            <div style="font-family:Arial,sans-serif; max-width:560px; margin:0 auto; color:#1A2326;">
+              <div style="background:#0F2027; padding:28px 24px; text-align:center;">
+                <h1 style="color:#D4AF37; font-size:22px; margin:0;">VII ENCoros 2026</h1>
+                <p style="color:#cbd5e1; font-size:13px; margin:6px 0 0;">Encontro Nacional de Coros de Goiânia</p>
+              </div>
+              <div style="padding:28px 24px; background:#ffffff;">
+                <h2 style="color:#0F2027; font-size:18px;">Inscrição recebida com sucesso!</h2>
+                <p style="line-height:1.6; font-size:14px;">
+                  Olá, ${escapeHtml(inscricao.nomeRegente)}! Recebemos a inscrição preliminar do
+                  <strong>${escapeHtml(inscricao.nomeCoro)}</strong> para o VII ENCoros 2026.
+                </p>
+                <p style="line-height:1.6; font-size:14px;">
+                  Agora falta um passo: complete sua participação enviando o <strong>repertório</strong>,
+                  informações de <strong>equipamento</strong> e <strong>fotos</strong> para divulgação,
+                  clicando no botão abaixo.
+                </p>
+                <div style="text-align:center; margin:28px 0;">
+                  <a href="${linkEtapa2}" style="background:#D4AF37; color:#0F2027; font-weight:bold; padding:14px 32px; border-radius:999px; text-decoration:none; font-size:14px; display:inline-block;">
+                    Completar Inscrição (Etapa 2)
+                  </a>
+                </div>
+                <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:8px; padding:14px 16px; margin:20px 0;">
+                  <p style="margin:0; font-size:13px; color:#991b1b;"><strong>Prazo final: 07 de agosto de 2026 — impreterivelmente.</strong></p>
+                </div>
+                <p style="font-size:12px; color:#6b7280; line-height:1.5;">
+                  Se o botão não funcionar, copie e cole este link no navegador:<br>
+                  <a href="${linkEtapa2}" style="color:#D4AF37; word-break:break-all;">${linkEtapa2}</a>
+                </p>
+              </div>
+              <div style="background:#0F2027; padding:16px 24px; text-align:center;">
+                <p style="color:#9ca3af; font-size:11px; margin:0;">VII ENCoros 2026 · 04 a 06 de setembro de 2026 · Goiânia, Goiás</p>
+              </div>
+            </div>
+          `;
+          await window.firebaseDataLayer.enviarEmail(
+            inscricao.emailRegente,
+            'VII ENCoros 2026 — Inscrição recebida, falta um passo!',
+            corpoEmail
+          );
+        }catch(emailErr){
+          // Não interrompe o fluxo do usuário — a inscrição já foi salva.
+          console.error('Erro ao enviar e-mail de confirmação (inscrição já foi salva):', emailErr);
+        }
+      }
+
+      mostrarMensagem(formMsg, '✓ Inscrição enviada com sucesso! Enviamos um e-mail de confirmação com o link para completar sua participação.', 'sucesso');
       formPreliminar.reset();
       setFluxo('novo');
     }catch(err){
