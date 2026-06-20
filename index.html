@@ -722,7 +722,15 @@
                   <option value="Presencial">Presencial</option>
                   <option value="Virtual">Virtual — Mostra Nacional/Internacional</option>
                 </select>
-                <p class="text-xs text-gray-500 mt-1.5">O dia de apresentação será escolhido na Etapa 2, após a aprovação.</p>
+              </div>
+
+              <!-- CAMPO: DIA DE APRESENTAÇÃO (visível apenas Presencial + fluxo Novo) -->
+              <div class="sm:col-span-2 hidden" id="wrapperDiaApresentacao">
+                <label class="label-field">Dia de Apresentação *</label>
+                <select name="diaApresentacao" id="selectDiaApresentacao" class="input-field bg-white">
+                  <option value="" disabled selected>Selecione o dia</option>
+                </select>
+                <p id="vagasFeedback" class="text-xs mt-1.5"></p>
               </div>
 
               <!-- CAMPO: DIA FIXO INFORMATIVO (apenas fluxo Convidado) -->
@@ -741,14 +749,80 @@
             </div>
           </div>
 
-          <!-- 3. VÍDEO PARA AVALIAÇÃO -->
+          <!-- 3. REDES SOCIAIS -->
           <div class="card-soft p-6 sm:p-8">
-            <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">3. Vídeo para Avaliação</h2>
-            <p class="text-sm text-gray-500 mb-6">Material obrigatório para a Comissão Artística avaliar sua inscrição.</p>
+            <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">3. Redes Sociais</h2>
+            <p class="text-sm text-gray-500 mb-6">Esses links ajudam a Comissão Artística a conhecer o trabalho do coro e também serão usados no material de divulgação do evento.</p>
 
-            <label class="label-field">Link de Vídeo Recente (YouTube, Drive, etc.) *</label>
-            <input required type="url" name="linkVideo" class="input-field" placeholder="https://...">
-            <p class="text-xs text-gray-500 mt-1">Vídeo recente do coro, para fins de avaliação artística.</p>
+            <div class="bg-amber-50 border border-amber-300 text-amber-800 text-sm rounded-lg px-4 py-3 mb-6 flex gap-2">
+              <span class="font-bold">⚠ Obrigatório:</span>
+              <span>Informe ao menos uma rede social do <strong>coro</strong> e uma do <strong>regente</strong> (pode ser a mesma plataforma, ex: Instagram dos dois).</span>
+            </div>
+
+            <div class="space-y-6">
+              <!-- REDES DO CORO -->
+              <div>
+                <h3 class="text-sm font-bold mb-3" style="color:var(--azul-petroleo)">Redes sociais do Coro</h3>
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="label-field text-xs">Instagram</label>
+                    <input type="url" name="coroInstagram" class="input-field" placeholder="https://instagram.com/...">
+                  </div>
+                  <div>
+                    <label class="label-field text-xs">Facebook</label>
+                    <input type="url" name="coroFacebook" class="input-field" placeholder="https://facebook.com/...">
+                  </div>
+                  <div>
+                    <label class="label-field text-xs">YouTube</label>
+                    <input type="url" name="coroYoutube" class="input-field" placeholder="https://youtube.com/...">
+                  </div>
+                  <div>
+                    <label class="label-field text-xs">TikTok</label>
+                    <input type="url" name="coroTiktok" class="input-field" placeholder="https://tiktok.com/...">
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="label-field text-xs">Outra rede / site</label>
+                    <input type="url" name="coroOutraRede" class="input-field" placeholder="https://...">
+                  </div>
+                </div>
+                <p id="redesCoroFeedback" class="text-xs mt-2 text-gray-500"></p>
+              </div>
+
+              <!-- REDES DO REGENTE -->
+              <div class="pt-6 border-t border-gray-100">
+                <h3 class="text-sm font-bold mb-3" style="color:var(--azul-petroleo)">Redes sociais do Regente</h3>
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="label-field text-xs">Instagram</label>
+                    <input type="url" name="regenteInstagram" class="input-field" placeholder="https://instagram.com/...">
+                  </div>
+                  <div>
+                    <label class="label-field text-xs">Facebook</label>
+                    <input type="url" name="regenteFacebook" class="input-field" placeholder="https://facebook.com/...">
+                  </div>
+                  <div>
+                    <label class="label-field text-xs">YouTube</label>
+                    <input type="url" name="regenteYoutube" class="input-field" placeholder="https://youtube.com/...">
+                  </div>
+                  <div>
+                    <label class="label-field text-xs">TikTok</label>
+                    <input type="url" name="regenteTiktok" class="input-field" placeholder="https://tiktok.com/...">
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="label-field text-xs">Outra rede / site</label>
+                    <input type="url" name="regenteOutraRede" class="input-field" placeholder="https://...">
+                  </div>
+                </div>
+                <p id="redesRegenteFeedback" class="text-xs mt-2 text-gray-500"></p>
+              </div>
+
+              <!-- VÍDEO (OPCIONAL) -->
+              <div class="pt-6 border-t border-gray-100">
+                <label class="label-field">Link de Vídeo Recente (opcional)</label>
+                <input type="url" name="linkVideo" class="input-field" placeholder="https://...">
+                <p class="text-xs text-gray-500 mt-1">Se tiver um vídeo recente do coro à parte das redes sociais, pode incluir aqui — não é obrigatório.</p>
+              </div>
+            </div>
           </div>
 
           <!-- 4. TRAVA JURÍDICA -->
@@ -800,17 +874,6 @@
           </div>
 
           <form id="formConfirmacao" class="space-y-12" novalidate>
-
-            <!-- DIA DE APRESENTAÇÃO (apenas fluxo Novo + Presencial) -->
-            <div class="card-soft p-6 sm:p-8 hidden" id="wrapperDiaApresentacaoConfirmacao">
-              <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Dia de Apresentação</h2>
-              <p class="text-sm text-gray-500 mb-5">Escolha o dia conforme a disponibilidade de vagas.</p>
-              <label class="label-field">Dia de Apresentação *</label>
-              <select name="diaApresentacao" id="selectDiaApresentacaoConfirmacao" class="input-field bg-white">
-                <option value="" disabled selected>Selecione o dia</option>
-              </select>
-              <p id="vagasFeedbackConfirmacao" class="text-xs mt-1.5"></p>
-            </div>
 
             <!-- REPERTÓRIO TÉCNICO (ECAD) -->
             <div class="card-soft p-6 sm:p-8">
@@ -1956,6 +2019,9 @@
   const formMsg = document.getElementById('formMsg');
   const selectModalidade = document.getElementById('selectModalidade');
   const wrapperModalidade = document.getElementById('wrapperModalidade');
+  const wrapperDiaApresentacao = document.getElementById('wrapperDiaApresentacao');
+  const selectDiaApresentacao = document.getElementById('selectDiaApresentacao');
+  const vagasFeedback = document.getElementById('vagasFeedback');
   const wrapperDiaConvidado = document.getElementById('wrapperDiaConvidado');
   const selectDiaConvidado = document.getElementById('selectDiaConvidado');
   const fluxoInscricaoInput = document.getElementById('fluxoInscricaoInput');
@@ -1998,6 +2064,40 @@
   // para o Firestore via window.firebaseDataLayer (addInscricao,
   // updateInscricao, setInscricaoComId), documento por documento.
 
+  // ---------- SELEÇÃO DE DIA E VAGAS — Etapa 1 (fluxo Novo + Presencial) ----------
+  // A escolha do dia de apresentação acontece já na inscrição preliminar,
+  // e a vaga é contada imediatamente (mesmo com status "Pendente", antes
+  // da aprovação) — ver contarVagasOcupadas, que não filtra por status.
+  function popularDiasDisponiveis(){
+    const diasComVagas = PROGRAMACAO_DATA.filter(d => d.vagasInscricao);
+
+    selectDiaApresentacao.innerHTML = '<option value="" disabled selected>Selecione o dia</option>' +
+      diasComVagas.map(dia=>{
+        const restantes = vagasRestantes(dia);
+        const esgotado = restantes === 0;
+        return `<option value="${dia.id}" ${esgotado ? 'disabled' : ''}>${dia.diaSemana} (${dia.data}) — ${dia.horario}${esgotado ? ' — Esgotado' : ' — ' + restantes + ' vaga(s)'}</option>`;
+      }).join('');
+  }
+
+  function atualizarFeedbackVagas(){
+    const diaId = selectDiaApresentacao.value;
+    if(!diaId){
+      vagasFeedback.textContent = '';
+      return;
+    }
+    const dia = PROGRAMACAO_DATA.find(d => d.id === diaId);
+    const restantes = vagasRestantes(dia);
+    if(restantes === 0){
+      vagasFeedback.textContent = dia.diaSemana + ' — vagas esgotadas para coros amadores.';
+      vagasFeedback.className = 'text-xs mt-1.5 text-red-600 font-medium';
+    } else {
+      vagasFeedback.textContent = dia.diaSemana + ' — ' + restantes + ' vaga(s) disponível(eis).';
+      vagasFeedback.className = 'text-xs mt-1.5 text-green-700 font-medium';
+    }
+  }
+
+  selectDiaApresentacao.addEventListener('change', atualizarFeedbackVagas);
+
   // ---------- FLUXO A x FLUXO B (Novo x Convidado/Fixo) — Etapa 1 ----------
   function setFluxo(fluxo){
     fluxoInscricaoInput.value = fluxo;
@@ -2010,6 +2110,11 @@
       wrapperModalidade.classList.add('hidden');
       selectModalidade.removeAttribute('required');
       selectModalidade.value = '';
+
+      wrapperDiaApresentacao.classList.add('hidden');
+      selectDiaApresentacao.removeAttribute('required');
+      selectDiaApresentacao.value = '';
+      vagasFeedback.textContent = '';
 
       wrapperDiaConvidado.classList.remove('hidden');
       popularDiaConvidado();
@@ -2026,11 +2131,32 @@
       selectDiaConvidado.value = '';
 
       fluxoConvidadoAviso.classList.add('hidden');
+
+      // Restaura a lógica condicional de dia conforme a modalidade já escolhida
+      if(selectModalidade.value === 'Presencial'){
+        wrapperDiaApresentacao.classList.remove('hidden');
+        selectDiaApresentacao.setAttribute('required', 'required');
+        popularDiasDisponiveis();
+      }
     }
   }
 
   btnFluxoNovo.addEventListener('click', () => setFluxo('novo'));
   btnFluxoConvidado.addEventListener('click', () => setFluxo('convidado'));
+
+  // Modalidade Presencial revela o campo de Dia; Virtual esconde
+  selectModalidade.addEventListener('change', function(){
+    if(this.value === 'Presencial'){
+      wrapperDiaApresentacao.classList.remove('hidden');
+      selectDiaApresentacao.setAttribute('required', 'required');
+      popularDiasDisponiveis();
+    } else {
+      wrapperDiaApresentacao.classList.add('hidden');
+      selectDiaApresentacao.removeAttribute('required');
+      selectDiaApresentacao.value = '';
+      vagasFeedback.textContent = '';
+    }
+  });
 
   function popularDiaConvidado(){
     // Mostra apenas dias com apresentações presenciais de coros (Sexta, Sábado, Domingo).
@@ -2058,17 +2184,61 @@
     const fd = new FormData(formPreliminar);
 
     let modalidade = '';
-    let diaApresentacaoConvidado = '';
+    let diaApresentacao = '';
 
     if(fluxo === 'convidado'){
       modalidade = 'Presencial';
-      diaApresentacaoConvidado = fd.get('diaConvidado') || '';
-      if(!diaApresentacaoConvidado){
+      diaApresentacao = fd.get('diaConvidado') || '';
+      if(!diaApresentacao){
         mostrarMensagem(formMsg, 'Selecione o dia/horário combinado com a organização.', 'erro');
         return;
       }
     } else {
       modalidade = fd.get('modalidade');
+      diaApresentacao = fd.get('diaApresentacao') || '';
+
+      // Revalida a vaga no momento exato do envio, para evitar que duas
+      // pessoas preenchendo o formulário ao mesmo tempo peguem a mesma
+      // última vaga (condição de corrida).
+      if(modalidade === 'Presencial'){
+        const diaEscolhido = PROGRAMACAO_DATA.find(d => d.id === diaApresentacao);
+        if(!diaEscolhido){
+          mostrarMensagem(formMsg, 'Selecione um dia de apresentação válido.', 'erro');
+          return;
+        }
+        if(vagasRestantes(diaEscolhido) === 0){
+          mostrarMensagem(formMsg, 'As vagas para ' + diaEscolhido.diaSemana + ' acabaram de se esgotar. Por favor, escolha outro dia.', 'erro');
+          popularDiasDisponiveis();
+          return;
+        }
+      }
+    }
+
+    // Validação: pelo menos uma rede social do coro e uma do regente
+    const redesCoro = {
+      instagram: fd.get('coroInstagram')?.trim(),
+      facebook: fd.get('coroFacebook')?.trim(),
+      youtube: fd.get('coroYoutube')?.trim(),
+      tiktok: fd.get('coroTiktok')?.trim(),
+      outra: fd.get('coroOutraRede')?.trim()
+    };
+    const redesRegente = {
+      instagram: fd.get('regenteInstagram')?.trim(),
+      facebook: fd.get('regenteFacebook')?.trim(),
+      youtube: fd.get('regenteYoutube')?.trim(),
+      tiktok: fd.get('regenteTiktok')?.trim(),
+      outra: fd.get('regenteOutraRede')?.trim()
+    };
+    const temRedeCoro = Object.values(redesCoro).some(v => v);
+    const temRedeRegente = Object.values(redesRegente).some(v => v);
+
+    if(!temRedeCoro){
+      mostrarMensagem(formMsg, 'Informe ao menos uma rede social do coro (Instagram, Facebook, YouTube, TikTok ou outra).', 'erro');
+      return;
+    }
+    if(!temRedeRegente){
+      mostrarMensagem(formMsg, 'Informe ao menos uma rede social do regente (Instagram, Facebook, YouTube, TikTok ou outra).', 'erro');
+      return;
     }
 
     const inscricao = {
@@ -2082,9 +2252,11 @@
       nomeCoro: fd.get('nomeCoro')?.trim(),
       cidadeEstado: fd.get('cidadeEstado')?.trim(),
       modalidade: modalidade,
-      diaApresentacao: diaApresentacaoConvidado, // só preenchido se Convidado; fluxo Novo define isso na Etapa 2
+      diaApresentacao: diaApresentacao, // já escolhido na Etapa 1 (a vaga conta a partir daqui, mesmo Pendente)
       historicoCoro: fd.get('historicoCoro')?.trim(),
-      linkVideo: fd.get('linkVideo')?.trim(),
+      linkVideo: fd.get('linkVideo')?.trim() || '',
+      redesSociaisCoro: redesCoro,
+      redesSociaisRegente: redesRegente,
       // campos completados só na Etapa 2:
       obrasRepertorio: [],
       duracaoTotalRepertorio: null,
@@ -2123,9 +2295,6 @@
   const confirmacaoNomeCoro = document.getElementById('confirmacaoNomeCoro');
   const formConfirmacao = document.getElementById('formConfirmacao');
   const confirmacaoMsg = document.getElementById('confirmacaoMsg');
-  const wrapperDiaApresentacaoConfirmacao = document.getElementById('wrapperDiaApresentacaoConfirmacao');
-  const selectDiaApresentacaoConfirmacao = document.getElementById('selectDiaApresentacaoConfirmacao');
-  const vagasFeedbackConfirmacao = document.getElementById('vagasFeedbackConfirmacao');
   const repertorioLista = document.getElementById('repertorioLista');
   const btnAddObra = document.getElementById('btnAddObra');
   const duracaoTotalRepertorioEl = document.getElementById('duracaoTotalRepertorio');
@@ -2163,14 +2332,6 @@
     confirmacaoConteudo.classList.remove('hidden');
     confirmacaoNomeCoro.textContent = inscricao.nomeCoro + ' · ' + inscricao.nomeRegente;
 
-    // Mostra o seletor de dia apenas se for fluxo Novo + Presencial (Convidado já tem dia fixo)
-    if(inscricao.fluxoInscricao === 'novo' && inscricao.modalidade === 'Presencial'){
-      wrapperDiaApresentacaoConfirmacao.classList.remove('hidden');
-      popularDiasDisponiveisConfirmacao();
-    } else {
-      wrapperDiaApresentacaoConfirmacao.classList.add('hidden');
-    }
-
     // Pré-popula repertório com 1 linha vazia (ou as obras já salvas, se o coro voltar para editar)
     repertorioLista.innerHTML = '';
     if(inscricao.obrasRepertorio && inscricao.obrasRepertorio.length > 0){
@@ -2181,32 +2342,6 @@
     atualizarDuracaoTotalRepertorio();
 
     return true;
-  }
-
-  function popularDiasDisponiveisConfirmacao(){
-    const diasComVagas = PROGRAMACAO_DATA.filter(d => d.vagasInscricao);
-    selectDiaApresentacaoConfirmacao.innerHTML = '<option value="" disabled selected>Selecione o dia</option>' +
-      diasComVagas.map(dia=>{
-        const restantes = vagasRestantes(dia);
-        const esgotado = restantes === 0;
-        return `<option value="${dia.id}" ${esgotado ? 'disabled' : ''}>${dia.diaSemana} (${dia.data}) — ${dia.horario}${esgotado ? ' — Esgotado' : ' — ' + restantes + ' vaga(s)'}</option>`;
-      }).join('');
-  }
-
-  if(selectDiaApresentacaoConfirmacao){
-    selectDiaApresentacaoConfirmacao.addEventListener('change', function(){
-      const diaId = this.value;
-      if(!diaId){ vagasFeedbackConfirmacao.textContent = ''; return; }
-      const dia = PROGRAMACAO_DATA.find(d => d.id === diaId);
-      const restantes = vagasRestantes(dia);
-      if(restantes === 0){
-        vagasFeedbackConfirmacao.textContent = dia.diaSemana + ' — vagas esgotadas para coros amadores.';
-        vagasFeedbackConfirmacao.className = 'text-xs mt-1.5 text-red-600 font-medium';
-      } else {
-        vagasFeedbackConfirmacao.textContent = dia.diaSemana + ' — ' + restantes + ' vaga(s) disponível(eis).';
-        vagasFeedbackConfirmacao.className = 'text-xs mt-1.5 text-green-700 font-medium';
-      }
-    });
   }
 
   // ---------- REPERTÓRIO TÉCNICO (CAMPOS ECAD) — usado na Etapa 2 ----------
@@ -2336,21 +2471,6 @@
         linkDrive: fd.get('linkDrive')?.trim(),
         etapa: 'completo'
       };
-
-      // Dia de apresentação: só revalida vaga se for fluxo Novo + Presencial
-      if(inscricao.fluxoInscricao === 'novo' && inscricao.modalidade === 'Presencial'){
-        const diaEscolhido = PROGRAMACAO_DATA.find(d => d.id === fd.get('diaApresentacao'));
-        if(!diaEscolhido){
-          mostrarMensagem(confirmacaoMsg, 'Selecione um dia de apresentação válido.', 'erro');
-          return;
-        }
-        if(vagasRestantes(diaEscolhido) === 0){
-          mostrarMensagem(confirmacaoMsg, 'As vagas para ' + diaEscolhido.diaSemana + ' acabaram de se esgotar. Escolha outro dia.', 'erro');
-          popularDiasDisponiveisConfirmacao();
-          return;
-        }
-        camposAtualizados.diaApresentacao = diaEscolhido.id;
-      }
 
       const btnSubmit = formConfirmacao.querySelector('button[type="submit"]');
       btnSubmit.disabled = true;
@@ -2541,6 +2661,14 @@
       const materiaisLinks = [];
       if(item.linkVideo) materiaisLinks.push(`<a href="${escapeHtml(item.linkVideo)}" target="_blank" rel="noopener" class="text-gold underline">Vídeo</a>`);
       if(item.linkDrive) materiaisLinks.push(`<a href="${escapeHtml(item.linkDrive)}" target="_blank" rel="noopener" class="text-gold underline">Fotos</a>`);
+
+      // Conta quantas redes sociais foram informadas pelo coro e pelo regente
+      const qtdRedesCoro = item.redesSociaisCoro ? Object.values(item.redesSociaisCoro).filter(v => v).length : 0;
+      const qtdRedesRegente = item.redesSociaisRegente ? Object.values(item.redesSociaisRegente).filter(v => v).length : 0;
+      if(qtdRedesCoro > 0 || qtdRedesRegente > 0){
+        materiaisLinks.push(`<span class="text-gray-500">Redes: ${qtdRedesCoro} coro / ${qtdRedesRegente} regente</span>`);
+      }
+
       const materiaisHtml = materiaisLinks.length > 0 ? materiaisLinks.join(' · ') : '<span class="text-gray-400">—</span>';
       const repertorioInfo = item.duracaoTotalRepertorio
         ? `<span class="block text-gray-400 mt-0.5">${item.obrasRepertorio.length} obra(s) · ${item.duracaoTotalRepertorio} min</span>`
