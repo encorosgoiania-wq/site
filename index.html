@@ -1007,6 +1007,22 @@
             <div id="cronogramaCorosDisponiveis" class="space-y-2 max-h-[480px] overflow-y-auto pr-1">
               <!-- preenchido via JS -->
             </div>
+
+            <!-- ITEM LIVRE: para atividades que não vêm de uma inscrição
+                 (ex: Concerto de Abertura, Homenagem, Intervalo, etc.) -->
+            <div class="mt-6 pt-5 border-t border-gray-200">
+              <h4 class="text-xs font-semibold tracking-[0.12em] uppercase text-gray-500 mb-3">Adicionar item livre</h4>
+              <div class="space-y-2">
+                <input type="text" id="itemLivreNome" class="input-field text-sm" placeholder="Ex: Homenagem a Heloisa e Honorina Barra">
+                <div class="flex gap-2">
+                  <input type="number" id="itemLivreDuracao" min="1" max="120" step="1" class="input-field text-sm w-24" placeholder="Min" value="15">
+                  <button type="button" id="btnAddItemLivre" class="flex-1 text-sm font-semibold text-gold border border-gold/40 rounded-lg px-4 py-2 hover:bg-amber-50 transition">
+                    + Adicionar ao bloco
+                  </button>
+                </div>
+              </div>
+              <p class="text-[11px] text-gray-400 mt-2">Use para itens que não são uma inscrição de coro: concertos institucionais, homenagens, intervalos, etc. Duração livre, em minutos.</p>
+            </div>
           </div>
 
           <!-- COLUNA: BLOCO MONTADO (ORDEM DE APRESENTAÇÃO) -->
@@ -1100,7 +1116,11 @@
       corosFixos: [],
       maxAmadores: 0,
       vagasOcupadasPorFixos: 0,
-      vagasInscricao: false
+      vagasInscricao: false,
+      // Dias sem inscrição de coro (cronograma 100% livre, montado manualmente
+      // pelo admin com itens como "Concerto de Abertura", "Homenagem", etc.)
+      // usam este limite de tempo útil fixo, em vez do cálculo por vagas/coros.
+      tempoUtilLivre: 90 // 1h30
     },
     {
       id: 'sexta',
@@ -1333,6 +1353,11 @@
   // Tempo total disponível para coros (institucionais + amadores) em um dia,
   // calculado a partir dos dados oficiais definidos pelo Maestro Eliseu
   function calcularTempoUtilCoros(dia){
+    // Dias sem coros/vagas (cronograma 100% livre, montado manualmente)
+    // usam um limite de tempo fixo definido em tempoUtilLivre.
+    if(typeof dia.tempoUtilLivre === 'number'){
+      return dia.tempoUtilLivre;
+    }
     const tempoFixos = (dia.corosFixos || []).reduce((acc, c) => acc + c.duracaoMinutos, 0);
     // Desconta do total de vagas amadoras aquelas já ocupadas por corosFixos (ex: Onix),
     // para não contar o mesmo coro duas vezes (uma como fixo, outra como vaga amadora)
@@ -2545,7 +2570,54 @@
     });
   }
 
-  // Calcula o tempo total ocupado pelos coros (institucionais + amadores),
+  // ---------- ITEM LIVRE: atividade customizada (não vem de inscrição) ----------
+  // Usado para montar cronogramas de dias sem coros inscritos (ex: Quinta —
+  // Concerto de Abertura, Homenagem) ou para inserir qualquer item extra em
+  // outros dias (intervalo, premiação, etc.). Nome e duração são livres.
+  const itemLivreNomeInput = document.getElementById('itemLivreNome');
+  const itemLivreDuracaoInput = document.getElementById('itemLivreDuracao');
+  const btnAddItemLivre = document.getElementById('btnAddItemLivre');
+
+  if(btnAddItemLivre){
+    btnAddItemLivre.addEventListener('click', function(){
+      const nome = itemLivreNomeInput.value.trim();
+      const duracao = parseInt(itemLivreDuracaoInput.value, 10);
+
+      if(!nome){
+        itemLivreNomeInput.focus();
+        return;
+      }
+      if(!duracao || duracao <= 0){
+        itemLivreDuracaoInput.focus();
+        return;
+      }
+
+      cronogramaEdicaoAtual.coros.push({
+        inscricaoId: null,
+        nomeCoro: nome,
+        duracaoMinutos: duracao,
+        fixo: false,
+        livre: true // identifica item livre (editável e removível, mas sem vínculo a uma inscrição)
+      });
+
+      itemLivreNomeInput.value = '';
+      itemLivreDuracaoInput.value = '15';
+      itemLivreNomeInput.focus();
+
+      renderOrdemBloco();
+    });
+
+    // Enter no campo de nome também adiciona (mais rápido que clicar no botão)
+    itemLivreNomeInput.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        btnAddItemLivre.click();
+      }
+    });
+  }
+
+
+  // Calcula o tempo total ocupado pelos itens do bloco (coros + itens livres),
   // sem contar abertura/encerramento
   function calcularTempoCorosBloco(){
     return cronogramaEdicaoAtual.coros.reduce((acc, c) => acc + (c.duracaoMinutos || 0), 0);
@@ -2585,26 +2657,41 @@
     `);
     cursorMin += cronogramaEdicaoAtual.duracaoAbertura;
 
-    // COROS (arrastáveis — institucionais fixos e amadores)
+    // COROS E ITENS LIVRES (arrastáveis — institucionais fixos têm duração
+    // travada nas 3 opções padrão; coros amadores e itens livres têm duração
+    // 100% editável em minutos, para acomodar qualquer atividade customizada)
     cronogramaEdicaoAtual.coros.forEach((c, idx) => {
       const horaInicio = minutosParaHHMM(cursorMin, dia.horarioInicioMinutos);
       const badgeFixo = c.fixo
         ? '<span class="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 shrink-0">Fixo</span>'
-        : '';
+        : (c.livre
+            ? '<span class="text-[10px] font-bold uppercase tracking-wide text-purple-600 bg-purple-50 border border-purple-200 rounded-full px-2 py-0.5 shrink-0">Item livre</span>'
+            : '');
       const removerBtn = c.fixo
         ? ''
         : `<button type="button" data-idx="${idx}" class="btnRemoverDoBloco text-gray-400 hover:text-red-600 transition shrink-0" aria-label="Remover">
              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
            </button>`;
+
+      // Itens fixos (institucionais) mantêm o select com opções padrão (15/20/30),
+      // já que essas durações são definidas oficialmente. Coros amadores e itens
+      // livres usam um campo numérico livre, sem travar em valores pré-definidos.
+      const duracaoControl = c.fixo
+        ? `<select data-idx="${idx}" class="cronograma-duracao-select text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 cursor-pointer">
+             ${CRONOGRAMA_DURACOES_VALIDAS.map(d => `<option value="${d}" ${d === c.duracaoMinutos ? 'selected' : ''}>${d} min</option>`).join('')}
+           </select>`
+        : `<div class="flex items-center gap-1 shrink-0">
+             <input type="number" data-idx="${idx}" min="1" max="180" step="1" value="${c.duracaoMinutos}" class="cronograma-duracao-input w-16 text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 text-center">
+             <span class="text-xs text-gray-500">min</span>
+           </div>`;
+
       itensHtml.push(`
         <div class="cronograma-coro-item flex items-center gap-3 bg-white border-2 rounded-lg p-3 cursor-grab active:cursor-grabbing" style="border-color:#E5E7EB" draggable="true" data-idx="${idx}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-gray-300 shrink-0"><circle cx="8" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
           <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${horaInicio}</span>
           <span class="text-sm font-semibold flex-1 truncate" style="color:var(--azul-petroleo)">${escapeHtml(c.nomeCoro)}</span>
           ${badgeFixo}
-          <select data-idx="${idx}" class="cronograma-duracao-select text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 cursor-pointer">
-            ${CRONOGRAMA_DURACOES_VALIDAS.map(d => `<option value="${d}" ${d === c.duracaoMinutos ? 'selected' : ''}>${d} min</option>`).join('')}
-          </select>
+          ${duracaoControl}
           ${removerBtn}
         </div>
       `);
@@ -2647,11 +2734,21 @@
       });
     }
 
-    // listeners: alterar duração de um coro
+    // listeners: alterar duração de um coro (institucionais usam select)
     cronogramaOrdemLista.querySelectorAll('.cronograma-duracao-select').forEach(sel=>{
       sel.addEventListener('change', function(){
         const idx = Number(this.dataset.idx);
         cronogramaEdicaoAtual.coros[idx].duracaoMinutos = Number(this.value);
+        renderOrdemBloco();
+      });
+    });
+
+    // listeners: alterar duração de um coro amador ou item livre (input numérico)
+    cronogramaOrdemLista.querySelectorAll('.cronograma-duracao-input').forEach(inp=>{
+      inp.addEventListener('change', function(){
+        const idx = Number(this.dataset.idx);
+        const valor = Math.max(parseInt(this.value, 10) || 1, 1);
+        cronogramaEdicaoAtual.coros[idx].duracaoMinutos = valor;
         renderOrdemBloco();
       });
     });
