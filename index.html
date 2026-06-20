@@ -906,6 +906,12 @@
       </div>
     </div>
 
+    <div class="max-w-7xl mx-auto px-6 pt-6">
+      <div class="bg-amber-50 border-2 border-amber-300 rounded-xl px-5 py-4 text-sm text-amber-900 leading-relaxed">
+        <strong>⚠ Importante — onde os dados ficam salvos:</strong> as inscrições só aparecem aqui se foram enviadas <strong>neste mesmo navegador e neste mesmo dispositivo</strong>. Se alguém preencheu o formulário no celular, em outro computador, numa aba anônima, ou se o navegador foi trocado, essa inscrição <strong>não vai aparecer</strong> automaticamente aqui — ela fica salva apenas no aparelho de quem preencheu. Para um cadastro real com inscrições de qualquer coro, em qualquer lugar, será necessário um banco de dados central (posso te ajudar a planejar isso quando for a hora).
+      </div>
+    </div>
+
     <div class="max-w-7xl mx-auto px-6 py-10">
 
       <!-- SUB-NAVEGAÇÃO DO PAINEL ADMIN -->
@@ -1189,8 +1195,35 @@
   function garantirSeedInstitucionais(){
     try{
       const raw = localStorage.getItem(STORAGE_KEY_INSCRICOES);
-      const lista = raw ? JSON.parse(raw) : [];
+      let lista = raw ? JSON.parse(raw) : [];
       let alterou = false;
+
+      // Remove o registro legado do Onix de uma versão anterior do sistema
+      // (ID antigo 999000001), que pode ter ficado salvo no navegador de
+      // quem testou o site antes desta correção — evita duplicação visual
+      // na tabela do admin.
+      const ID_LEGADO_ONIX = 999000001;
+      if(lista.some(i => i.id === ID_LEGADO_ONIX)){
+        lista = lista.filter(i => i.id !== ID_LEGADO_ONIX);
+        alterou = true;
+      }
+
+      // Deduplicação de segurança: se por qualquer motivo dois registros
+      // institucionais com o mesmo nome existirem, mantém apenas o mais
+      // recente (dataEnvio maior) e remove os demais.
+      const nomesVistos = new Map();
+      lista.forEach(i => {
+        if(!i.isInstitucional) return;
+        const atual = nomesVistos.get(i.nomeCoro);
+        if(!atual || new Date(i.dataEnvio) > new Date(atual.dataEnvio)){
+          nomesVistos.set(i.nomeCoro, i);
+        }
+      });
+      const idsParaManter = new Set(lista.filter(i => !i.isInstitucional).map(i => i.id));
+      nomesVistos.forEach(i => idsParaManter.add(i.id));
+      const tamanhoAntes = lista.length;
+      lista = lista.filter(i => idsParaManter.has(i.id));
+      if(lista.length !== tamanhoAntes) alterou = true;
 
       COROS_INSTITUCIONAIS_SEED.forEach(seed => {
         const jaExiste = lista.some(i => i.id === seed.id);
@@ -1348,10 +1381,34 @@
 
     PROGRAMACAO_DATA.forEach(dia => {
       if((dia.corosFixos || []).length === 0) return; // só dias com institucionais
-      if(todosCronogramas[dia.id]) return; // já existe cronograma salvo, não sobrescreve
 
-      todosCronogramas[dia.id] = gerarCronogramaSeed(dia.id);
-      alterou = true;
+      if(!todosCronogramas[dia.id]){
+        // Nenhum cronograma salvo ainda para este dia: cria do zero
+        todosCronogramas[dia.id] = gerarCronogramaSeed(dia.id);
+        alterou = true;
+        return;
+      }
+
+      // Já existe cronograma salvo (possivelmente customizado pelo admin com
+      // coros amadores adicionados manualmente). Não mexemos na ordem nem nos
+      // coros amadores — só sincronizamos os campos dos itens FIXOS (duração e
+      // a flag "anfitriao") com o que está definido em PROGRAMACAO_DATA.corosFixos,
+      // para que ajustes feitos aqui no código (como marcar um coro como
+      // anfitrião) sempre se reflitam, mesmo em cronogramas já salvos antes.
+      const cronoExistente = todosCronogramas[dia.id];
+      cronoExistente.coros.forEach(item => {
+        if(!item.fixo) return; // não mexe em coros amadores
+        const definicaoAtual = dia.corosFixos.find(c => c.nomeCoro === item.nomeCoro);
+        if(!definicaoAtual) return;
+        if(item.anfitriao !== !!definicaoAtual.anfitriao){
+          item.anfitriao = !!definicaoAtual.anfitriao;
+          alterou = true;
+        }
+        if(item.duracaoMinutos !== definicaoAtual.duracaoMinutos){
+          item.duracaoMinutos = definicaoAtual.duracaoMinutos;
+          alterou = true;
+        }
+      });
     });
 
     if(alterou){
@@ -2235,10 +2292,19 @@
     }
     emptyState.classList.add('hidden');
 
+    // Verifica se um nome de coro está marcado como "anfitrião" em algum dia
+    // da programação (PROGRAMACAO_DATA.corosFixos), para refletir o mesmo
+    // critério usado na Programação pública.
+    function isCoroAnfitriao(nomeCoro){
+      return PROGRAMACAO_DATA.some(dia =>
+        (dia.corosFixos || []).some(c => c.nomeCoro === nomeCoro && c.anfitriao)
+      );
+    }
+
     adminTableBody.innerHTML = lista.map(item=>{
-      const fluxoBadge = item.isInstitucional
-        ? '<span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 inline-block mt-1">⭐ Corpo Estável</span>'
-        : (item.fluxoInscricao === 'convidado'
+      const fluxoBadge = (item.isInstitucional && isCoroAnfitriao(item.nomeCoro))
+        ? '<span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 inline-block mt-1">⭐ Anfitrião</span>'
+        : (!item.isInstitucional && item.fluxoInscricao === 'convidado'
             ? '<span class="text-[10px] font-semibold text-blue-600 block mt-0.5">Convidado/Fixo</span>'
             : '');
 
