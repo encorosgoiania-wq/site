@@ -130,6 +130,17 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
+<!-- TELA DE CARREGAMENTO INICIAL: visível até a conexão com o banco de
+     dados (Firebase) ser estabelecida e os dados carregarem pela primeira
+     vez. Evita mostrar a página com dados desatualizados/vazios por um
+     instante. -->
+<div id="loadingInicial" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-petroleo gap-4">
+  <svg width="40" height="40" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-spin">
+    <circle cx="19" cy="19" r="16" stroke="#D4AF37" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="70 30" opacity="0.9"/>
+  </svg>
+  <p class="text-gray-300 text-sm">Carregando ENCoros…</p>
+</div>
+
 <!-- ===================== HEADER / NAV ===================== -->
 <header class="bg-petroleo sticky top-0 z-50 shadow-lg shadow-black/20">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1093,6 +1104,127 @@
   </div>
 </footer>
 
+<!-- ======================================================================
+     FIREBASE — Camada de persistência em nuvem (Firestore)
+     Substitui o localStorage para que as inscrições sejam compartilhadas
+     entre QUALQUER dispositivo/navegador, e não fiquem presas ao aparelho
+     de quem preencheu o formulário.
+
+     Coleções usadas neste projeto Firebase compartilhado (prefixo "encoros2026_"
+     para nunca colidir com dados de outros projetos, como a Rifa Onix):
+       - encoros2026_inscricoes  (1 documento por inscrição de coro)
+       - encoros2026_cronograma  (1 documento por dia, ID = id do dia: sexta, sabado...)
+====================================================================== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getFirestore, collection, doc, getDocs, getDoc, setDoc, addDoc,
+    updateDoc, deleteDoc, query, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDgLIpoGCO4Lb5oeiXNwArAQtGmquRSMhA",
+    authDomain: "rifa-onix-barail---abril-26.firebaseapp.com",
+    databaseURL: "https://rifa-onix-barail---abril-26-default-rtdb.firebaseio.com",
+    projectId: "rifa-onix-barail---abril-26",
+    storageBucket: "rifa-onix-barail---abril-26.firebasestorage.app",
+    messagingSenderId: "462942707997",
+    appId: "1:462942707997:web:66fe13bb669444769fc1f4",
+    measurementId: "G-3YSP1TM22P"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const db = getFirestore(fbApp);
+
+  const COL_INSCRICOES = 'encoros2026_inscricoes';
+  const COL_CRONOGRAMA = 'encoros2026_cronograma';
+
+  // ---------- INSCRIÇÕES ----------
+
+  // Busca todas as inscrições da nuvem. Retorna um array de objetos,
+  // cada um com a propriedade "id" (string do documento Firestore).
+  async function fsGetInscricoes(){
+    const snap = await getDocs(collection(db, COL_INSCRICOES));
+    return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+  }
+
+  // Cria uma nova inscrição na nuvem. Retorna o ID gerado pelo Firestore.
+  async function fsAddInscricao(dados){
+    const ref = await addDoc(collection(db, COL_INSCRICOES), dados);
+    return ref.id;
+  }
+
+  // Atualiza campos específicos de uma inscrição existente (merge parcial).
+  async function fsUpdateInscricao(id, dadosParciais){
+    await updateDoc(doc(db, COL_INSCRICOES, String(id)), dadosParciais);
+  }
+
+  // Cria ou sobrescreve uma inscrição com um ID específico (usado para os
+  // coros institucionais fixos, que precisam de um ID previsível para não
+  // duplicar entre carregamentos de página).
+  async function fsSetInscricaoComId(id, dados){
+    await setDoc(doc(db, COL_INSCRICOES, String(id)), dados, { merge: true });
+  }
+
+  async function fsDeleteInscricao(id){
+    await deleteDoc(doc(db, COL_INSCRICOES, String(id)));
+  }
+
+  async function fsDeleteTodasInscricoes(){
+    const snap = await getDocs(collection(db, COL_INSCRICOES));
+    await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+  }
+
+  // ---------- CRONOGRAMA ----------
+
+  // Busca o cronograma de TODOS os dias, retornando um objeto { diaId: dados }
+  // (mesmo formato que o sistema antigo usava no localStorage).
+  async function fsGetCronogramaData(){
+    const snap = await getDocs(collection(db, COL_CRONOGRAMA));
+    const resultado = {};
+    snap.docs.forEach(d => { resultado[d.id] = d.data(); });
+    return resultado;
+  }
+
+  // Salva o cronograma de um dia específico (sobrescreve o documento inteiro).
+  async function fsSalvarCronogramaDoDia(diaId, dados){
+    await setDoc(doc(db, COL_CRONOGRAMA, diaId), dados);
+  }
+
+  // Escuta mudanças em tempo real na coleção de inscrições, chamando o
+  // callback sempre que algo mudar na nuvem (ex: outra pessoa se inscreveu
+  // enquanto o admin está com a página aberta). Retorna a função de
+  // "unsubscribe" caso seja necessário parar de escutar.
+  function fsEscutarInscricoes(callback){
+    return onSnapshot(collection(db, COL_INSCRICOES), (snap) => {
+      const lista = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      callback(lista);
+    }, (erro) => {
+      console.error('Erro ao escutar inscrições em tempo real:', erro);
+    });
+  }
+
+  // Expõe as funções no escopo global (window), para que o script principal
+  // (não-módulo, mais abaixo) consiga chamá-las normalmente.
+  window.firebaseDataLayer = {
+    getInscricoes: fsGetInscricoes,
+    addInscricao: fsAddInscricao,
+    updateInscricao: fsUpdateInscricao,
+    setInscricaoComId: fsSetInscricaoComId,
+    deleteInscricao: fsDeleteInscricao,
+    deleteTodasInscricoes: fsDeleteTodasInscricoes,
+    getCronogramaData: fsGetCronogramaData,
+    salvarCronogramaDoDia: fsSalvarCronogramaDoDia,
+    escutarInscricoes: fsEscutarInscricoes,
+    pronto: true
+  };
+
+  // Dispara um evento customizado avisando que o Firebase está pronto,
+  // para o script principal (que pode carregar antes deste módulo) saber
+  // que já pode inicializar os dados.
+  window.dispatchEvent(new CustomEvent('firebaseReady'));
+</script>
+
 <script>
 (function(){
   "use strict";
@@ -1190,7 +1322,56 @@
     }
   ];
 
-  const STORAGE_KEY_INSCRICOES = 'encoros2026_inscricoes';
+  // ======================================================================
+  // CAMADA DE DADOS — Firestore (com cache local em memória)
+  // ----------------------------------------------------------------------
+  // Por que um cache em memória em vez de chamar o Firestore direto em
+  // cada função? Quase toda a lógica deste site (cálculo de vagas, render
+  // do cronograma, validações de formulário) foi escrita de forma SÍNCRONA,
+  // assumindo que os dados já estão disponíveis na hora. Reescrever tudo
+  // isso para async/await seria um retrabalho enorme e arriscado.
+  //
+  // Em vez disso: mantemos um array `cacheInscricoes` e um objeto
+  // `cacheCronograma` em memória, sempre atualizados em tempo real via
+  // onSnapshot (o Firestore avisa automaticamente quando algo muda — seja
+  // por uma ação nesta aba, ou por qualquer outra pessoa, em qualquer
+  // outro dispositivo). Toda leitura do site usa esse cache (rápido,
+  // síncrono). Toda escrita vai direto para o Firestore, e o cache se
+  // atualiza sozinho pouco depois, via onSnapshot — disparando um
+  // re-render automático da tela ativa.
+  // ======================================================================
+  let cacheInscricoes = [];
+  let cacheCronograma = {};
+  let firebasePronto = false;
+  let onCacheAtualizadoCallback = null; // setado depois, pela UI (re-renderiza a tela atual)
+
+  function aoFirebaseEstarPronto(){
+    return new Promise(resolve=>{
+      if(window.firebaseDataLayer && window.firebaseDataLayer.pronto){
+        resolve();
+      } else {
+        window.addEventListener('firebaseReady', () => resolve(), { once: true });
+      }
+    });
+  }
+
+  // Inicializa a sincronização em tempo real: escuta inscrições continuamente,
+  // e carrega o cronograma uma vez (atualizado depois a cada escrita).
+  async function inicializarSincronizacaoFirebase(){
+    await aoFirebaseEstarPronto();
+    const fdl = window.firebaseDataLayer;
+
+    fdl.escutarInscricoes((lista) => {
+      cacheInscricoes = lista;
+      if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
+    });
+
+    cacheCronograma = await fdl.getCronogramaData();
+    firebasePronto = true;
+    if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
+  }
+
+  const STORAGE_KEY_INSCRICOES = 'encoros2026_inscricoes'; // mantido apenas como identificador textual em comentários/legado
 
   // ======================================================================
   // COROS INSTITUCIONAIS FIXOS — seed automático de inscrições
@@ -1198,100 +1379,56 @@
   // são o corpo estável do evento: já têm dia, horário e vaga garantidos,
   // sem precisar passar pelo processo normal de inscrição/aprovação.
   // Por isso, cada um recebe automaticamente um registro de inscrição com
-  // status "Aprovado" assim que a página carrega pela primeira vez — isso
-  // garante que: (1) apareçam sozinhos no Cronograma do dia certo, e
-  // (2) você tenha, desde já, um link de confirmação pronto para mandar a
-  // cada um preencher repertório, fotos e equipamento (Etapa 2 completa).
-  // IDs fixos e previsíveis evitam duplicação mesmo rodando o seed várias vezes.
+  // status "Aprovado" na nuvem, assim que o Firebase conecta pela primeira
+  // vez — isso garante que: (1) apareçam sozinhos no Cronograma do dia
+  // certo, e (2) você tenha, desde já, um link de confirmação pronto para
+  // mandar a cada um preencher repertório, fotos e equipamento (Etapa 2
+  // completa). IDs fixos e previsíveis evitam duplicação.
   // ======================================================================
   const COROS_INSTITUCIONAIS_SEED = [
-    { id: 900000001, nomeCoro: 'CSUFG', diaApresentacao: 'sexta', duracaoMinutos: 20 },
-    { id: 900000002, nomeCoro: 'CSJGOIÁS', diaApresentacao: 'sabado', duracaoMinutos: 20 },
-    { id: 900000003, nomeCoro: 'CJGOIÂNIA', diaApresentacao: 'sabado', duracaoMinutos: 20 },
-    { id: 900000004, nomeCoro: 'Onix Brasil Vocal Internacional', diaApresentacao: 'sabado', duracaoMinutos: 15 },
-    { id: 900000005, nomeCoro: 'CSGOIÂNIA', diaApresentacao: 'domingo', duracaoMinutos: 30 }
+    { id: '900000001', nomeCoro: 'CSUFG', diaApresentacao: 'sexta', duracaoMinutos: 20 },
+    { id: '900000002', nomeCoro: 'CSJGOIÁS', diaApresentacao: 'sabado', duracaoMinutos: 20 },
+    { id: '900000003', nomeCoro: 'CJGOIÂNIA', diaApresentacao: 'sabado', duracaoMinutos: 20 },
+    { id: '900000004', nomeCoro: 'Onix Brasil Vocal Internacional', diaApresentacao: 'sabado', duracaoMinutos: 15 },
+    { id: '900000005', nomeCoro: 'CSGOIÂNIA', diaApresentacao: 'domingo', duracaoMinutos: 30 }
   ];
 
-  function garantirSeedInstitucionais(){
+  async function garantirSeedInstitucionais(){
+    const fdl = window.firebaseDataLayer;
     try{
-      const raw = localStorage.getItem(STORAGE_KEY_INSCRICOES);
-      let lista = raw ? JSON.parse(raw) : [];
-      let alterou = false;
-
-      // Remove o registro legado do Onix de uma versão anterior do sistema
-      // (ID antigo 999000001), que pode ter ficado salvo no navegador de
-      // quem testou o site antes desta correção — evita duplicação visual
-      // na tabela do admin.
-      const ID_LEGADO_ONIX = 999000001;
-      if(lista.some(i => i.id === ID_LEGADO_ONIX)){
-        lista = lista.filter(i => i.id !== ID_LEGADO_ONIX);
-        alterou = true;
-      }
-
-      // Deduplicação de segurança: se por qualquer motivo dois registros
-      // institucionais com o mesmo nome existirem, mantém apenas o mais
-      // recente (dataEnvio maior) e remove os demais.
-      const nomesVistos = new Map();
-      lista.forEach(i => {
-        if(!i.isInstitucional) return;
-        const atual = nomesVistos.get(i.nomeCoro);
-        if(!atual || new Date(i.dataEnvio) > new Date(atual.dataEnvio)){
-          nomesVistos.set(i.nomeCoro, i);
-        }
-      });
-      const idsParaManter = new Set(lista.filter(i => !i.isInstitucional).map(i => i.id));
-      nomesVistos.forEach(i => idsParaManter.add(i.id));
-      const tamanhoAntes = lista.length;
-      lista = lista.filter(i => idsParaManter.has(i.id));
-      if(lista.length !== tamanhoAntes) alterou = true;
-
-      COROS_INSTITUCIONAIS_SEED.forEach(seed => {
-        const jaExiste = lista.some(i => i.id === seed.id);
-        if(!jaExiste){
-          lista.push({
-            id: seed.id,
-            dataEnvio: new Date().toISOString(),
-            fluxoInscricao: 'convidado',
-            etapa: 'preliminar',
-            nomeRegente: 'Organização VII ENCoros',
-            emailRegente: '',
-            telefoneRegente: '',
-            curriculoRegente: '',
-            nomeCoro: seed.nomeCoro,
-            cidadeEstado: '',
-            modalidade: 'Presencial',
-            diaApresentacao: seed.diaApresentacao,
-            historicoCoro: '',
-            linkVideo: '',
-            obrasRepertorio: [],
-            duracaoTotalRepertorio: null,
-            levaEquipamento: false,
-            linkDrive: '',
-            status: 'Aprovado',
-            cronogramaDuracao: null,
-            isInstitucional: true
-          });
-          alterou = true;
-        }
-      });
-
-      if(alterou){
-        localStorage.setItem(STORAGE_KEY_INSCRICOES, JSON.stringify(lista));
+      for(const seed of COROS_INSTITUCIONAIS_SEED){
+        await fdl.setInscricaoComId(seed.id, {
+          dataEnvio: new Date().toISOString(),
+          fluxoInscricao: 'convidado',
+          etapa: 'preliminar',
+          nomeRegente: 'Organização VII ENCoros',
+          emailRegente: '',
+          telefoneRegente: '',
+          curriculoRegente: '',
+          nomeCoro: seed.nomeCoro,
+          cidadeEstado: '',
+          modalidade: 'Presencial',
+          diaApresentacao: seed.diaApresentacao,
+          historicoCoro: '',
+          linkVideo: '',
+          obrasRepertorio: [],
+          duracaoTotalRepertorio: null,
+          levaEquipamento: false,
+          linkDrive: '',
+          status: 'Aprovado',
+          cronogramaDuracao: null,
+          isInstitucional: true
+        });
       }
     }catch(e){
-      console.error('Erro ao garantir seed dos coros institucionais', e);
+      console.error('Erro ao garantir seed dos coros institucionais na nuvem', e);
     }
   }
-  garantirSeedInstitucionais();
 
+  // getInscricoesData() agora lê do CACHE local (síncrono, instantâneo),
+  // que é mantido sincronizado com o Firestore em tempo real.
   function getInscricoesData(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY_INSCRICOES);
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){
-      console.error('Erro ao ler localStorage', e);
-      return [];
-    }
+    return cacheInscricoes;
   }
 
   // Conta quantas inscrições Presenciais já ocupam vagas de coro amador em cada dia
@@ -1317,23 +1454,30 @@
   // O limite de tempo disponível para coros é calculado por dia, somando os
   // institucionais fixos definidos pelo Maestro + (maxAmadores × 15min).
   // ======================================================================
-  const STORAGE_KEY_CRONOGRAMA = 'encoros2026_cronograma';
+  const STORAGE_KEY_CRONOGRAMA = 'encoros2026_cronograma'; // identificador textual (comentários/legado)
   const CRONOGRAMA_DURACAO_PADRAO_ABERTURA = 10;
   const CRONOGRAMA_DURACAO_PADRAO_ENCERRAMENTO = 10;
   const CRONOGRAMA_DURACOES_VALIDAS = [15, 20, 30];
 
+  // getCronogramaData() lê do CACHE local (síncrono), sincronizado com o
+  // Firestore. O cache é recarregado por inteiro a cada vez que salvamos
+  // um dia (ver salvarCronogramaData), já que o cronograma muda com menos
+  // frequência que as inscrições e não precisa de listener em tempo real.
   function getCronogramaData(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY_CRONOGRAMA);
-      return raw ? JSON.parse(raw) : {};
-    }catch(e){
-      console.error('Erro ao ler cronograma do localStorage', e);
-      return {};
-    }
+    return cacheCronograma;
   }
 
-  function salvarCronogramaData(data){
-    localStorage.setItem(STORAGE_KEY_CRONOGRAMA, JSON.stringify(data));
+  // Salva o cronograma de um dia na nuvem E atualiza o cache local na hora
+  // (otimista), para a tela refletir a mudança imediatamente sem esperar
+  // round-trip do servidor.
+  async function salvarCronogramaData(dataCompleta){
+    cacheCronograma = dataCompleta;
+    const fdl = window.firebaseDataLayer;
+    // Salva cada dia presente no objeto como um documento separado
+    const promessas = Object.keys(dataCompleta).map(diaId =>
+      fdl.salvarCronogramaDoDia(diaId, dataCompleta[diaId])
+    );
+    await Promise.all(promessas);
   }
 
   // Retorna o cronograma salvo de um dia específico, ou null se não houver
@@ -1400,7 +1544,7 @@
   // Se o admin já personalizou o cronograma (adicionou amadores, mudou duração
   // de abertura, etc.), esse seed NÃO sobrescreve nada — só preenche o que
   // estiver vazio.
-  function garantirSeedCronograma(){
+  async function garantirSeedCronograma(){
     const todosCronogramas = getCronogramaData();
     let alterou = false;
 
@@ -1437,10 +1581,9 @@
     });
 
     if(alterou){
-      salvarCronogramaData(todosCronogramas);
+      await salvarCronogramaData(todosCronogramas);
     }
   }
-  garantirSeedCronograma();
 
   // ---------- NAVEGAÇÃO SPA ----------
   const views = {
@@ -1808,9 +1951,10 @@
     return getInscricoesData();
   }
 
-  function salvarInscricoes(lista){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
-  }
+  // NOTA: a antiga função salvarInscricoes(lista) (que reescrevia o array
+  // inteiro no localStorage) foi removida. Toda escrita agora vai direto
+  // para o Firestore via window.firebaseDataLayer (addInscricao,
+  // updateInscricao, setInscricaoComId), documento por documento.
 
   // ---------- FLUXO A x FLUXO B (Novo x Convidado/Fixo) — Etapa 1 ----------
   function setFluxo(fluxo){
@@ -1855,7 +1999,7 @@
   }
 
   // ---------- ENVIO DA INSCRIÇÃO PRELIMINAR (Etapa 1) ----------
-  formPreliminar.addEventListener('submit', function(e){
+  formPreliminar.addEventListener('submit', async function(e){
     e.preventDefault();
 
     if(!checkbox.checked){
@@ -1886,7 +2030,6 @@
     }
 
     const inscricao = {
-      id: Date.now(),
       dataEnvio: new Date().toISOString(),
       fluxoInscricao: fluxo, // 'novo' | 'convidado'
       etapa: 'preliminar', // 'preliminar' | 'completo'
@@ -1909,14 +2052,20 @@
       cronogramaDuracao: null
     };
 
-    const lista = getInscricoes();
-    lista.push(inscricao);
-    salvarInscricoes(lista);
-
-    mostrarMensagem(formMsg, '✓ Inscrição preliminar enviada com sucesso! Em breve entraremos em contato com o link para a Etapa 2.', 'sucesso');
-    formPreliminar.reset();
-    atualizarBotao();
-    setFluxo('novo');
+    btnEnviar.disabled = true;
+    btnEnviar.textContent = 'Enviando...';
+    try{
+      await window.firebaseDataLayer.addInscricao(inscricao);
+      mostrarMensagem(formMsg, '✓ Inscrição preliminar enviada com sucesso! Em breve entraremos em contato com o link para a Etapa 2.', 'sucesso');
+      formPreliminar.reset();
+      setFluxo('novo');
+    }catch(err){
+      console.error('Erro ao salvar inscrição na nuvem:', err);
+      mostrarMensagem(formMsg, 'Não foi possível enviar sua inscrição agora. Verifique sua conexão com a internet e tente novamente.', 'erro');
+    }finally{
+      btnEnviar.textContent = 'Enviar Inscrição Preliminar';
+      atualizarBotao();
+    }
 
     setTimeout(()=>{ formMsg.classList.add('hidden'); }, 8000);
   });
@@ -2106,7 +2255,7 @@
 
   // ---------- ENVIO DA CONFIRMAÇÃO (Etapa 2) ----------
   if(formConfirmacao){
-    formConfirmacao.addEventListener('submit', function(e){
+    formConfirmacao.addEventListener('submit', async function(e){
       e.preventDefault();
 
       if(!formConfirmacao.checkValidity()){
@@ -2131,14 +2280,20 @@
       }
 
       const lista = getInscricoes();
-      const idx = lista.findIndex(i => i.id === inscricaoEmConfirmacaoId);
-      if(idx === -1){
+      const inscricao = lista.find(i => i.id === inscricaoEmConfirmacaoId);
+      if(!inscricao){
         mostrarMensagem(confirmacaoMsg, 'Inscrição não encontrada. Atualize a página e tente novamente.', 'erro');
         return;
       }
-      const inscricao = lista[idx];
 
       const fd = new FormData(formConfirmacao);
+      const camposAtualizados = {
+        obrasRepertorio: obras,
+        duracaoTotalRepertorio: duracaoTotal,
+        levaEquipamento: checkboxEquipamento.checked,
+        linkDrive: fd.get('linkDrive')?.trim(),
+        etapa: 'completo'
+      };
 
       // Dia de apresentação: só revalida vaga se for fluxo Novo + Presencial
       if(inscricao.fluxoInscricao === 'novo' && inscricao.modalidade === 'Presencial'){
@@ -2152,27 +2307,31 @@
           popularDiasDisponiveisConfirmacao();
           return;
         }
-        inscricao.diaApresentacao = diaEscolhido.id;
+        camposAtualizados.diaApresentacao = diaEscolhido.id;
       }
 
-      inscricao.obrasRepertorio = obras;
-      inscricao.duracaoTotalRepertorio = duracaoTotal;
-      inscricao.levaEquipamento = checkboxEquipamento.checked;
-      inscricao.linkDrive = fd.get('linkDrive')?.trim();
-      inscricao.etapa = 'completo';
+      const btnSubmit = formConfirmacao.querySelector('button[type="submit"]');
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Enviando...';
 
-      lista[idx] = inscricao;
-      salvarInscricoes(lista);
-
-      mostrarMensagem(confirmacaoMsg, '✓ Participação confirmada com sucesso! Nos vemos no VII ENCoros 2026.', 'sucesso');
-      formConfirmacao.querySelector('button[type="submit"]').disabled = true;
-      formConfirmacao.querySelector('button[type="submit"]').classList.add('btn-disabled');
-      formConfirmacao.querySelector('button[type="submit"]').classList.remove('btn-gold');
+      try{
+        await window.firebaseDataLayer.updateInscricao(inscricaoEmConfirmacaoId, camposAtualizados);
+        mostrarMensagem(confirmacaoMsg, '✓ Participação confirmada com sucesso! Nos vemos no VII ENCoros 2026.', 'sucesso');
+        btnSubmit.classList.add('btn-disabled');
+        btnSubmit.classList.remove('btn-gold');
+        btnSubmit.textContent = 'Confirmar Participação';
+      }catch(err){
+        console.error('Erro ao confirmar participação na nuvem:', err);
+        mostrarMensagem(confirmacaoMsg, 'Não foi possível confirmar agora. Verifique sua conexão e tente novamente.', 'erro');
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Confirmar Participação';
+      }
     });
   }
 
-  // Roda a checagem de token assim que o script carrega
-  checkModoConfirmacaoNaURL();
+  // NOTA: checkModoConfirmacaoNaURL() é chamada apenas no final da
+  // inicialização (iniciarApp), depois que os dados já chegaram da nuvem —
+  // chamá-la aqui seria cedo demais, pois o cache ainda estaria vazio.
 
   // ---------- AUTENTICAÇÃO DO PAINEL ADMIN ----------
   // ATENÇÃO: login simulado no front-end, apenas para fins de teste/demonstração.
@@ -2365,7 +2524,7 @@
           <td class="px-4 py-3 text-gray-600 text-xs">${diaLabel(item.diaApresentacao)}</td>
           <td class="px-4 py-3 text-xs">${materiaisHtml}${repertorioInfo}</td>
           <td class="px-4 py-3">
-            <select data-id="${item.id}" class="status-select text-xs font-semibold border rounded-full px-2 py-1.5 cursor-pointer ${statusBadgeClass(item.status)}">
+            <select data-id="${item.id}" data-status-anterior="${item.status}" class="status-select text-xs font-semibold border rounded-full px-2 py-1.5 cursor-pointer ${statusBadgeClass(item.status)}">
               <option value="Pendente" ${item.status==='Pendente'?'selected':''}>Pendente</option>
               <option value="Aprovado" ${item.status==='Aprovado'?'selected':''}>Aprovado</option>
               <option value="Rejeitado" ${item.status==='Rejeitado'?'selected':''}>Rejeitado</option>
@@ -2377,21 +2536,27 @@
     }).join('');
 
     document.querySelectorAll('.status-select').forEach(sel=>{
-      sel.addEventListener('change', function(){
-        const id = Number(this.dataset.id);
-        const lista = getInscricoes();
-        const idx = lista.findIndex(i=>i.id === id);
-        if(idx !== -1){
-          lista[idx].status = this.value;
-          salvarInscricoes(lista);
+      sel.addEventListener('change', async function(){
+        const id = this.dataset.id;
+        const statusAnterior = this.dataset.statusAnterior || '';
+        this.disabled = true;
+        try{
+          await window.firebaseDataLayer.updateInscricao(id, { status: this.value });
+          // renderAdminTable() roda automaticamente via onSnapshot (tempo real),
+          // mas chamamos aqui também para feedback visual imediato.
           renderAdminTable();
+        }catch(err){
+          console.error('Erro ao atualizar status na nuvem:', err);
+          alert('Não foi possível atualizar o status agora. Verifique sua conexão e tente novamente.');
+          this.value = statusAnterior;
+          this.disabled = false;
         }
       });
     });
 
     document.querySelectorAll('.btnCopiarLink').forEach(btn=>{
       btn.addEventListener('click', function(){
-        const id = Number(this.dataset.id);
+        const id = this.dataset.id;
         const link = getLinkConfirmacao(id);
         navigator.clipboard.writeText(link).then(()=>{
           const textoOriginal = this.textContent;
@@ -2417,10 +2582,30 @@
     URL.revokeObjectURL(url);
   });
 
-  btnLimpar.addEventListener('click', function(){
-    if(confirm('Tem certeza que deseja apagar TODAS as inscrições salvas? Esta ação não pode ser desfeita.')){
-      localStorage.removeItem(STORAGE_KEY);
+  btnLimpar.addEventListener('click', async function(){
+    const confirmacao = confirm(
+      'ATENÇÃO: isso vai apagar TODAS as inscrições da nuvem — de TODOS os coros, ' +
+      'em qualquer dispositivo que tenha se inscrito até agora. Esta ação não pode ' +
+      'ser desfeita e afeta todo mundo, não só este navegador.\n\n' +
+      'Tem certeza que deseja continuar?'
+    );
+    if(!confirmacao) return;
+
+    const textoOriginal = this.textContent;
+    this.disabled = true;
+    this.textContent = 'Apagando...';
+    try{
+      await window.firebaseDataLayer.deleteTodasInscricoes();
+      // Os coros institucionais (CSUFG, Onix, etc.) são recriados automaticamente
+      // na nuvem, já que são essenciais ao funcionamento do site.
+      await garantirSeedInstitucionais();
       renderAdminTable();
+    }catch(err){
+      console.error('Erro ao limpar dados na nuvem:', err);
+      alert('Não foi possível apagar os dados agora. Verifique sua conexão e tente novamente.');
+    }finally{
+      this.disabled = false;
+      this.textContent = textoOriginal;
     }
   });
 
@@ -2547,7 +2732,7 @@
 
     cronogramaCorosDisponiveis.querySelectorAll('.btnAdicionarBloco').forEach(btn=>{
       btn.addEventListener('click', function(){
-        const inscricaoId = Number(this.dataset.inscricaoId);
+        const inscricaoId = this.dataset.inscricaoId;
         const inscricao = inscricoes.find(i => i.id === inscricaoId);
         if(!inscricao) return;
 
@@ -2843,17 +3028,52 @@
   // ---------- INICIALIZAÇÃO ----------
   atualizarBotao();
 
-  // Link direto de divulgação: ?inscrever=1 abre a página já na Inscrição,
-  // para uso em redes sociais e WhatsApp (ex: site.com/?inscrever=1).
-  // O modo Confirmação (?confirmar=TOKEN) tem prioridade caso ambos apareçam.
-  const paramsInit = new URLSearchParams(window.location.search);
-  if(paramsInit.get('confirmar')){
-    goTo('inscricao'); // checkModoConfirmacaoNaURL() já tratou a troca de sub-modo
-  } else if(paramsInit.get('inscrever')){
-    goTo('inscricao');
-  } else {
-    goTo('home');
+  // Callback chamado toda vez que o cache local é atualizado por uma
+  // mudança em tempo real vinda do Firestore (nova inscrição, aprovação,
+  // etc). Re-renderiza a tela atualmente visível, se ela depender de dados.
+  onCacheAtualizadoCallback = function(){
+    const viewAtiva = Object.keys(views).find(k => !views[k].classList.contains('hidden'));
+    if(viewAtiva === 'admin' && isAdminLoggedIn()){
+      renderAdminTable();
+    }
+    if(viewAtiva === 'programacao'){
+      renderPainelMacro();
+      renderCarrosselDia();
+    }
+  };
+
+  async function iniciarApp(){
+    try{
+      await inicializarSincronizacaoFirebase();
+      await garantirSeedInstitucionais();
+      await garantirSeedCronograma();
+    }catch(err){
+      console.error('Erro ao conectar com o banco de dados em nuvem:', err);
+      // Mesmo com erro, deixamos a página seguir — formulários mostrarão
+      // erro ao tentar enviar, em vez de travar a navegação inteira.
+    }
+
+    const loadingEl = document.getElementById('loadingInicial');
+    if(loadingEl) loadingEl.remove();
+
+    // Link direto de divulgação: ?inscrever=1 abre a página já na Inscrição,
+    // para uso em redes sociais e WhatsApp (ex: site.com/?inscrever=1).
+    // O modo Confirmação (?confirmar=TOKEN) tem prioridade caso ambos apareçam.
+    const paramsInit = new URLSearchParams(window.location.search);
+    if(paramsInit.get('confirmar')){
+      goTo('inscricao'); // checkModoConfirmacaoNaURL() já tratou a troca de sub-modo
+    } else if(paramsInit.get('inscrever')){
+      goTo('inscricao');
+    } else {
+      goTo('home');
+    }
+
+    // Só roda a checagem de token DEPOIS que os dados já chegaram da nuvem,
+    // senão a inscrição correspondente ainda não existiria no cache.
+    checkModoConfirmacaoNaURL();
   }
+
+  iniciarApp();
 
 })();
 </script>
