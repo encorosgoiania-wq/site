@@ -884,6 +884,10 @@
           </div>
           <button type="submit" class="btn-gold w-full py-3 rounded-full text-sm font-bold">Entrar</button>
         </form>
+
+        <div class="mt-5 text-center text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+          Usuário: <strong class="text-gray-600">encoros</strong> · Senha: <strong class="text-gray-600">encoros2026</strong>
+        </div>
       </div>
     </div>
 
@@ -916,6 +920,18 @@
 
       <!-- ===== SUB-ABA: INSCRIÇÕES ===== -->
       <div id="adminSubviewInscricoes">
+
+        <!-- LINK PÚBLICO DE DIVULGAÇÃO -->
+        <div class="card-soft p-5 sm:p-6 mb-10 border-2" style="border-color:var(--dourado)">
+          <h2 class="text-sm font-bold mb-1" style="color:var(--azul-petroleo)">📣 Link para divulgação (redes sociais e WhatsApp)</h2>
+          <p class="text-xs text-gray-500 mb-3">Compartilhe este link para que os coros acessem diretamente o formulário de inscrição preliminar.</p>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="text" id="linkDivulgacaoInput" readonly class="input-field bg-bg-claro text-sm" style="background-color:var(--bg-claro)" value="">
+            <button type="button" id="btnCopiarLinkDivulgacao" class="shrink-0 btn-gold px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap">
+              🔗 Copiar link
+            </button>
+          </div>
+        </div>
 
         <!-- CONTROLE DE VAGAS POR DIA -->
         <div class="mb-10">
@@ -1039,8 +1055,9 @@
     </div>
     <div>
       <h4 class="text-gold font-semibold mb-2 text-xs tracking-widest uppercase">Realização</h4>
+      <p class="text-gray-400">Prefeitura de Goiânia (Orquestra Sinfônica de Goiânia — Secult/OSGO)</p>
+      <p class="text-gray-400 mt-2 text-xs uppercase tracking-wide text-gray-500">Co-realização</p>
       <p class="text-gray-400">Escola do Futuro de Goiás em Artes Basileu França</p>
-      <p class="text-gray-400">Orquestra Sinfônica de Goiânia (Secult/Prefeitura de Goiânia)</p>
       <p class="text-gray-400">Onix Brasil Vocal Internacional</p>
     </div>
     <div>
@@ -1070,6 +1087,7 @@
       diaSemana: 'Quinta-feira',
       data: '03 de Setembro',
       horario: 'Início às 20h',
+      horarioInicioMinutos: 20 * 60, // 20:00
       titulo: 'Concerto de Abertura',
       descricao: 'Cerimônia oficial de abertura do VII ENCoros, com apresentação institucional, homenagem especial a Heloisa Barra e Honorina Barra, e concerto de abertura conduzido pelo corpo estável do evento.',
       fixos: ['Cerimônia de Abertura'],
@@ -1083,6 +1101,7 @@
       diaSemana: 'Sexta-feira',
       data: '04 de Setembro',
       horario: 'Início às 19h30',
+      horarioInicioMinutos: 19 * 60 + 30, // 19:30
       titulo: 'Concerto Coral — Noite de Sexta',
       descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSUFG. Inclui coros infantis.',
       fixos: ['CSUFG'],
@@ -1099,6 +1118,7 @@
       diaSemana: 'Sábado',
       data: '05 de Setembro',
       horario: 'Início às 19h30',
+      horarioInicioMinutos: 19 * 60 + 30, // 19:30
       titulo: 'Concerto Coral — Noite de Sábado',
       descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSJGOIÁS, do CJGOIÂNIA e do Onix Brasil Vocal Internacional.',
       fixos: ['CSJGOIÁS', 'CJGOIÂNIA', 'Onix Brasil Vocal Internacional'],
@@ -1118,6 +1138,7 @@
       diaSemana: 'Domingo',
       data: '06 de Setembro',
       horario: 'Início às 11h',
+      horarioInicioMinutos: 11 * 60, // 11:00
       titulo: 'Concerto Coral — Manhã de Domingo',
       descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSGOIÂNIA.',
       fixos: ['CSGOIÂNIA'],
@@ -1133,6 +1154,7 @@
       diaSemana: 'Segunda-feira',
       data: '07 de Setembro',
       horario: 'Início às 19h — Transmissão Digital',
+      horarioInicioMinutos: 19 * 60, // 19:00
       titulo: 'Mostra de Coros Virtuais',
       descricao: 'Mostra de Coros Virtuais Nacionais e Internacionais, concentrada neste dia, transmitida pelos canais oficiais do evento. Modalidade exclusiva para inscrições Virtuais.',
       fixos: [],
@@ -1144,10 +1166,70 @@
 
   const STORAGE_KEY_INSCRICOES = 'encoros2026_inscricoes';
 
-  // NOTA: o Onix Brasil Vocal Internacional não é mais tratado como uma
-  // "inscrição seed" — ele agora é um coro institucional fixo do sábado,
-  // definido em PROGRAMACAO_DATA.corosFixos, igual ao CSJGOIÁS e CJGOIÂNIA.
-  // Isso garante que ele apareça automaticamente no cronograma sem ação manual.
+  // ======================================================================
+  // COROS INSTITUCIONAIS FIXOS — seed automático de inscrições
+  // CSUFG, CSJGOIÁS, CJGOIÂNIA, CSGOIÂNIA e o Onix Brasil Vocal Internacional
+  // são o corpo estável do evento: já têm dia, horário e vaga garantidos,
+  // sem precisar passar pelo processo normal de inscrição/aprovação.
+  // Por isso, cada um recebe automaticamente um registro de inscrição com
+  // status "Aprovado" assim que a página carrega pela primeira vez — isso
+  // garante que: (1) apareçam sozinhos no Cronograma do dia certo, e
+  // (2) você tenha, desde já, um link de confirmação pronto para mandar a
+  // cada um preencher repertório, fotos e equipamento (Etapa 2 completa).
+  // IDs fixos e previsíveis evitam duplicação mesmo rodando o seed várias vezes.
+  // ======================================================================
+  const COROS_INSTITUCIONAIS_SEED = [
+    { id: 900000001, nomeCoro: 'CSUFG', diaApresentacao: 'sexta', duracaoMinutos: 20 },
+    { id: 900000002, nomeCoro: 'CSJGOIÁS', diaApresentacao: 'sabado', duracaoMinutos: 20 },
+    { id: 900000003, nomeCoro: 'CJGOIÂNIA', diaApresentacao: 'sabado', duracaoMinutos: 20 },
+    { id: 900000004, nomeCoro: 'Onix Brasil Vocal Internacional', diaApresentacao: 'sabado', duracaoMinutos: 15 },
+    { id: 900000005, nomeCoro: 'CSGOIÂNIA', diaApresentacao: 'domingo', duracaoMinutos: 30 }
+  ];
+
+  function garantirSeedInstitucionais(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY_INSCRICOES);
+      const lista = raw ? JSON.parse(raw) : [];
+      let alterou = false;
+
+      COROS_INSTITUCIONAIS_SEED.forEach(seed => {
+        const jaExiste = lista.some(i => i.id === seed.id);
+        if(!jaExiste){
+          lista.push({
+            id: seed.id,
+            dataEnvio: new Date().toISOString(),
+            fluxoInscricao: 'convidado',
+            etapa: 'preliminar',
+            nomeRegente: 'Organização VII ENCoros',
+            emailRegente: '',
+            telefoneRegente: '',
+            curriculoRegente: '',
+            nomeCoro: seed.nomeCoro,
+            cidadeEstado: '',
+            modalidade: 'Presencial',
+            diaApresentacao: seed.diaApresentacao,
+            historicoCoro: '',
+            linkVideo: '',
+            obrasRepertorio: [],
+            duracaoTotalRepertorio: null,
+            levaEquipamento: false,
+            linkDrive: '',
+            status: 'Aprovado',
+            cronogramaDuracao: null,
+            isInstitucional: true
+          });
+          alterou = true;
+        }
+      });
+
+      if(alterou){
+        localStorage.setItem(STORAGE_KEY_INSCRICOES, JSON.stringify(lista));
+      }
+    }catch(e){
+      console.error('Erro ao garantir seed dos coros institucionais', e);
+    }
+  }
+  garantirSeedInstitucionais();
 
   function getInscricoesData(){
     try{
@@ -1162,7 +1244,7 @@
   // Conta quantas inscrições Presenciais já ocupam vagas de coro amador em cada dia
   function contarVagasOcupadas(diaId){
     const lista = getInscricoesData();
-    return lista.filter(i => i.modalidade === 'Presencial' && i.diaApresentacao === diaId).length;
+    return lista.filter(i => i.modalidade === 'Presencial' && i.diaApresentacao === diaId && !i.isInstitucional).length;
   }
 
   function vagasRestantes(dia){
@@ -1229,14 +1311,20 @@
   // Gera a estrutura inicial (seed) de um bloco: abertura + coros institucionais
   // fixos já carregados automaticamente + encerramento. Usado na primeira vez
   // que um dia é aberto no admin, antes de qualquer customização salva.
+  // O inscricaoId é vinculado ao registro real da inscrição institucional
+  // (criado por garantirSeedInstitucionais), para que o repertório preenchido
+  // na Etapa 2 apareça automaticamente na Programação pública.
   function gerarCronogramaSeed(diaId){
     const dia = PROGRAMACAO_DATA.find(d => d.id === diaId);
-    const coros = (dia.corosFixos || []).map(c => ({
-      inscricaoId: null, // institucional fixo, não vem de uma inscrição
-      nomeCoro: c.nomeCoro,
-      duracaoMinutos: c.duracaoMinutos,
-      fixo: true
-    }));
+    const coros = (dia.corosFixos || []).map(c => {
+      const inscricaoVinculada = COROS_INSTITUCIONAIS_SEED.find(s => s.nomeCoro === c.nomeCoro);
+      return {
+        inscricaoId: inscricaoVinculada ? inscricaoVinculada.id : null,
+        nomeCoro: c.nomeCoro,
+        duracaoMinutos: c.duracaoMinutos,
+        fixo: true
+      };
+    });
     return {
       diaId: diaId,
       duracaoAbertura: CRONOGRAMA_DURACAO_PADRAO_ABERTURA,
@@ -1245,6 +1333,31 @@
       atualizadoEm: null
     };
   }
+
+  // Garante que todo dia com coros institucionais fixos já tenha um cronograma
+  // PERSISTIDO desde o primeiro carregamento da página — assim a Programação
+  // pública mostra a sequência (Abertura + fixos + Encerramento) imediatamente,
+  // sem depender do admin abrir o painel e clicar em "Salvar Cronograma".
+  // Se o admin já personalizou o cronograma (adicionou amadores, mudou duração
+  // de abertura, etc.), esse seed NÃO sobrescreve nada — só preenche o que
+  // estiver vazio.
+  function garantirSeedCronograma(){
+    const todosCronogramas = getCronogramaData();
+    let alterou = false;
+
+    PROGRAMACAO_DATA.forEach(dia => {
+      if((dia.corosFixos || []).length === 0) return; // só dias com institucionais
+      if(todosCronogramas[dia.id]) return; // já existe cronograma salvo, não sobrescreve
+
+      todosCronogramas[dia.id] = gerarCronogramaSeed(dia.id);
+      alterou = true;
+    });
+
+    if(alterou){
+      salvarCronogramaData(todosCronogramas);
+    }
+  }
+  garantirSeedCronograma();
 
   // ---------- NAVEGAÇÃO SPA ----------
   const views = {
@@ -1439,7 +1552,7 @@
       // ABERTURA
       cardsHtml.push(`
         <div class="flex items-center gap-4 bg-bg-claro border border-gray-200 rounded-xl px-5 py-3.5" style="background-color:var(--bg-claro)">
-          <span class="font-mono text-sm font-bold text-gray-400 w-14 shrink-0">${minutosParaHHMM(0)}</span>
+          <span class="font-mono text-sm font-bold text-gray-400 w-14 shrink-0">${minutosParaHHMM(0, dia.horarioInicioMinutos)}</span>
           <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Abertura</span>
           <span class="text-xs text-gray-400">${durAbertura} min</span>
         </div>
@@ -1447,7 +1560,7 @@
 
       // COROS
       cronogramaSalvo.coros.forEach(c=>{
-        const horaInicio = minutosParaHHMM(cursorMin);
+        const horaInicio = minutosParaHHMM(cursorMin, dia.horarioInicioMinutos);
 
         // Busca o repertório completo na inscrição original, se houver
         const inscricaoOriginal = c.inscricaoId ? todasInscricoes.find(i => i.id === c.inscricaoId) : null;
@@ -1486,7 +1599,7 @@
       // ENCERRAMENTO
       cardsHtml.push(`
         <div class="flex items-center gap-4 bg-bg-claro border border-gray-200 rounded-xl px-5 py-3.5" style="background-color:var(--bg-claro)">
-          <span class="font-mono text-sm font-bold text-gray-400 w-14 shrink-0">${minutosParaHHMM(cursorMin)}</span>
+          <span class="font-mono text-sm font-bold text-gray-400 w-14 shrink-0">${minutosParaHHMM(cursorMin, dia.horarioInicioMinutos)}</span>
           <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Encerramento</span>
           <span class="text-xs text-gray-400">${durEncerramento} min</span>
         </div>
@@ -2002,12 +2115,34 @@
       adminPanelContent.classList.remove('hidden');
       renderAdminTable();
       setAdminSubview('inscricoes');
+      preencherLinkDivulgacao();
     } else {
       adminLoginScreen.classList.remove('hidden');
       adminPanelContent.classList.add('hidden');
       adminLoginForm.reset();
       adminLoginError.classList.add('hidden');
     }
+  }
+
+  function preencherLinkDivulgacao(){
+    const input = document.getElementById('linkDivulgacaoInput');
+    if(!input) return;
+    input.value = window.location.origin + window.location.pathname + '?inscrever=1';
+  }
+
+  const btnCopiarLinkDivulgacao = document.getElementById('btnCopiarLinkDivulgacao');
+  if(btnCopiarLinkDivulgacao){
+    btnCopiarLinkDivulgacao.addEventListener('click', function(){
+      const input = document.getElementById('linkDivulgacaoInput');
+      navigator.clipboard.writeText(input.value).then(()=>{
+        const original = this.textContent;
+        this.textContent = '✓ Copiado!';
+        setTimeout(()=>{ this.textContent = original; }, 2000);
+      }).catch(()=>{
+        input.select();
+        prompt('Copie o link manualmente:', input.value);
+      });
+    });
   }
 
   adminLoginForm.addEventListener('submit', function(e){
@@ -2100,9 +2235,11 @@
     emptyState.classList.add('hidden');
 
     adminTableBody.innerHTML = lista.map(item=>{
-      const fluxoBadge = item.fluxoInscricao === 'convidado'
-        ? '<span class="text-[10px] font-semibold text-blue-600 block mt-0.5">Convidado/Fixo</span>'
-        : '';
+      const fluxoBadge = item.isInstitucional
+        ? '<span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 inline-block mt-1">⭐ Corpo Estável</span>'
+        : (item.fluxoInscricao === 'convidado'
+            ? '<span class="text-[10px] font-semibold text-blue-600 block mt-0.5">Convidado/Fixo</span>'
+            : '');
 
       const etapaBadge = item.etapa === 'completo'
         ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-700">Completo</span>'
@@ -2254,9 +2391,13 @@
       .join('');
   }
 
-  function minutosParaHHMM(min){
-    const h = Math.floor(min / 60);
-    const m = min % 60;
+  // Converte minutos relativos ao início do bloco em horário real (HH:MM),
+  // somando o horarioInicioMinutos do dia (ex: 19h30 = 1170min) como base.
+  // Sem offsetInicio, comporta-se como antes (00:00 = início do bloco).
+  function minutosParaHHMM(min, offsetInicio){
+    const totalMin = min + (offsetInicio || 0);
+    const h = Math.floor(totalMin / 60) % 24;
+    const m = totalMin % 60;
     return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
   }
 
@@ -2291,6 +2432,7 @@
       i.modalidade === 'Presencial' &&
       i.diaApresentacao === cronogramaDiaAtual &&
       i.status !== 'Rejeitado' &&
+      !i.isInstitucional &&
       !idsNoBloco.has(i.id)
     );
 
@@ -2361,14 +2503,14 @@
       cronogramaTempoAviso.textContent = '⚠ O tempo dos coros (' + tempoCoros + ' min) ultrapassa o limite de ' + limiteCoros + ' min definido para ' + dia.diaSemana + '.';
     }
 
-    // Monta a sequência com horários calculados, começando em 00:00 relativo ao início do bloco
+    // Monta a sequência com horários reais, começando no horário oficial de início do dia
     let cursorMin = 0;
     const itensHtml = [];
 
     // ABERTURA (editável)
     itensHtml.push(`
       <div class="flex items-center gap-3 bg-bg-claro border border-gray-200 rounded-lg p-3" style="background-color:var(--bg-claro)">
-        <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin)}</span>
+        <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin, dia.horarioInicioMinutos)}</span>
         <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Abertura</span>
         <input type="number" min="0" max="60" step="5" id="inputDuracaoAbertura" value="${cronogramaEdicaoAtual.duracaoAbertura}" class="w-16 text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 text-center">
         <span class="text-xs text-gray-500">min</span>
@@ -2378,7 +2520,7 @@
 
     // COROS (arrastáveis — institucionais fixos e amadores)
     cronogramaEdicaoAtual.coros.forEach((c, idx) => {
-      const horaInicio = minutosParaHHMM(cursorMin);
+      const horaInicio = minutosParaHHMM(cursorMin, dia.horarioInicioMinutos);
       const badgeFixo = c.fixo
         ? '<span class="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 shrink-0">Fixo</span>'
         : '';
@@ -2405,7 +2547,7 @@
     // ENCERRAMENTO (editável)
     itensHtml.push(`
       <div class="flex items-center gap-3 bg-bg-claro border border-gray-200 rounded-lg p-3" style="background-color:var(--bg-claro)">
-        <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin)}</span>
+        <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin, dia.horarioInicioMinutos)}</span>
         <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Encerramento</span>
         <input type="number" min="0" max="60" step="5" id="inputDuracaoEncerramento" value="${cronogramaEdicaoAtual.duracaoEncerramento}" class="w-16 text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 text-center">
         <span class="text-xs text-gray-500">min</span>
@@ -2536,7 +2678,18 @@
 
   // ---------- INICIALIZAÇÃO ----------
   atualizarBotao();
-  goTo('home');
+
+  // Link direto de divulgação: ?inscrever=1 abre a página já na Inscrição,
+  // para uso em redes sociais e WhatsApp (ex: site.com/?inscrever=1).
+  // O modo Confirmação (?confirmar=TOKEN) tem prioridade caso ambos apareçam.
+  const paramsInit = new URLSearchParams(window.location.search);
+  if(paramsInit.get('confirmar')){
+    goTo('inscricao'); // checkModoConfirmacaoNaURL() já tratou a troca de sub-modo
+  } else if(paramsInit.get('inscrever')){
+    goTo('inscricao');
+  } else {
+    goTo('home');
+  }
 
 })();
 </script>
