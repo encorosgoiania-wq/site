@@ -635,8 +635,14 @@
           </div>
         </div>
 
-        <!-- SELETOR DE FLUXO: NOVO x CONVIDADO/FIXO -->
-        <div class="card-soft p-5 sm:p-6 mb-10">
+        <!-- SELETOR DE FLUXO: NOVO x CONVIDADO/FIXO
+             Oculto no formulário público — os coros institucionais (corpo
+             estável) agora são criados automaticamente pelo sistema, então
+             não há mais necessidade de oferecer essa escolha aqui. O bloco
+             continua no DOM (apenas invisível) para o JavaScript de
+             setFluxo('novo') continuar funcionando sem precisar reescrever
+             toda a lógica do formulário. -->
+        <div class="hidden card-soft p-5 sm:p-6 mb-10">
           <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-gray-500 mb-3">Qual é o seu caso?</h2>
           <div class="grid sm:grid-cols-2 gap-3">
             <button type="button" id="btnFluxoNovo" class="fluxo-btn text-left border-2 rounded-xl p-4 transition" style="border-color:var(--dourado)">
