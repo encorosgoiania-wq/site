@@ -1107,7 +1107,7 @@
       fixos: ['CSUFG'],
       // Coros institucionais fixos: sempre presentes no cronograma, com duração própria definida pelo Maestro Eliseu
       corosFixos: [
-        { nomeCoro: 'CSUFG', duracaoMinutos: 20 }
+        { nomeCoro: 'CSUFG', duracaoMinutos: 20, anfitriao: false }
       ],
       maxAmadores: 4, // 4 coros amadores de 15min cada (inclui coros infantis)
       vagasOcupadasPorFixos: 0,
@@ -1123,9 +1123,9 @@
       descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSJGOIÁS, do CJGOIÂNIA e do Onix Brasil Vocal Internacional.',
       fixos: ['CSJGOIÁS', 'CJGOIÂNIA', 'Onix Brasil Vocal Internacional'],
       corosFixos: [
-        { nomeCoro: 'CSJGOIÁS', duracaoMinutos: 20 },
-        { nomeCoro: 'CJGOIÂNIA', duracaoMinutos: 20 },
-        { nomeCoro: 'Onix Brasil Vocal Internacional', duracaoMinutos: 15 }
+        { nomeCoro: 'CSJGOIÁS', duracaoMinutos: 20, anfitriao: true },
+        { nomeCoro: 'CJGOIÂNIA', duracaoMinutos: 20, anfitriao: false },
+        { nomeCoro: 'Onix Brasil Vocal Internacional', duracaoMinutos: 15, anfitriao: true }
       ],
       // 3 vagas amadoras no total; o Onix ocupa 1 delas automaticamente (fixo),
       // restando 2 vagas livres para inscrição pública externa
@@ -1143,7 +1143,7 @@
       descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSGOIÂNIA.',
       fixos: ['CSGOIÂNIA'],
       corosFixos: [
-        { nomeCoro: 'CSGOIÂNIA', duracaoMinutos: 30 }
+        { nomeCoro: 'CSGOIÂNIA', duracaoMinutos: 30, anfitriao: true }
       ],
       maxAmadores: 4, // 4 coros amadores de 15min cada
       vagasOcupadasPorFixos: 0,
@@ -1322,7 +1322,8 @@
         inscricaoId: inscricaoVinculada ? inscricaoVinculada.id : null,
         nomeCoro: c.nomeCoro,
         duracaoMinutos: c.duracaoMinutos,
-        fixo: true
+        fixo: true,
+        anfitriao: !!c.anfitriao
       };
     });
     return {
@@ -1566,8 +1567,8 @@
         const inscricaoOriginal = c.inscricaoId ? todasInscricoes.find(i => i.id === c.inscricaoId) : null;
         const obras = inscricaoOriginal?.obrasRepertorio || [];
 
-        const fixoBadge = c.fixo
-          ? '<span class="text-[10px] font-bold uppercase tracking-wide text-gold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0">Corpo Estável</span>'
+        const fixoBadge = c.anfitriao
+          ? '<span class="text-[10px] font-bold uppercase tracking-wide text-gold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0">Coro Anfitrião</span>'
           : '';
 
         const repertorioHtml = obras.length > 0
