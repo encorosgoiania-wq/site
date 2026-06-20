@@ -274,6 +274,26 @@
         <p class="text-gray-700 leading-relaxed text-lg mt-10">
           A gestão e a execução de toda a estrutura desta edição estão a cargo da <strong>Prefeitura de Goiânia / OSGO</strong> e do seu corpo estável, o <strong>Coro Sinfônico de Goiânia (CSGOIÂNIA)</strong>, que coordenam a logística, os espaços de apresentação e a curadoria artística do evento.
         </p>
+
+        <!-- COROS ANFITRIÕES -->
+        <div class="mt-14">
+          <span class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">Coros Anfitriões</span>
+          <h3 class="font-serif-display text-2xl mt-2 mb-6" style="color:var(--azul-petroleo)">Quem recebe o VII ENCoros 2026</h3>
+          <div class="grid sm:grid-cols-3 gap-6">
+            <div class="card-soft p-6 border-2" style="border-color:#F3E5C3">
+              <span class="text-[10px] font-bold uppercase tracking-wide text-gold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 inline-block mb-3">Sábado</span>
+              <h4 class="font-semibold" style="color:var(--azul-petroleo)">Coro Jovem de Goiás - Basileu (CSJGOIÁS)</h4>
+            </div>
+            <div class="card-soft p-6 border-2" style="border-color:#F3E5C3">
+              <span class="text-[10px] font-bold uppercase tracking-wide text-gold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 inline-block mb-3">Sábado</span>
+              <h4 class="font-semibold" style="color:var(--azul-petroleo)">Onix Brasil Vocal Internacional</h4>
+            </div>
+            <div class="card-soft p-6 border-2" style="border-color:#F3E5C3">
+              <span class="text-[10px] font-bold uppercase tracking-wide text-gold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 inline-block mb-3">Domingo</span>
+              <h4 class="font-semibold" style="color:var(--azul-petroleo)">Coro Sinfônico de Goiânia (CSGOIÂNIA)</h4>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1241,6 +1261,30 @@
   // limites de vagas (maxAmadores) ficam aqui; o admin lê e atualiza as
   // vagas ocupadas em tempo real a partir das inscrições salvas.
   // ======================================================================
+  // Mapa de nome completo de cada coro institucional, usado para exibir
+  // "Nome Completo (SIGLA)" em qualquer lugar do site onde o nome do coro
+  // aparece para o público — em vez de só a sigla isolada. A sigla
+  // continua sendo usada internamente como identificador (nomeCoro em
+  // corosFixos, COROS_INSTITUCIONAIS_SEED, etc.) para não quebrar a
+  // vinculação com inscrições e cronogramas já salvos.
+  const NOMES_COMPLETOS_COROS = {
+    'CSUFG': 'Coral Sinfônico da UFG',
+    'CSJGOIÁS': 'Coro Jovem de Goiás - Basileu',
+    'CJGOIÂNIA': 'Coro Juvenil de Goiânia',
+    'CSGOIÂNIA': 'Coro Sinfônico de Goiânia',
+    'Onix Brasil Vocal Internacional': 'Onix Brasil Vocal Internacional'
+  };
+
+  // Retorna "Nome Completo (SIGLA)" para coros institucionais conhecidos,
+  // ou o próprio nome recebido caso não haja sigla mapeada (ex: nomes de
+  // coros amadores digitados livremente no formulário).
+  function nomeCompletoCoro(nomeOuSigla){
+    const completo = NOMES_COMPLETOS_COROS[nomeOuSigla];
+    if(!completo) return nomeOuSigla;
+    if(completo === nomeOuSigla) return nomeOuSigla; // Onix já é nome completo, sem sigla a mostrar
+    return completo + ' (' + nomeOuSigla + ')';
+  }
+
   const PROGRAMACAO_DATA = [
     {
       id: 'quinta',
@@ -1267,8 +1311,8 @@
       horario: 'Início às 19h30',
       horarioInicioMinutos: 19 * 60 + 30, // 19:30
       titulo: 'Concerto Coral — Noite de Sexta',
-      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSUFG. Inclui coros infantis.',
-      fixos: ['CSUFG'],
+      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do Coral Sinfônico da UFG (CSUFG). Inclui coros infantis.',
+      fixos: ['Coral Sinfônico da UFG (CSUFG)'],
       // Coros institucionais fixos: sempre presentes no cronograma, com duração própria definida pelo Maestro Eliseu
       corosFixos: [
         { nomeCoro: 'CSUFG', duracaoMinutos: 20, anfitriao: false }
@@ -1284,8 +1328,8 @@
       horario: 'Início às 19h30',
       horarioInicioMinutos: 19 * 60 + 30, // 19:30
       titulo: 'Concerto Coral — Noite de Sábado',
-      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSJGOIÁS, do CJGOIÂNIA e do Onix Brasil Vocal Internacional.',
-      fixos: ['CSJGOIÁS', 'CJGOIÂNIA', 'Onix Brasil Vocal Internacional'],
+      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do Coro Jovem de Goiás - Basileu (CSJGOIÁS), do Coro Juvenil de Goiânia (CJGOIÂNIA) e do Onix Brasil Vocal Internacional.',
+      fixos: ['Coro Jovem de Goiás - Basileu (CSJGOIÁS)', 'Coro Juvenil de Goiânia (CJGOIÂNIA)', 'Onix Brasil Vocal Internacional'],
       corosFixos: [
         { nomeCoro: 'CSJGOIÁS', duracaoMinutos: 20, anfitriao: true },
         { nomeCoro: 'CJGOIÂNIA', duracaoMinutos: 20, anfitriao: false },
@@ -1304,8 +1348,8 @@
       horario: 'Início às 11h',
       horarioInicioMinutos: 11 * 60, // 11:00
       titulo: 'Concerto Coral — Manhã de Domingo',
-      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do CSGOIÂNIA.',
-      fixos: ['CSGOIÂNIA'],
+      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do Coro Sinfônico de Goiânia (CSGOIÂNIA).',
+      fixos: ['Coro Sinfônico de Goiânia (CSGOIÂNIA)'],
       corosFixos: [
         { nomeCoro: 'CSGOIÂNIA', duracaoMinutos: 30, anfitriao: true }
       ],
@@ -1818,7 +1862,7 @@
           <div class="bg-white border-2 rounded-xl px-5 py-4" style="border-color:${c.fixo ? '#F3E5C3' : '#ECECEC'}">
             <div class="flex items-center gap-4">
               <span class="font-mono text-sm font-bold w-14 shrink-0" style="color:var(--azul-petroleo)">${horaInicio}</span>
-              <span class="text-base font-semibold flex-1" style="color:var(--azul-petroleo)">${escapeHtml(c.nomeCoro)}</span>
+              <span class="text-base font-semibold flex-1" style="color:var(--azul-petroleo)">${escapeHtml(nomeCompletoCoro(c.nomeCoro))}</span>
               ${fixoBadge}
               <span class="text-xs font-semibold text-gold shrink-0">${c.duracaoMinutos} min</span>
             </div>
@@ -2518,7 +2562,7 @@
 
       return `
         <tr class="hover:bg-gray-50">
-          <td class="px-4 py-3 font-semibold text-gray-800">${escapeHtml(item.nomeCoro)}${fluxoBadge}</td>
+          <td class="px-4 py-3 font-semibold text-gray-800">${escapeHtml(nomeCompletoCoro(item.nomeCoro))}${fluxoBadge}</td>
           <td class="px-4 py-3 text-gray-600">${escapeHtml(item.nomeRegente)}</td>
           <td class="px-4 py-3 text-gray-600">${escapeHtml(item.cidadeEstado)}</td>
           <td class="px-4 py-3">
