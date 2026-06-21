@@ -159,6 +159,7 @@
         <a href="#" data-nav="home" class="nav-trigger nav-link active">Início</a>
         <a href="#" data-nav="regulamento" class="nav-trigger nav-link">Regulamento</a>
         <a href="#" data-nav="programacao" class="nav-trigger nav-link">Programação</a>
+        <a href="#" data-nav="blog" class="nav-trigger nav-link">Blog</a>
 
         <!-- DROPDOWN: ANOS ANTERIORES -->
         <div class="relative" id="editionsDropdownWrap">
@@ -198,6 +199,7 @@
       <a href="#" data-nav="home" class="nav-trigger nav-link px-2 py-3">Início</a>
       <a href="#" data-nav="regulamento" class="nav-trigger nav-link px-2 py-3">Regulamento</a>
       <a href="#" data-nav="programacao" class="nav-trigger nav-link px-2 py-3">Programação</a>
+      <a href="#" data-nav="blog" class="nav-trigger nav-link px-2 py-3">Blog</a>
 
       <!-- DROPDOWN MOBILE: ANOS ANTERIORES -->
       <div>
@@ -630,6 +632,87 @@
     </div>
   </section>
 
+  <!-- ###################### ABA: BLOG DO EVENTO ###################### -->
+  <section id="view-blog" class="view hidden section-fade">
+    <div class="bg-petroleo text-white py-16">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <span class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">VII ENCoros 2026</span>
+        <h1 class="font-serif-display text-4xl mt-3">Blog do Evento</h1>
+        <p class="text-gray-300 mt-3">Fotos, vídeos e momentos do VII ENCoros — compartilhados por você e pela organização.</p>
+      </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-6 py-14">
+
+      <!-- AÇÕES DO TOPO -->
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-10">
+        <p class="text-sm text-gray-600 max-w-md">
+          Já postou nas redes com a <strong class="text-gold">#encoros2026</strong>? Mande o link aqui e, depois de aprovado, seu post aparece nesta página.
+        </p>
+        <button type="button" id="btnAbrirSugerirPost" class="shrink-0 btn-gold px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap">
+          + Sugerir Post
+        </button>
+      </div>
+
+      <!-- GRID DE POSTS APROVADOS -->
+      <div id="blogPostsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- preenchido via JS -->
+      </div>
+      <div id="blogEmptyState" class="hidden text-center py-20 text-gray-400">
+        <p class="text-lg">Ainda não há posts publicados.</p>
+        <p class="text-sm mt-1">Seja o primeiro a compartilhar um momento do VII ENCoros!</p>
+      </div>
+    </div>
+
+    <!-- MODAL: SUGERIR POST -->
+    <div id="modalSugerirPost" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div id="modalSugerirPostOverlay" class="absolute inset-0 bg-black/50"></div>
+      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+          <h3 class="font-serif-display text-xl" style="color:var(--azul-petroleo)">Sugerir Post para o Blog</h3>
+          <button type="button" id="btnFecharModalSugerirPost" class="text-gray-400 hover:text-gray-700 transition" aria-label="Fechar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <form id="formSugerirPost" class="px-6 py-5 space-y-4">
+          <div class="bg-amber-50 border border-amber-300 text-amber-800 text-xs rounded-lg px-4 py-3">
+            Seu post passa por uma aprovação rápida da organização antes de aparecer no blog.
+          </div>
+
+          <div>
+            <label class="label-field">Seu nome *</label>
+            <input required type="text" id="postAutorNome" class="input-field" placeholder="Nome completo">
+          </div>
+          <div>
+            <label class="label-field">Nome do Coro (se aplicável)</label>
+            <input type="text" id="postNomeCoro" class="input-field" placeholder="Ex: Estrelas do Cerrado">
+          </div>
+          <div>
+            <label class="label-field">Legenda / Comentário *</label>
+            <textarea required id="postLegenda" rows="3" class="input-field" placeholder="Conte um pouco sobre esse momento..."></textarea>
+          </div>
+          <div>
+            <label class="label-field">Link da foto/vídeo *</label>
+            <input required type="text" id="postLink" class="input-field" placeholder="Link do Instagram, YouTube, TikTok, Drive...">
+            <p class="text-xs text-gray-500 mt-1">Cole o link do post (Instagram/TikTok/YouTube) ou de uma pasta com a foto/vídeo (Drive).</p>
+          </div>
+
+          <div id="sugerirPostMsg" class="hidden text-sm rounded-lg px-4 py-3"></div>
+
+          <div class="flex gap-3 pt-2">
+            <button type="button" id="btnCancelarSugerirPost" class="flex-1 border border-gray-300 text-gray-700 font-semibold rounded-full py-2.5 hover:bg-gray-50 transition">
+              Cancelar
+            </button>
+            <button type="submit" id="btnEnviarSugerirPost" class="flex-1 btn-gold rounded-full py-2.5 font-bold">
+              Enviar para Aprovação
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
   <!-- ###################### ABA 3: INSCRIÇÃO ###################### -->
   <section id="view-inscricao" class="view hidden section-fade">
 
@@ -1036,6 +1119,9 @@
         <button type="button" id="adminTabCronograma" class="admin-subtab px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 transition">
           Cronograma
         </button>
+        <button type="button" id="adminTabBlog" class="admin-subtab px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 transition">
+          Blog
+        </button>
       </div>
 
       <!-- ===== SUB-ABA: INSCRIÇÕES ===== -->
@@ -1113,6 +1199,23 @@
           </select>
         </div>
 
+        <!-- LOCAL DO BLOCO -->
+        <div class="card-soft p-5 mb-8 grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="label-field">Local da apresentação</label>
+            <select id="cronogramaLocalSelect" class="input-field bg-white mb-2">
+              <option value="EFG em Artes Basileu França">EFG em Artes Basileu França (padrão)</option>
+              <option value="Virtual / YouTube">Virtual / YouTube</option>
+              <option value="outro">Outro local (digitar abaixo)</option>
+            </select>
+            <input type="text" id="cronogramaLocalCustom" class="input-field hidden" placeholder="Ex: Igreja Nossa Senhora do Rosário">
+          </div>
+          <div>
+            <label class="label-field">Link do Google Maps (opcional)</label>
+            <input type="text" id="cronogramaLinkMapa" class="input-field" placeholder="https://maps.google.com/...">
+          </div>
+        </div>
+
         <div class="grid lg:grid-cols-5 gap-8">
 
           <!-- COLUNA: COROS DISPONÍVEIS PARA ESSE DIA -->
@@ -1174,6 +1277,23 @@
             </p>
           </div>
 
+        </div>
+      </div>
+
+      <!-- ===== SUB-ABA: BLOG ===== -->
+      <div id="adminSubviewBlog" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="font-serif-display text-xl" style="color:var(--azul-petroleo)">Posts sugeridos pelo público</h2>
+            <p class="text-sm text-gray-500 mt-1">Aprove para publicar no blog público, ou rejeite/exclua posts indesejados.</p>
+          </div>
+        </div>
+
+        <div id="adminBlogLista" class="space-y-3">
+          <!-- preenchido via JS -->
+        </div>
+        <div id="adminBlogEmptyState" class="hidden text-center py-16 text-gray-400">
+          <p class="text-lg">Nenhum post foi sugerido ainda.</p>
         </div>
       </div>
 
@@ -1407,6 +1527,39 @@
     });
   }
 
+  // ---------- BLOG DO EVENTO ----------
+  // Posts sugeridos pelo público (foto/vídeo via link externo + legenda) ou
+  // criados pela organização. Todo post entra como "Pendente" e só aparece
+  // na página pública do Blog depois de aprovado no Admin.
+  const COL_BLOG = 'encoros2026_blog';
+
+  async function fsGetPostsBlog(){
+    const snap = await getDocs(collection(db, COL_BLOG));
+    return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+  }
+
+  async function fsAddPostBlog(dados){
+    const ref = await addDoc(collection(db, COL_BLOG), dados);
+    return ref.id;
+  }
+
+  async function fsUpdatePostBlog(id, dadosParciais){
+    await updateDoc(doc(db, COL_BLOG, String(id)), dadosParciais);
+  }
+
+  async function fsDeletePostBlog(id){
+    await deleteDoc(doc(db, COL_BLOG, String(id)));
+  }
+
+  function fsEscutarPostsBlog(callback){
+    return onSnapshot(collection(db, COL_BLOG), (snap) => {
+      const lista = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      callback(lista);
+    }, (erro) => {
+      console.error('Erro ao escutar posts do blog em tempo real:', erro);
+    });
+  }
+
   // Expõe as funções no escopo global (window), para que o script principal
   // (não-módulo, mais abaixo) consiga chamá-las normalmente.
   window.firebaseDataLayer = {
@@ -1420,6 +1573,11 @@
     salvarCronogramaDoDia: fsSalvarCronogramaDoDia,
     escutarInscricoes: fsEscutarInscricoes,
     enviarEmail: fsEnviarEmail,
+    getPostsBlog: fsGetPostsBlog,
+    addPostBlog: fsAddPostBlog,
+    updatePostBlog: fsUpdatePostBlog,
+    deletePostBlog: fsDeletePostBlog,
+    escutarPostsBlog: fsEscutarPostsBlog,
     pronto: true
   };
 
@@ -1570,6 +1728,7 @@
   // ======================================================================
   let cacheInscricoes = [];
   let cacheCronograma = {};
+  let cachePostsBlog = [];
   let firebasePronto = false;
   let onCacheAtualizadoCallback = null; // setado depois, pela UI (re-renderiza a tela atual)
 
@@ -1583,8 +1742,9 @@
     });
   }
 
-  // Inicializa a sincronização em tempo real: escuta inscrições continuamente,
-  // e carrega o cronograma uma vez (atualizado depois a cada escrita).
+  // Inicializa a sincronização em tempo real: escuta inscrições e posts do
+  // blog continuamente, e carrega o cronograma uma vez (atualizado depois a
+  // cada escrita).
   async function inicializarSincronizacaoFirebase(){
     await aoFirebaseEstarPronto();
     const fdl = window.firebaseDataLayer;
@@ -1594,9 +1754,24 @@
       if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
     });
 
+    fdl.escutarPostsBlog((lista) => {
+      cachePostsBlog = lista;
+      if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
+    });
+
     cacheCronograma = await fdl.getCronogramaData();
     firebasePronto = true;
     if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
+  }
+
+  // getPostsBlog() lê do cache local (síncrono), sincronizado com o
+  // Firestore em tempo real — mesmo padrão usado para inscrições.
+  function getPostsBlog(){
+    return cachePostsBlog;
+  }
+
+  function getPostsBlogAprovados(){
+    return cachePostsBlog.filter(p => p.status === 'Aprovado');
   }
 
   const STORAGE_KEY_INSCRICOES = 'encoros2026_inscricoes'; // mantido apenas como identificador textual em comentários/legado
@@ -1744,6 +1919,11 @@
   // O inscricaoId é vinculado ao registro real da inscrição institucional
   // (criado por garantirSeedInstitucionais), para que o repertório preenchido
   // na Etapa 2 apareça automaticamente na Programação pública.
+  // Local padrão sugerido para novos blocos de programação. O admin pode
+  // editar livremente (ex: trocar pelo nome de uma igreja específica) ou
+  // selecionar a opção "Virtual / YouTube" no caso da Mostra de Coros Virtuais.
+  const LOCAL_PADRAO_PROGRAMACAO = 'EFG em Artes Basileu França';
+
   function gerarCronogramaSeed(diaId){
     const dia = PROGRAMACAO_DATA.find(d => d.id === diaId);
     const coros = (dia.corosFixos || []).map(c => {
@@ -1760,6 +1940,8 @@
       diaId: diaId,
       duracaoAbertura: CRONOGRAMA_DURACAO_PADRAO_ABERTURA,
       duracaoEncerramento: CRONOGRAMA_DURACAO_PADRAO_ENCERRAMENTO,
+      local: diaId === 'segunda' ? 'Virtual / YouTube' : LOCAL_PADRAO_PROGRAMACAO,
+      linkMapa: '',
       coros: coros,
       atualizadoEm: null
     };
@@ -1818,6 +2000,7 @@
     home: document.getElementById('view-home'),
     regulamento: document.getElementById('view-regulamento'),
     programacao: document.getElementById('view-programacao'),
+    blog: document.getElementById('view-blog'),
     inscricao: document.getElementById('view-inscricao'),
     admin: document.getElementById('view-admin'),
   };
@@ -1853,6 +2036,10 @@
     if(viewName === 'programacao'){
       renderPainelMacro();
       renderCarrosselDia();
+    }
+
+    if(viewName === 'blog'){
+      renderBlogGrid();
     }
 
     window.scrollTo({top:0, behavior:'smooth'});
@@ -2109,6 +2296,151 @@
     });
   }
 
+  // ======================================================================
+  // BLOG DO EVENTO — view pública
+  // ======================================================================
+  const blogPostsGrid = document.getElementById('blogPostsGrid');
+  const blogEmptyState = document.getElementById('blogEmptyState');
+  const btnAbrirSugerirPost = document.getElementById('btnAbrirSugerirPost');
+  const modalSugerirPost = document.getElementById('modalSugerirPost');
+  const modalSugerirPostOverlay = document.getElementById('modalSugerirPostOverlay');
+  const btnFecharModalSugerirPost = document.getElementById('btnFecharModalSugerirPost');
+  const btnCancelarSugerirPost = document.getElementById('btnCancelarSugerirPost');
+  const formSugerirPost = document.getElementById('formSugerirPost');
+  const sugerirPostMsg = document.getElementById('sugerirPostMsg');
+
+  // Gera um link individual e compartilhável para um post específico do blog,
+  // no formato .../index.html?post=ID — abre o blog já com aquele post em
+  // destaque (ver checkModoPostNaURL).
+  function getLinkPost(postId){
+    return window.location.origin + window.location.pathname + '?post=' + postId;
+  }
+
+  // Tenta identificar a plataforma a partir do link, só para mostrar um
+  // selinho visual (Instagram/YouTube/TikTok/Drive/Outro) no card do post.
+  function identificarPlataforma(link){
+    const l = (link || '').toLowerCase();
+    if(l.includes('instagram.com')) return { nome: 'Instagram', cor: 'bg-pink-100 text-pink-700' };
+    if(l.includes('youtube.com') || l.includes('youtu.be')) return { nome: 'YouTube', cor: 'bg-red-100 text-red-700' };
+    if(l.includes('tiktok.com')) return { nome: 'TikTok', cor: 'bg-gray-200 text-gray-800' };
+    if(l.includes('drive.google.com')) return { nome: 'Google Drive', cor: 'bg-blue-100 text-blue-700' };
+    if(l.includes('facebook.com')) return { nome: 'Facebook', cor: 'bg-indigo-100 text-indigo-700' };
+    return { nome: 'Link', cor: 'bg-gray-100 text-gray-600' };
+  }
+
+  function renderBlogGrid(){
+    if(!blogPostsGrid) return;
+    const posts = getPostsBlogAprovados().sort((a, b) => new Date(b.dataEnvio) - new Date(a.dataEnvio));
+
+    if(posts.length === 0){
+      blogPostsGrid.innerHTML = '';
+      blogEmptyState.classList.remove('hidden');
+      return;
+    }
+    blogEmptyState.classList.add('hidden');
+
+    blogPostsGrid.innerHTML = posts.map(post => {
+      const plataforma = identificarPlataforma(post.link);
+      const linkCompartilhar = getLinkPost(post.id);
+      const textoCompartilhar = (post.legenda || 'Confira esse momento do VII ENCoros 2026!') + ' ' + linkCompartilhar;
+
+      return `
+        <div class="card-soft p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${plataforma.cor}">${plataforma.nome}</span>
+            <span class="text-[11px] text-gray-400">${new Date(post.dataEnvio).toLocaleDateString('pt-BR')}</span>
+          </div>
+          <a href="${escapeHtml(post.link)}" target="_blank" rel="noopener" class="block text-sm font-semibold mb-2 hover:text-gold transition" style="color:var(--azul-petroleo)">
+            ${post.nomeCoro ? escapeHtml(post.nomeCoro) : escapeHtml(post.autorNome)}
+          </a>
+          <p class="text-sm text-gray-600 leading-relaxed flex-1 mb-4">${escapeHtml(post.legenda)}</p>
+          <div class="flex items-center gap-2 pt-3 border-t border-gray-100">
+            <a href="${escapeHtml(post.link)}" target="_blank" rel="noopener" class="flex-1 text-center text-xs font-semibold text-gold border border-gold/40 rounded-full px-3 py-2 hover:bg-amber-50 transition">
+              Ver post
+            </a>
+            <a href="https://wa.me/?text=${encodeURIComponent(textoCompartilhar)}" target="_blank" rel="noopener" class="w-9 h-9 shrink-0 rounded-full bg-green-50 border border-green-300 flex items-center justify-center hover:bg-green-100 transition" title="Compartilhar no WhatsApp">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#16a34a"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.45 1.29 4.89L2 22l5.32-1.4a9.86 9.86 0 0 0 4.72 1.2h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.84 14.04c-.25.7-1.25 1.29-1.97 1.42-.5.09-1.15.16-3.32-.71-2.79-1.12-4.6-3.93-4.74-4.11-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.02.96-2.3.25-.27.55-.34.73-.34h.53c.17 0 .4-.03.62.48.25.59.85 2.04.93 2.19.08.15.13.32.03.51-.1.18-.15.3-.3.46-.15.16-.3.36-.43.48-.15.14-.3.3-.13.59.17.3.76 1.26 1.64 2.04 1.13 1.01 2.07 1.32 2.37 1.47.3.15.47.13.65-.08.18-.2.76-.88.96-1.18.2-.3.4-.25.66-.15.27.1 1.71.81 2 .96.29.15.48.22.55.35.07.13.07.74-.18 1.44z"/></svg>
+            </a>
+            <button type="button" data-link="${escapeHtml(linkCompartilhar)}" class="btnCopiarLinkPost w-9 h-9 shrink-0 rounded-full bg-gray-50 border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition" title="Copiar link deste post">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.querySelectorAll('.btnCopiarLinkPost').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        navigator.clipboard.writeText(this.dataset.link).then(()=>{
+          const original = this.innerHTML;
+          this.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+          setTimeout(()=>{ this.innerHTML = original; }, 1500);
+        }).catch(()=>{
+          prompt('Copie o link manualmente:', this.dataset.link);
+        });
+      });
+    });
+  }
+
+  function abrirModalSugerirPost(){
+    formSugerirPost.reset();
+    sugerirPostMsg.classList.add('hidden');
+    modalSugerirPost.classList.remove('hidden');
+  }
+
+  function fecharModalSugerirPost(){
+    modalSugerirPost.classList.add('hidden');
+  }
+
+  if(btnAbrirSugerirPost) btnAbrirSugerirPost.addEventListener('click', abrirModalSugerirPost);
+  if(btnFecharModalSugerirPost) btnFecharModalSugerirPost.addEventListener('click', fecharModalSugerirPost);
+  if(btnCancelarSugerirPost) btnCancelarSugerirPost.addEventListener('click', fecharModalSugerirPost);
+  if(modalSugerirPostOverlay) modalSugerirPostOverlay.addEventListener('click', fecharModalSugerirPost);
+
+  if(formSugerirPost){
+    formSugerirPost.addEventListener('submit', async function(e){
+      e.preventDefault();
+
+      const novoPost = {
+        autorNome: document.getElementById('postAutorNome').value.trim(),
+        nomeCoro: document.getElementById('postNomeCoro').value.trim(),
+        legenda: document.getElementById('postLegenda').value.trim(),
+        link: document.getElementById('postLink').value.trim(),
+        status: 'Pendente', // só aparece no blog público após aprovação no Admin
+        dataEnvio: new Date().toISOString()
+      };
+
+      const btnSubmit = document.getElementById('btnEnviarSugerirPost');
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Enviando...';
+
+      try{
+        await window.firebaseDataLayer.addPostBlog(novoPost);
+        sugerirPostMsg.textContent = '✓ Recebemos sua sugestão! Assim que aprovada, ela aparece no blog.';
+        sugerirPostMsg.className = 'text-sm rounded-lg px-4 py-3 bg-green-50 text-green-700 border border-green-300';
+        sugerirPostMsg.classList.remove('hidden');
+        formSugerirPost.reset();
+        setTimeout(fecharModalSugerirPost, 2500);
+      }catch(err){
+        console.error('Erro ao enviar post para o blog:', err);
+        sugerirPostMsg.textContent = 'Não foi possível enviar agora. Verifique sua conexão e tente novamente.';
+        sugerirPostMsg.className = 'text-sm rounded-lg px-4 py-3 bg-red-50 text-red-700 border border-red-300';
+        sugerirPostMsg.classList.remove('hidden');
+      }finally{
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Enviar para Aprovação';
+      }
+    });
+  }
+
+  // Detecta ?post=ID na URL: abre o site direto na aba Blog (o post em si
+  // já está visível na grade — não há página individual separada, mas o
+  // link funciona como um atalho direto para a seção do Blog).
+  function checkModoPostNaURL(){
+    const params = new URLSearchParams(window.location.search);
+    return params.get('post');
+  }
+
   // ---------- FORMULÁRIO DE INSCRIÇÃO ----------
   // ======================================================================
   // SISTEMA DE TOKEN — link individual de confirmação (Etapa 2)
@@ -2132,6 +2464,64 @@
   function getLinkConfirmacao(inscricaoId){
     const token = gerarTokenConfirmacao(inscricaoId);
     return window.location.origin + window.location.pathname + '?confirmar=' + token;
+  }
+
+  // ======================================================================
+  // MÓDULO DE COMUNICAÇÃO — templates de WhatsApp e E-mail por coro
+  // Substitui as variáveis [NOME_DO_CORO], [LOCAL], [DATA], [HORA] e
+  // [LINK_MAPA] pelos dados reais do coro e do bloco de programação em que
+  // ele está inserido, e abre o wa.me / mailto: já preenchidos.
+  // ======================================================================
+  function preencherTemplate(template, variaveis){
+    let resultado = template;
+    Object.keys(variaveis).forEach(chave => {
+      const regex = new RegExp('\\[' + chave + '\\]', 'g');
+      resultado = resultado.replace(regex, variaveis[chave] || '');
+    });
+    return resultado;
+  }
+
+  function montarVariaveisComunicacao(nomeCoro, dia, horaInicioCoro){
+    return {
+      NOME_DO_CORO: nomeCoro,
+      LOCAL: (cronogramaEdicaoAtual && cronogramaEdicaoAtual.local) || LOCAL_PADRAO_PROGRAMACAO,
+      DATA: dia ? (dia.diaSemana + ', ' + dia.data) : '',
+      HORA: horaInicioCoro || (dia ? dia.horario : ''),
+      LINK_MAPA: (cronogramaEdicaoAtual && cronogramaEdicaoAtual.linkMapa) || ''
+    };
+  }
+
+  const TEMPLATE_WHATSAPP_PADRAO =
+    'Olá! Tudo bem? Aqui é da organização do VII ENCoros 2026. ' +
+    'Passando para confirmar a apresentação do [NOME_DO_CORO] no dia [DATA], às [HORA], em [LOCAL]. ' +
+    'Pedimos que cheguem com antecedência para o ensaio/passagem de som. [LINK_MAPA]';
+
+  const TEMPLATE_EMAIL_ASSUNTO_PADRAO = 'VII ENCoros 2026 — Confirmação de apresentação';
+  const TEMPLATE_EMAIL_CORPO_PADRAO =
+    'Olá!\n\n' +
+    'Escrevemos da organização do VII ENCoros 2026 para confirmar os detalhes da apresentação do [NOME_DO_CORO]:\n\n' +
+    'Data: [DATA]\n' +
+    'Horário: [HORA]\n' +
+    'Local: [LOCAL]\n' +
+    '[LINK_MAPA]\n\n' +
+    'Pedimos que cheguem com antecedência para o ensaio/passagem de som.\n\n' +
+    'Qualquer dúvida, estamos à disposição.\n\n' +
+    'Atenciosamente,\nOrganização VII ENCoros 2026';
+
+  function getLinkWhatsAppCoro(inscricao, dia, horaInicioCoro){
+    const vars = montarVariaveisComunicacao(inscricao.nomeCoro, dia, horaInicioCoro);
+    const mensagem = preencherTemplate(TEMPLATE_WHATSAPP_PADRAO, vars);
+    const telefone = (inscricao.telefoneRegente || '').replace(/\D/g, '');
+    const numeroComDDI = telefone.length > 0 && !telefone.startsWith('55') ? '55' + telefone : telefone;
+    return 'https://wa.me/' + numeroComDDI + '?text=' + encodeURIComponent(mensagem);
+  }
+
+  function getLinkEmailCoro(inscricao, dia, horaInicioCoro){
+    const vars = montarVariaveisComunicacao(inscricao.nomeCoro, dia, horaInicioCoro);
+    const assunto = preencherTemplate(TEMPLATE_EMAIL_ASSUNTO_PADRAO, vars);
+    const corpo = preencherTemplate(TEMPLATE_EMAIL_CORPO_PADRAO, vars);
+    const email = inscricao.emailRegente || '';
+    return 'mailto:' + email + '?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(corpo);
   }
 
   // ---------- ELEMENTOS: MODO PRELIMINAR (Etapa 1) ----------
@@ -3130,38 +3520,129 @@
   });
 
   // ======================================================================
-  // SUB-NAVEGAÇÃO DO PAINEL ADMIN (Inscrições / Cronograma)
+  // ADMIN — GESTÃO DE POSTS DO BLOG (aprovar / rejeitar / excluir)
+  // ======================================================================
+  function statusBadgeBlogClass(status){
+    switch(status){
+      case 'Aprovado': return 'bg-green-100 text-green-700 border-green-300';
+      case 'Rejeitado': return 'bg-red-100 text-red-700 border-red-300';
+      default: return 'bg-amber-100 text-amber-700 border-amber-300';
+    }
+  }
+
+  function renderAdminBlog(){
+    const adminBlogLista = document.getElementById('adminBlogLista');
+    const adminBlogEmptyState = document.getElementById('adminBlogEmptyState');
+    if(!adminBlogLista) return;
+
+    const posts = getPostsBlog().sort((a, b) => new Date(b.dataEnvio) - new Date(a.dataEnvio));
+
+    if(posts.length === 0){
+      adminBlogLista.innerHTML = '';
+      adminBlogEmptyState.classList.remove('hidden');
+      return;
+    }
+    adminBlogEmptyState.classList.add('hidden');
+
+    adminBlogLista.innerHTML = posts.map(post => `
+      <div class="card-soft p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-semibold" style="color:var(--azul-petroleo)">${escapeHtml(post.nomeCoro || post.autorNome)}</span>
+            <span class="text-xs text-gray-400">por ${escapeHtml(post.autorNome)}</span>
+          </div>
+          <p class="text-xs text-gray-600 mt-1 line-clamp-2">${escapeHtml(post.legenda)}</p>
+          <a href="${escapeHtml(post.link)}" target="_blank" rel="noopener" class="text-xs text-gold underline break-all">${escapeHtml(post.link)}</a>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <select data-id="${post.id}" class="status-select-blog text-xs font-semibold border rounded-full px-2 py-1.5 cursor-pointer ${statusBadgeBlogClass(post.status)}">
+            <option value="Pendente" ${post.status==='Pendente'?'selected':''}>Pendente</option>
+            <option value="Aprovado" ${post.status==='Aprovado'?'selected':''}>Aprovado</option>
+            <option value="Rejeitado" ${post.status==='Rejeitado'?'selected':''}>Rejeitado</option>
+          </select>
+          <button type="button" data-id="${post.id}" data-nome="${escapeHtml(post.nomeCoro || post.autorNome)}" class="btnExcluirPostBlog text-xs font-semibold text-red-600 border border-red-300 rounded-full px-3 py-1.5 hover:bg-red-50 transition whitespace-nowrap">
+            🗑 Excluir
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.status-select-blog').forEach(sel=>{
+      sel.addEventListener('change', async function(){
+        const id = this.dataset.id;
+        this.disabled = true;
+        try{
+          await window.firebaseDataLayer.updatePostBlog(id, { status: this.value });
+          renderAdminBlog();
+        }catch(err){
+          console.error('Erro ao atualizar status do post:', err);
+          alert('Não foi possível atualizar agora. Verifique sua conexão e tente novamente.');
+          this.disabled = false;
+        }
+      });
+    });
+
+    document.querySelectorAll('.btnExcluirPostBlog').forEach(btn=>{
+      btn.addEventListener('click', async function(){
+        const id = this.dataset.id;
+        const nome = this.dataset.nome || 'este post';
+        const confirmacao = confirm('Tem certeza que deseja excluir o post de "' + nome + '"? Esta ação não pode ser desfeita.');
+        if(!confirmacao) return;
+
+        this.disabled = true;
+        this.textContent = 'Excluindo...';
+        try{
+          await window.firebaseDataLayer.deletePostBlog(id);
+          renderAdminBlog();
+        }catch(err){
+          console.error('Erro ao excluir post:', err);
+          alert('Não foi possível excluir agora. Verifique sua conexão e tente novamente.');
+          this.disabled = false;
+          this.textContent = '🗑 Excluir';
+        }
+      });
+    });
+  }
+
+  // ======================================================================
+  // SUB-NAVEGAÇÃO DO PAINEL ADMIN (Inscrições / Cronograma / Blog)
   // ======================================================================
   const adminTabInscricoes = document.getElementById('adminTabInscricoes');
   const adminTabCronograma = document.getElementById('adminTabCronograma');
+  const adminTabBlog = document.getElementById('adminTabBlog');
   const adminSubviewInscricoes = document.getElementById('adminSubviewInscricoes');
   const adminSubviewCronograma = document.getElementById('adminSubviewCronograma');
+  const adminSubviewBlog = document.getElementById('adminSubviewBlog');
+
+  const ADMIN_ABAS = {
+    inscricoes: { botao: adminTabInscricoes, painel: adminSubviewInscricoes },
+    cronograma: { botao: adminTabCronograma, painel: adminSubviewCronograma },
+    blog: { botao: adminTabBlog, painel: adminSubviewBlog }
+  };
 
   function setAdminSubview(tab){
-    if(tab === 'cronograma'){
-      adminSubviewCronograma.classList.remove('hidden');
-      adminSubviewInscricoes.classList.add('hidden');
-      adminTabCronograma.style.borderColor = 'var(--dourado)';
-      adminTabCronograma.style.color = 'var(--azul-petroleo)';
-      adminTabCronograma.classList.remove('text-gray-400');
-      adminTabInscricoes.style.borderColor = 'transparent';
-      adminTabInscricoes.style.color = '';
-      adminTabInscricoes.classList.add('text-gray-400');
-      renderCronogramaAdmin();
-    } else {
-      adminSubviewInscricoes.classList.remove('hidden');
-      adminSubviewCronograma.classList.add('hidden');
-      adminTabInscricoes.style.borderColor = 'var(--dourado)';
-      adminTabInscricoes.style.color = 'var(--azul-petroleo)';
-      adminTabInscricoes.classList.remove('text-gray-400');
-      adminTabCronograma.style.borderColor = 'transparent';
-      adminTabCronograma.style.color = '';
-      adminTabCronograma.classList.add('text-gray-400');
-    }
+    Object.keys(ADMIN_ABAS).forEach(key => {
+      const { botao, painel } = ADMIN_ABAS[key];
+      if(key === tab){
+        painel.classList.remove('hidden');
+        botao.style.borderColor = 'var(--dourado)';
+        botao.style.color = 'var(--azul-petroleo)';
+        botao.classList.remove('text-gray-400');
+      } else {
+        painel.classList.add('hidden');
+        botao.style.borderColor = 'transparent';
+        botao.style.color = '';
+        botao.classList.add('text-gray-400');
+      }
+    });
+
+    if(tab === 'cronograma') renderCronogramaAdmin();
+    if(tab === 'blog') renderAdminBlog();
   }
 
   adminTabInscricoes.addEventListener('click', () => setAdminSubview('inscricoes'));
   adminTabCronograma.addEventListener('click', () => setAdminSubview('cronograma'));
+  adminTabBlog.addEventListener('click', () => setAdminSubview('blog'));
 
   // ======================================================================
   // GESTÃO DE CRONOGRAMA — montagem de blocos de apresentação por dia
@@ -3176,9 +3657,10 @@
   const cronogramaSalvoMsg = document.getElementById('cronogramaSalvoMsg');
 
   // Estado em memória do bloco sendo editado, sincronizado com localStorage
-  // apenas ao clicar "Salvar Cronograma". Inclui abertura/encerramento (editáveis)
-  // e a lista de coros (institucionais fixos + amadores), na ordem de apresentação.
-  let cronogramaEdicaoAtual = { duracaoAbertura: 10, duracaoEncerramento: 10, coros: [] };
+  // apenas ao clicar "Salvar Cronograma". Inclui abertura/encerramento (editáveis),
+  // local/linkMapa (para os templates de comunicação) e a lista de coros
+  // (institucionais fixos + amadores), na ordem de apresentação.
+  let cronogramaEdicaoAtual = { duracaoAbertura: 10, duracaoEncerramento: 10, local: '', linkMapa: '', coros: [] };
   let cronogramaDiaAtual = null;
 
   function popularSelectDiaCronograma(){
@@ -3198,6 +3680,29 @@
     return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
   }
 
+  // Sincroniza os campos visuais de Local/Link do Maps com o estado atual
+  // de cronogramaEdicaoAtual. Chamado sempre que o dia é trocado.
+  function atualizarCamposLocalNaTela(){
+    const localSelect = document.getElementById('cronogramaLocalSelect');
+    const localCustomInput = document.getElementById('cronogramaLocalCustom');
+    const linkMapaInput = document.getElementById('cronogramaLinkMapa');
+    if(!localSelect) return;
+
+    const local = cronogramaEdicaoAtual.local || LOCAL_PADRAO_PROGRAMACAO;
+    const opcoesPadrao = ['EFG em Artes Basileu França', 'Virtual / YouTube'];
+
+    if(opcoesPadrao.includes(local)){
+      localSelect.value = local;
+      localCustomInput.classList.add('hidden');
+      localCustomInput.value = '';
+    } else {
+      localSelect.value = 'outro';
+      localCustomInput.classList.remove('hidden');
+      localCustomInput.value = local;
+    }
+    linkMapaInput.value = cronogramaEdicaoAtual.linkMapa || '';
+  }
+
   // Carrega o cronograma para edição: usa o salvo se existir, senão gera o seed
   // (abertura/encerramento padrão + coros institucionais fixos do dia)
   function carregarCronogramaParaEdicao(diaId){
@@ -3207,6 +3712,8 @@
       cronogramaEdicaoAtual = {
         duracaoAbertura: salvo.duracaoAbertura ?? 10,
         duracaoEncerramento: salvo.duracaoEncerramento ?? 10,
+        local: salvo.local || LOCAL_PADRAO_PROGRAMACAO,
+        linkMapa: salvo.linkMapa || '',
         coros: salvo.coros.map(c => ({...c}))
       };
     } else {
@@ -3214,9 +3721,12 @@
       cronogramaEdicaoAtual = {
         duracaoAbertura: seed.duracaoAbertura,
         duracaoEncerramento: seed.duracaoEncerramento,
+        local: seed.local,
+        linkMapa: seed.linkMapa,
         coros: seed.coros.map(c => ({...c}))
       };
     }
+    atualizarCamposLocalNaTela();
   }
 
   // Lista os coros inscritos (Presencial, status != Rejeitado) para o dia selecionado,
@@ -3390,12 +3900,34 @@
              <span class="text-xs text-gray-500">min</span>
            </div>`;
 
+      // Botões de comunicação (WhatsApp/E-mail), exibidos apenas para itens
+      // vinculados a uma inscrição real (têm contato do regente cadastrado).
+      // Itens livres (ex: "Homenagem", "Concerto de Abertura") não exibem.
+      let botoesComunicacao = '';
+      if(c.inscricaoId){
+        const todasInscricoes = getInscricoes();
+        const inscricaoDoCoro = todasInscricoes.find(i => i.id === c.inscricaoId);
+        if(inscricaoDoCoro){
+          const linkWpp = getLinkWhatsAppCoro(inscricaoDoCoro, dia, horaInicio);
+          const linkEmail = getLinkEmailCoro(inscricaoDoCoro, dia, horaInicio);
+          botoesComunicacao = `
+            <a href="${linkWpp}" target="_blank" rel="noopener" class="shrink-0 w-7 h-7 rounded-full bg-green-50 border border-green-300 flex items-center justify-center hover:bg-green-100 transition" title="Enviar WhatsApp para ${escapeHtml(inscricaoDoCoro.nomeRegente || '')}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.45 1.29 4.89L2 22l5.32-1.4a9.86 9.86 0 0 0 4.72 1.2h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.84 14.04c-.25.7-1.25 1.29-1.97 1.42-.5.09-1.15.16-3.32-.71-2.79-1.12-4.6-3.93-4.74-4.11-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.02.96-2.3.25-.27.55-.34.73-.34h.53c.17 0 .4-.03.62.48.25.59.85 2.04.93 2.19.08.15.13.32.03.51-.1.18-.15.3-.3.46-.15.16-.3.36-.43.48-.15.14-.3.3-.13.59.17.3.76 1.26 1.64 2.04 1.13 1.01 2.07 1.32 2.37 1.47.3.15.47.13.65-.08.18-.2.76-.88.96-1.18.2-.3.4-.25.66-.15.27.1 1.71.81 2 .96.29.15.48.22.55.35.07.13.07.74-.18 1.44z"/></svg>
+            </a>
+            <a href="${linkEmail}" class="shrink-0 w-7 h-7 rounded-full bg-blue-50 border border-blue-300 flex items-center justify-center hover:bg-blue-100 transition" title="Enviar e-mail para ${escapeHtml(inscricaoDoCoro.nomeRegente || '')}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"/></svg>
+            </a>
+          `;
+        }
+      }
+
       itensHtml.push(`
         <div class="cronograma-coro-item flex items-center gap-3 bg-white border-2 rounded-lg p-3 cursor-grab active:cursor-grabbing" style="border-color:#E5E7EB" draggable="true" data-idx="${idx}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-gray-300 shrink-0"><circle cx="8" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
           <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${horaInicio}</span>
           <span class="text-sm font-semibold flex-1 truncate" style="color:var(--azul-petroleo)">${escapeHtml(c.nomeCoro)}</span>
           ${badgeFixo}
+          ${botoesComunicacao}
           ${duracaoControl}
           ${removerBtn}
         </div>
@@ -3520,6 +4052,37 @@
     });
   }
 
+  // ---------- CAMPOS DE LOCAL E LINK DO GOOGLE MAPS ----------
+  const cronogramaLocalSelect = document.getElementById('cronogramaLocalSelect');
+  const cronogramaLocalCustom = document.getElementById('cronogramaLocalCustom');
+  const cronogramaLinkMapaInput = document.getElementById('cronogramaLinkMapa');
+
+  if(cronogramaLocalSelect){
+    cronogramaLocalSelect.addEventListener('change', function(){
+      if(this.value === 'outro'){
+        cronogramaLocalCustom.classList.remove('hidden');
+        cronogramaLocalCustom.value = '';
+        cronogramaLocalCustom.focus();
+        cronogramaEdicaoAtual.local = '';
+      } else {
+        cronogramaLocalCustom.classList.add('hidden');
+        cronogramaEdicaoAtual.local = this.value;
+      }
+    });
+  }
+
+  if(cronogramaLocalCustom){
+    cronogramaLocalCustom.addEventListener('input', function(){
+      cronogramaEdicaoAtual.local = this.value.trim();
+    });
+  }
+
+  if(cronogramaLinkMapaInput){
+    cronogramaLinkMapaInput.addEventListener('input', function(){
+      cronogramaEdicaoAtual.linkMapa = this.value.trim();
+    });
+  }
+
   if(btnSalvarCronograma){
     btnSalvarCronograma.addEventListener('click', function(){
       const dia = PROGRAMACAO_DATA.find(d => d.id === cronogramaDiaAtual);
@@ -3535,6 +4098,8 @@
         diaId: cronogramaDiaAtual,
         duracaoAbertura: cronogramaEdicaoAtual.duracaoAbertura,
         duracaoEncerramento: cronogramaEdicaoAtual.duracaoEncerramento,
+        local: cronogramaEdicaoAtual.local || LOCAL_PADRAO_PROGRAMACAO,
+        linkMapa: cronogramaEdicaoAtual.linkMapa || '',
         coros: cronogramaEdicaoAtual.coros,
         atualizadoEm: new Date().toISOString()
       };
@@ -3555,10 +4120,14 @@
     const viewAtiva = Object.keys(views).find(k => !views[k].classList.contains('hidden'));
     if(viewAtiva === 'admin' && isAdminLoggedIn()){
       renderAdminTable();
+      if(typeof renderAdminBlog === 'function') renderAdminBlog();
     }
     if(viewAtiva === 'programacao'){
       renderPainelMacro();
       renderCarrosselDia();
+    }
+    if(viewAtiva === 'blog'){
+      renderBlogGrid();
     }
   };
 
@@ -3578,12 +4147,15 @@
 
     // Link direto de divulgação: ?inscrever=1 abre a página já na Inscrição,
     // para uso em redes sociais e WhatsApp (ex: site.com/?inscrever=1).
-    // O modo Confirmação (?confirmar=TOKEN) tem prioridade caso ambos apareçam.
+    // ?post=ID abre direto na aba Blog (link individual de compartilhamento).
+    // O modo Confirmação (?confirmar=TOKEN) tem prioridade caso vários apareçam.
     const paramsInit = new URLSearchParams(window.location.search);
     if(paramsInit.get('confirmar')){
       goTo('inscricao'); // checkModoConfirmacaoNaURL() já tratou a troca de sub-modo
     } else if(paramsInit.get('inscrever')){
       goTo('inscricao');
+    } else if(paramsInit.get('post')){
+      goTo('blog');
     } else {
       goTo('home');
     }
