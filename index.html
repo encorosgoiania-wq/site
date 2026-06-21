@@ -1088,6 +1088,7 @@
                 <th class="px-4 py-3">Materiais</th>
                 <th class="px-4 py-3">Status</th>
                 <th class="px-4 py-3">Confirmação</th>
+                <th class="px-4 py-3">Ações</th>
               </tr>
             </thead>
             <tbody id="adminTableBody" class="divide-y divide-gray-100">
@@ -1178,6 +1179,81 @@
 
     </div>
     </div><!-- /adminPanelContent -->
+
+    <!-- MODAL: EDITAR INSCRIÇÃO -->
+    <div id="modalEditarInscricao" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div id="modalEditarOverlay" class="absolute inset-0 bg-black/50"></div>
+      <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+          <h3 class="font-serif-display text-xl" style="color:var(--azul-petroleo)">Editar Inscrição</h3>
+          <button type="button" id="btnFecharModalEditar" class="text-gray-400 hover:text-gray-700 transition" aria-label="Fechar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <form id="formEditarInscricao" class="px-6 py-5 space-y-4">
+          <input type="hidden" id="editId">
+
+          <div>
+            <label class="label-field">Nome do Coro *</label>
+            <input required type="text" id="editNomeCoro" class="input-field">
+          </div>
+          <div>
+            <label class="label-field">Nome do Regente *</label>
+            <input required type="text" id="editNomeRegente" class="input-field">
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label-field">E-mail</label>
+              <input type="email" id="editEmailRegente" class="input-field">
+            </div>
+            <div>
+              <label class="label-field">Telefone / WhatsApp</label>
+              <input type="tel" id="editTelefoneRegente" class="input-field">
+            </div>
+          </div>
+          <div>
+            <label class="label-field">Cidade / Estado de Origem</label>
+            <input type="text" id="editCidadeEstado" class="input-field">
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label-field">Modalidade</label>
+              <select id="editModalidade" class="input-field bg-white">
+                <option value="Presencial">Presencial</option>
+                <option value="Virtual">Virtual</option>
+              </select>
+            </div>
+            <div>
+              <label class="label-field">Dia de Apresentação</label>
+              <select id="editDiaApresentacao" class="input-field bg-white">
+                <option value="">— Nenhum —</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="label-field">Status</label>
+            <select id="editStatus" class="input-field bg-white">
+              <option value="Pendente">Pendente</option>
+              <option value="Aprovado">Aprovado</option>
+              <option value="Rejeitado">Rejeitado</option>
+            </select>
+          </div>
+
+          <div id="editModalMsg" class="hidden text-sm rounded-lg px-4 py-3"></div>
+
+          <div class="flex gap-3 pt-2">
+            <button type="button" id="btnCancelarEdicao" class="flex-1 border border-gray-300 text-gray-700 font-semibold rounded-full py-2.5 hover:bg-gray-50 transition">
+              Cancelar
+            </button>
+            <button type="submit" id="btnSalvarEdicao" class="flex-1 btn-gold rounded-full py-2.5 font-bold">
+              Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </section>
 
 </main>
@@ -2772,6 +2848,91 @@
     }).join('');
   }
 
+  // ---------- MODAL DE EDIÇÃO DE INSCRIÇÃO ----------
+  const modalEditarInscricao = document.getElementById('modalEditarInscricao');
+  const modalEditarOverlay = document.getElementById('modalEditarOverlay');
+  const formEditarInscricao = document.getElementById('formEditarInscricao');
+  const btnFecharModalEditar = document.getElementById('btnFecharModalEditar');
+  const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
+  const editModalMsg = document.getElementById('editModalMsg');
+
+  function popularSelectDiaEdicao(){
+    const select = document.getElementById('editDiaApresentacao');
+    const diasValidos = PROGRAMACAO_DATA.filter(dia => dia.vagasInscricao || dia.id === 'segunda');
+    select.innerHTML = '<option value="">— Nenhum —</option>' +
+      diasValidos.map(dia => `<option value="${dia.id}">${dia.diaSemana} (${dia.data})</option>`).join('');
+  }
+
+  function abrirModalEdicao(id){
+    const lista = getInscricoes();
+    const item = lista.find(i => i.id === id);
+    if(!item) return;
+
+    popularSelectDiaEdicao();
+
+    document.getElementById('editId').value = item.id;
+    document.getElementById('editNomeCoro').value = item.nomeCoro || '';
+    document.getElementById('editNomeRegente').value = item.nomeRegente || '';
+    document.getElementById('editEmailRegente').value = item.emailRegente || '';
+    document.getElementById('editTelefoneRegente').value = item.telefoneRegente || '';
+    document.getElementById('editCidadeEstado').value = item.cidadeEstado || '';
+    document.getElementById('editModalidade').value = item.modalidade || 'Presencial';
+    document.getElementById('editDiaApresentacao').value = item.diaApresentacao || '';
+    document.getElementById('editStatus').value = item.status || 'Pendente';
+
+    editModalMsg.classList.add('hidden');
+    modalEditarInscricao.classList.remove('hidden');
+  }
+
+  function fecharModalEdicao(){
+    modalEditarInscricao.classList.add('hidden');
+    formEditarInscricao.reset();
+  }
+
+  btnFecharModalEditar.addEventListener('click', fecharModalEdicao);
+  btnCancelarEdicao.addEventListener('click', fecharModalEdicao);
+  modalEditarOverlay.addEventListener('click', fecharModalEdicao);
+
+  formEditarInscricao.addEventListener('submit', async function(e){
+    e.preventDefault();
+
+    const id = document.getElementById('editId').value;
+    const camposAtualizados = {
+      nomeCoro: document.getElementById('editNomeCoro').value.trim(),
+      nomeRegente: document.getElementById('editNomeRegente').value.trim(),
+      emailRegente: document.getElementById('editEmailRegente').value.trim(),
+      telefoneRegente: document.getElementById('editTelefoneRegente').value.trim(),
+      cidadeEstado: document.getElementById('editCidadeEstado').value.trim(),
+      modalidade: document.getElementById('editModalidade').value,
+      diaApresentacao: document.getElementById('editDiaApresentacao').value,
+      status: document.getElementById('editStatus').value
+    };
+
+    if(!camposAtualizados.nomeCoro || !camposAtualizados.nomeRegente){
+      editModalMsg.textContent = 'Nome do Coro e Nome do Regente são obrigatórios.';
+      editModalMsg.className = 'text-sm rounded-lg px-4 py-3 bg-red-50 text-red-700 border border-red-300';
+      return;
+    }
+
+    const btnSalvar = document.getElementById('btnSalvarEdicao');
+    btnSalvar.disabled = true;
+    btnSalvar.textContent = 'Salvando...';
+
+    try{
+      await window.firebaseDataLayer.updateInscricao(id, camposAtualizados);
+      fecharModalEdicao();
+      renderAdminTable();
+    }catch(err){
+      console.error('Erro ao salvar edição:', err);
+      editModalMsg.textContent = 'Não foi possível salvar agora. Verifique sua conexão e tente novamente.';
+      editModalMsg.className = 'text-sm rounded-lg px-4 py-3 bg-red-50 text-red-700 border border-red-300';
+      editModalMsg.classList.remove('hidden');
+    }finally{
+      btnSalvar.disabled = false;
+      btnSalvar.textContent = 'Salvar Alterações';
+    }
+  });
+
   function renderAdminTable(){
     const lista = getInscricoes();
     totalInscricoesEl.textContent = lista.length;
@@ -2848,6 +3009,16 @@
             </select>
           </td>
           <td class="px-4 py-3">${linkConfirmacaoHtml}</td>
+          <td class="px-4 py-3">
+            <div class="flex gap-2">
+              <button type="button" data-id="${item.id}" class="btnEditarInscricao text-xs font-semibold text-blue-600 border border-blue-300 rounded-full px-3 py-1.5 hover:bg-blue-50 transition whitespace-nowrap">
+                ✎ Editar
+              </button>
+              <button type="button" data-id="${item.id}" data-nome="${escapeHtml(item.nomeCoro)}" class="btnExcluirInscricao text-xs font-semibold text-red-600 border border-red-300 rounded-full px-3 py-1.5 hover:bg-red-50 transition whitespace-nowrap">
+                🗑 Excluir
+              </button>
+            </div>
+          </td>
         </tr>
       `;
     }).join('');
@@ -2882,6 +3053,38 @@
         }).catch(()=>{
           prompt('Copie o link manualmente:', link);
         });
+      });
+    });
+
+    document.querySelectorAll('.btnEditarInscricao').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        abrirModalEdicao(this.dataset.id);
+      });
+    });
+
+    document.querySelectorAll('.btnExcluirInscricao').forEach(btn=>{
+      btn.addEventListener('click', async function(){
+        const id = this.dataset.id;
+        const nome = this.dataset.nome || 'esta inscrição';
+        const confirmacao = confirm(
+          'Tem certeza que deseja EXCLUIR a inscrição de "' + nome + '"?\n\n' +
+          'Esta ação remove o registro permanentemente da nuvem e não pode ser desfeita.'
+        );
+        if(!confirmacao) return;
+
+        this.disabled = true;
+        this.textContent = 'Excluindo...';
+        try{
+          await window.firebaseDataLayer.deleteInscricao(id);
+          // renderAdminTable() roda automaticamente via onSnapshot, mas
+          // chamamos aqui também para feedback visual imediato.
+          renderAdminTable();
+        }catch(err){
+          console.error('Erro ao excluir inscrição:', err);
+          alert('Não foi possível excluir agora. Verifique sua conexão e tente novamente.');
+          this.disabled = false;
+          this.textContent = '🗑 Excluir';
+        }
       });
     });
   }
