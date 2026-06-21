@@ -861,7 +861,13 @@
             </label>
           </div>
 
-          <div id="formMsg" class="hidden text-center text-sm rounded-lg px-4 py-3"></div>
+          <div id="formMsg" class="hidden rounded-2xl px-6 py-6 border-2 flex items-start gap-4">
+            <div id="formMsgIcone" class="shrink-0 w-12 h-12 rounded-full flex items-center justify-center"></div>
+            <div class="flex-1 pt-1">
+              <p id="formMsgTitulo" class="font-bold text-base mb-1"></p>
+              <p id="formMsgTexto" class="text-sm leading-relaxed"></p>
+            </div>
+          </div>
 
           <button type="submit" id="btnEnviar" disabled class="btn-disabled w-full py-4 rounded-full text-base font-bold transition-all">
             Enviar Inscrição Preliminar
@@ -2091,13 +2097,35 @@
   checkbox.addEventListener('change', atualizarBotao);
 
   function mostrarMensagem(el, texto, tipo){
-    el.textContent = texto;
-    el.classList.remove('hidden','bg-green-50','text-green-700','border','border-green-300','bg-red-50','text-red-700','border-red-300');
+    const icone = document.getElementById('formMsgIcone');
+    const titulo = document.getElementById('formMsgTitulo');
+    const corpo = document.getElementById('formMsgTexto');
+
+    el.classList.remove('hidden','bg-green-50','border-green-400','bg-red-50','border-red-400');
+    corpo.classList.remove('text-green-700','text-red-700');
+    titulo.classList.remove('text-green-800','text-red-800');
+
     if(tipo === 'sucesso'){
-      el.classList.add('bg-green-50','text-green-700','border','border-green-300');
+      el.classList.add('bg-green-50','border-green-400');
+      titulo.classList.add('text-green-800');
+      corpo.classList.add('text-green-700');
+      titulo.textContent = 'Inscrição enviada com sucesso!';
+      icone.className = 'shrink-0 w-12 h-12 rounded-full flex items-center justify-center bg-green-500';
+      icone.innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
     } else {
-      el.classList.add('bg-red-50','text-red-700','border-red-300');
+      el.classList.add('bg-red-50','border-red-400');
+      titulo.classList.add('text-red-800');
+      corpo.classList.add('text-red-700');
+      titulo.textContent = 'Não foi possível enviar';
+      icone.className = 'shrink-0 w-12 h-12 rounded-full flex items-center justify-center bg-red-500';
+      icone.innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     }
+
+    corpo.textContent = texto;
+
+    // Garante que a mensagem fique visível na tela, mesmo em celular ou
+    // se a pessoa tiver rolado para outra parte da página antes de enviar.
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   const STORAGE_KEY = STORAGE_KEY_INSCRICOES;
@@ -2371,6 +2399,9 @@
                   Se o botão não funcionar, copie e cole este link no navegador:<br>
                   <a href="${linkEtapa2}" style="color:#D4AF37; word-break:break-all;">${linkEtapa2}</a>
                 </p>
+                <p style="font-size:12px; color:#6b7280; line-height:1.5; margin-top:14px;">
+                  📩 Não encontrou este e-mail mais tarde? Verifique sua pasta de <strong>Spam/Lixo Eletrônico</strong> e marque como "Não é spam" para garantir que os próximos avisos cheguem certinho.
+                </p>
               </div>
               <div style="background:#0F2027; padding:16px 24px; text-align:center;">
                 <p style="color:#9ca3af; font-size:11px; margin:0;">VII ENCoros 2026 · 04 a 07 de setembro de 2026 · Goiânia, Goiás</p>
@@ -2388,7 +2419,7 @@
         }
       }
 
-      mostrarMensagem(formMsg, '✓ Inscrição enviada com sucesso! Enviamos um e-mail de confirmação com o link para completar sua participação.', 'sucesso');
+      mostrarMensagem(formMsg, 'Sua inscrição já está registrada no sistema. Enviamos um e-mail de confirmação com o link para completar sua participação — se não encontrar na caixa de entrada em alguns minutos, confira também a pasta de Spam/Lixo Eletrônico.', 'sucesso');
       formPreliminar.reset();
       setFluxo('novo');
     }catch(err){
@@ -2399,7 +2430,9 @@
       atualizarBotao();
     }
 
-    setTimeout(()=>{ formMsg.classList.add('hidden'); }, 8000);
+    // A mensagem de confirmação permanece visível até a pessoa enviar uma
+    // nova inscrição ou sair da página — não desaparece sozinha, para dar
+    // tempo de ler com calma (especialmente o aviso sobre checar o Spam).
   });
 
   setFluxo('novo');
