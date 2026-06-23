@@ -605,7 +605,7 @@
 
             <div class="text-center flex-1">
               <span id="carrosselDiaSemana" class="text-gold font-semibold tracking-[0.2em] text-xs uppercase">Quinta-feira</span>
-              <h3 id="carrosselData" class="font-serif-display text-2xl sm:text-3xl mt-1" style="color:var(--azul-petroleo)">03 de Setembro</h3>
+              <h3 id="carrosselData" class="font-serif-display text-2xl sm:text-3xl mt-1" style="color:var(--azul-petroleo)">04 de Setembro</h3>
             </div>
 
             <button id="carrosselNext" type="button" aria-label="Próximo dia" class="shrink-0 w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center hover:border-gold hover:text-gold transition">
@@ -1625,7 +1625,7 @@
     {
       id: 'quinta',
       diaSemana: 'Quinta-feira',
-      data: '03 de Setembro',
+      data: '04 de Setembro',
       horario: 'Início às 20h',
       horarioInicioMinutos: 20 * 60, // 20:00
       titulo: 'Concerto de Abertura',
@@ -2481,46 +2481,69 @@
     return resultado;
   }
 
-  function montarVariaveisComunicacao(nomeCoro, dia, horaInicioCoro){
+  function montarVariaveisComunicacao(nomeCoro, dia, horaInicioCoro, inscricao){
+    const linkEtapa2 = (inscricao && inscricao.id) ? getLinkConfirmacao(inscricao.id) : '';
     return {
       NOME_DO_CORO: nomeCoro,
       LOCAL: (cronogramaEdicaoAtual && cronogramaEdicaoAtual.local) || LOCAL_PADRAO_PROGRAMACAO,
       DATA: dia ? (dia.diaSemana + ', ' + dia.data) : '',
       HORA: horaInicioCoro || (dia ? dia.horario : ''),
-      LINK_MAPA: (cronogramaEdicaoAtual && cronogramaEdicaoAtual.linkMapa) || ''
+      LINK_MAPA: (cronogramaEdicaoAtual && cronogramaEdicaoAtual.linkMapa)
+        ? '\n📍 Como chegar: ' + cronogramaEdicaoAtual.linkMapa
+        : '',
+      LINK_ETAPA2: linkEtapa2,
+      PRAZO_REPERTORIO: '07 de agosto de 2026'
     };
   }
 
   const TEMPLATE_WHATSAPP_PADRAO =
-    'Olá! Tudo bem? Aqui é da organização do VII ENCoros 2026. ' +
-    'Passando para confirmar a apresentação do [NOME_DO_CORO] no dia [DATA], às [HORA], em [LOCAL]. ' +
-    'Pedimos que cheguem com antecedência para o ensaio/passagem de som. [LINK_MAPA]';
+    'Olá, [NOME_DO_CORO]! 🎶\n\n' +
+    'Que alegria ter vocês no VII ENCoros 2026! Ficamos muito felizes com a inscrição!\n\n' +
+    'Estamos organizando os detalhes finais e precisamos dos dados do repertório e da logística da apresentação de vocês.\n\n' +
+    '📅 Data: [DATA]\n' +
+    '🕐 Horário: [HORA]\n' +
+    '📍 Local: [LOCAL][LINK_MAPA]\n\n' +
+    '⚠️ Prazo final para envio do repertório: *[PRAZO_REPERTORIO]* (impreterivelmente)\n\n' +
+    'Por favor, acesse o link abaixo para completar o cadastro (Etapa 2) com as obras do repertório e informações de logística:\n' +
+    '👉 [LINK_ETAPA2]\n\n' +
+    'Qualquer dúvida, estamos à disposição! 😊\n' +
+    'Organização VII ENCoros 2026';
 
-  const TEMPLATE_EMAIL_ASSUNTO_PADRAO = 'VII ENCoros 2026 — Confirmação de apresentação';
+  const TEMPLATE_EMAIL_ASSUNTO_PADRAO = 'VII ENCoros 2026 — Complete sua inscrição (Etapa 2)';
   const TEMPLATE_EMAIL_CORPO_PADRAO =
-    'Olá!\n\n' +
-    'Escrevemos da organização do VII ENCoros 2026 para confirmar os detalhes da apresentação do [NOME_DO_CORO]:\n\n' +
+    'Olá, [NOME_DO_CORO]!\n\n' +
+    'Que alegria ter vocês no VII ENCoros 2026! Ficamos muito felizes com a inscrição e mal podemos esperar para receber o grupo em Goiânia.\n\n' +
+    'Para finalizarmos a organização do evento, precisamos que o(a) maestro(a) preencha a Etapa 2 da inscrição com as informações de repertório e logística.\n\n' +
+    '— Detalhes da apresentação —\n' +
     'Data: [DATA]\n' +
     'Horário: [HORA]\n' +
-    'Local: [LOCAL]\n' +
-    '[LINK_MAPA]\n\n' +
-    'Pedimos que cheguem com antecedência para o ensaio/passagem de som.\n\n' +
-    'Qualquer dúvida, estamos à disposição.\n\n' +
-    'Atenciosamente,\nOrganização VII ENCoros 2026';
+    'Local: [LOCAL][LINK_MAPA]\n\n' +
+    '⚠️  PRAZO FINAL para envio do repertório: [PRAZO_REPERTORIO] (impreterivelmente)\n\n' +
+    'Acesse o link exclusivo abaixo para completar o cadastro:\n' +
+    '[LINK_ETAPA2]\n\n' +
+    'Se tiver qualquer dúvida ou precisar de informações adicionais, não hesite em nos contatar.\n\n' +
+    'Com alegria,\n' +
+    'Organização VII ENCoros 2026\n' +
+    'encorosgoiania@gmail.com';
 
   function getLinkWhatsAppCoro(inscricao, dia, horaInicioCoro){
-    const vars = montarVariaveisComunicacao(inscricao.nomeCoro, dia, horaInicioCoro);
+    const vars = montarVariaveisComunicacao(inscricao.nomeCoro, dia, horaInicioCoro, inscricao);
     const mensagem = preencherTemplate(TEMPLATE_WHATSAPP_PADRAO, vars);
     const telefone = (inscricao.telefoneRegente || '').replace(/\D/g, '');
     const numeroComDDI = telefone.length > 0 && !telefone.startsWith('55') ? '55' + telefone : telefone;
+    // Se não tiver telefone cadastrado, abre WhatsApp sem número (admin digita na hora)
+    if(!numeroComDDI){
+      return 'https://wa.me/?text=' + encodeURIComponent(mensagem);
+    }
     return 'https://wa.me/' + numeroComDDI + '?text=' + encodeURIComponent(mensagem);
   }
 
   function getLinkEmailCoro(inscricao, dia, horaInicioCoro){
-    const vars = montarVariaveisComunicacao(inscricao.nomeCoro, dia, horaInicioCoro);
+    const vars = montarVariaveisComunicacao(inscricao.nomeCoro, dia, horaInicioCoro, inscricao);
     const assunto = preencherTemplate(TEMPLATE_EMAIL_ASSUNTO_PADRAO, vars);
     const corpo = preencherTemplate(TEMPLATE_EMAIL_CORPO_PADRAO, vars);
     const email = inscricao.emailRegente || '';
+    // Se não tiver e-mail cadastrado, abre cliente de e-mail sem destinatário
     return 'mailto:' + email + '?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(corpo);
   }
 
@@ -3345,7 +3368,15 @@
       );
     }
 
-    adminTableBody.innerHTML = lista.map(item=>{
+    // Ordena do mais recente para o mais antigo (último inscrito aparece primeiro)
+    const listaOrdenada = [...lista]
+      .filter(i => !i.isInstitucional)
+      .sort((a, b) => new Date(b.dataEnvio || 0) - new Date(a.dataEnvio || 0));
+    const institucionais = lista.filter(i => i.isInstitucional);
+    const listaFinal = [...listaOrdenada, ...institucionais];
+
+    adminTableBody.innerHTML = listaFinal.map((item, idx)=>{
+      const isMaisRecente = idx === 0 && !item.isInstitucional;
       const fluxoBadge = (item.isInstitucional && isCoroAnfitriao(item.nomeCoro))
         ? '<span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 inline-block mt-1">⭐ Anfitrião</span>'
         : (!item.isInstitucional && item.fluxoInscricao === 'convidado'
@@ -3378,9 +3409,16 @@
            </button>`
         : '<span class="text-gray-400 text-xs">Aprove para gerar</span>';
 
+      const trClass = isMaisRecente
+        ? 'bg-amber-50 border-l-4 border-amber-400'
+        : 'hover:bg-gray-50';
+      const novoTag = isMaisRecente
+        ? '<span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5 inline-block ml-1">✨ Novo</span>'
+        : '';
+
       return `
-        <tr class="hover:bg-gray-50">
-          <td class="px-4 py-3 font-semibold text-gray-800">${escapeHtml(nomeCompletoCoro(item.nomeCoro))}${fluxoBadge}</td>
+        <tr class="${trClass}">
+          <td class="px-4 py-3 font-semibold text-gray-800">${escapeHtml(nomeCompletoCoro(item.nomeCoro))}${fluxoBadge}${novoTag}</td>
           <td class="px-4 py-3 text-gray-600">${escapeHtml(item.nomeRegente)}</td>
           <td class="px-4 py-3 text-gray-600">${escapeHtml(item.cidadeEstado)}</td>
           <td class="px-4 py-3">
@@ -3900,25 +3938,47 @@
              <span class="text-xs text-gray-500">min</span>
            </div>`;
 
-      // Botões de comunicação (WhatsApp/E-mail), exibidos apenas para itens
-      // vinculados a uma inscrição real (têm contato do regente cadastrado).
-      // Itens livres (ex: "Homenagem", "Concerto de Abertura") não exibem.
+      // Botões de comunicação (WhatsApp/E-mail).
+      // Para coros com inscrição real: usa os dados da inscrição (telefone, e-mail, link Etapa 2).
+      // Para coros fixos institucionais (CSUFG, CSJGOIÁS etc.) sem inscrição no sistema:
+      // usa os dados do COROS_INSTITUCIONAIS_SEED como fallback, gerando botão sem número/e-mail
+      // (admin preenche na hora ao abrir o WhatsApp/e-mail).
       let botoesComunicacao = '';
+      let inscricaoDoCoro = null;
+
       if(c.inscricaoId){
         const todasInscricoes = getInscricoes();
-        const inscricaoDoCoro = todasInscricoes.find(i => i.id === c.inscricaoId);
-        if(inscricaoDoCoro){
-          const linkWpp = getLinkWhatsAppCoro(inscricaoDoCoro, dia, horaInicio);
-          const linkEmail = getLinkEmailCoro(inscricaoDoCoro, dia, horaInicio);
-          botoesComunicacao = `
-            <a href="${linkWpp}" target="_blank" rel="noopener" class="shrink-0 w-7 h-7 rounded-full bg-green-50 border border-green-300 flex items-center justify-center hover:bg-green-100 transition" title="Enviar WhatsApp para ${escapeHtml(inscricaoDoCoro.nomeRegente || '')}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.45 1.29 4.89L2 22l5.32-1.4a9.86 9.86 0 0 0 4.72 1.2h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.84 14.04c-.25.7-1.25 1.29-1.97 1.42-.5.09-1.15.16-3.32-.71-2.79-1.12-4.6-3.93-4.74-4.11-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.02.96-2.3.25-.27.55-.34.73-.34h.53c.17 0 .4-.03.62.48.25.59.85 2.04.93 2.19.08.15.13.32.03.51-.1.18-.15.3-.3.46-.15.16-.3.36-.43.48-.15.14-.3.3-.13.59.17.3.76 1.26 1.64 2.04 1.13 1.01 2.07 1.32 2.37 1.47.3.15.47.13.65-.08.18-.2.76-.88.96-1.18.2-.3.4-.25.66-.15.27.1 1.71.81 2 .96.29.15.48.22.55.35.07.13.07.74-.18 1.44z"/></svg>
-            </a>
-            <a href="${linkEmail}" class="shrink-0 w-7 h-7 rounded-full bg-blue-50 border border-blue-300 flex items-center justify-center hover:bg-blue-100 transition" title="Enviar e-mail para ${escapeHtml(inscricaoDoCoro.nomeRegente || '')}">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"/></svg>
-            </a>
-          `;
-        }
+        inscricaoDoCoro = todasInscricoes.find(i => i.id === c.inscricaoId);
+      }
+
+      // Fallback para coro fixo sem inscrição: cria um objeto mínimo com o nome do coro
+      if(!inscricaoDoCoro && c.nomeCoro){
+        inscricaoDoCoro = {
+          id: null,
+          nomeCoro: c.nomeCoro,
+          nomeRegente: '',
+          telefoneRegente: '',
+          emailRegente: ''
+        };
+      }
+
+      if(inscricaoDoCoro){
+        const linkWpp = getLinkWhatsAppCoro(inscricaoDoCoro, dia, horaInicio);
+        const linkEmail = getLinkEmailCoro(inscricaoDoCoro, dia, horaInicio);
+        const tituloWpp = inscricaoDoCoro.nomeRegente
+          ? 'WhatsApp para ' + escapeHtml(inscricaoDoCoro.nomeRegente)
+          : 'WhatsApp (sem número cadastrado — abre sem destinatário)';
+        const tituloEmail = inscricaoDoCoro.emailRegente
+          ? 'E-mail para ' + escapeHtml(inscricaoDoCoro.emailRegente)
+          : 'E-mail (sem endereço cadastrado — abre sem destinatário)';
+        botoesComunicacao = `
+          <a href="${linkWpp}" target="_blank" rel="noopener" class="shrink-0 w-7 h-7 rounded-full bg-green-50 border border-green-300 flex items-center justify-center hover:bg-green-100 transition" title="${tituloWpp}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.45 1.29 4.89L2 22l5.32-1.4a9.86 9.86 0 0 0 4.72 1.2h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.84 14.04c-.25.7-1.25 1.29-1.97 1.42-.5.09-1.15.16-3.32-.71-2.79-1.12-4.6-3.93-4.74-4.11-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.02.96-2.3.25-.27.55-.34.73-.34h.53c.17 0 .4-.03.62.48.25.59.85 2.04.93 2.19.08.15.13.32.03.51-.1.18-.15.3-.3.46-.15.16-.3.36-.43.48-.15.14-.3.3-.13.59.17.3.76 1.26 1.64 2.04 1.13 1.01 2.07 1.32 2.37 1.47.3.15.47.13.65-.08.18-.2.76-.88.96-1.18.2-.3.4-.25.66-.15.27.1 1.71.81 2 .96.29.15.48.22.55.35.07.13.07.74-.18 1.44z"/></svg>
+          </a>
+          <a href="${linkEmail}" class="shrink-0 w-7 h-7 rounded-full bg-blue-50 border border-blue-300 flex items-center justify-center hover:bg-blue-100 transition" title="${tituloEmail}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"/></svg>
+          </a>
+        `;
       }
 
       itensHtml.push(`
