@@ -1147,9 +1147,9 @@
       <div id="adminSubviewInscricoes">
 
         <!-- LINK PÚBLICO DE DIVULGAÇÃO -->
-        <div class="card-soft p-5 sm:p-6 mb-10 border-2" style="border-color:var(--dourado)">
-          <h2 class="text-sm font-bold mb-1" style="color:var(--azul-petroleo)">📣 Link para divulgação (redes sociais e WhatsApp)</h2>
-          <p class="text-xs text-gray-500 mb-3">Compartilhe este link para que os coros acessem diretamente o formulário de inscrição preliminar.</p>
+        <div class="card-soft p-5 sm:p-6 mb-8 border-2" style="border-color:var(--dourado)">
+          <h2 class="text-sm font-bold mb-1" style="color:var(--azul-petroleo)">📣 Link para divulgação</h2>
+          <p class="text-xs text-gray-500 mb-3">Compartilhe para que os coros acessem o formulário de inscrição diretamente.</p>
           <div class="flex flex-col sm:flex-row gap-2">
             <input type="text" id="linkDivulgacaoInput" readonly class="input-field bg-bg-claro text-sm" style="background-color:var(--bg-claro)" value="">
             <button type="button" id="btnCopiarLinkDivulgacao" class="shrink-0 btn-gold px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap">
@@ -1158,17 +1158,23 @@
           </div>
         </div>
 
-        <!-- CONTROLE DE VAGAS POR DIA -->
-        <div class="mb-10">
+        <!-- ALERTAS AUTOMÁTICOS -->
+        <div id="adminAlertas" class="mb-8 space-y-3"></div>
+
+        <!-- VAGAS POR DIA -->
+        <div class="mb-8">
           <h2 class="font-serif-display text-xl mb-4" style="color:var(--azul-petroleo)">Vagas — Coros Amadores Presenciais</h2>
-          <div id="painelVagasAdmin" class="grid sm:grid-cols-3 gap-4">
-            <!-- preenchido via JS -->
-          </div>
+          <div id="painelVagasAdmin" class="grid sm:grid-cols-3 gap-4"></div>
         </div>
 
+        <!-- CONTROLES -->
         <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <div class="text-sm text-gray-600">
-            <span id="totalInscricoes" class="font-semibold text-petroleo" style="color:var(--azul-petroleo)">0</span> inscrição(ões) registrada(s)
+          <div class="flex items-center gap-4">
+            <span id="totalInscricoes" class="text-sm font-semibold" style="color:var(--azul-petroleo)">0 inscrição(ões)</span>
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" id="toggleVistaRelatorio" checked class="accent-gold w-4 h-4">
+              Vista por dia
+            </label>
           </div>
           <div class="flex gap-3">
             <button id="btnExportar" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
@@ -1180,31 +1186,35 @@
           </div>
         </div>
 
-        <div class="card-soft overflow-x-auto">
-          <table class="w-full text-sm admin-table">
-            <thead class="bg-bg-claro border-b border-gray-200" style="background-color:var(--bg-claro)">
-              <tr class="text-left">
-                <th class="px-4 py-3">Coro</th>
-                <th class="px-4 py-3">Regente</th>
-                <th class="px-4 py-3">Cidade</th>
-                <th class="px-4 py-3">Modalidade</th>
-                <th class="px-4 py-3">Etapa</th>
-                <th class="px-4 py-3">Dia</th>
-                <th class="px-4 py-3">Materiais</th>
-                <th class="px-4 py-3">Status</th>
-                <th class="px-4 py-3">Confirmação</th>
-                <th class="px-4 py-3">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="adminTableBody" class="divide-y divide-gray-100">
-              <!-- preenchido via JS -->
-            </tbody>
-          </table>
-          <div id="emptyState" class="hidden text-center py-16 text-gray-400">
-            <p class="text-lg">Nenhuma inscrição registrada ainda.</p>
-            <p class="text-sm mt-1">Os envios feitos no formulário de inscrição aparecerão aqui.</p>
+        <!-- VISTA POR DIA (relatório) -->
+        <div id="adminRelatorioDia"></div>
+
+        <!-- VISTA TABELA (completa, toggle) -->
+        <div id="adminVistaTabela" class="hidden">
+          <div class="card-soft overflow-x-auto">
+            <table class="w-full text-sm admin-table">
+              <thead class="bg-bg-claro border-b border-gray-200" style="background-color:var(--bg-claro)">
+                <tr class="text-left">
+                  <th class="px-4 py-3">Coro</th>
+                  <th class="px-4 py-3">Regente</th>
+                  <th class="px-4 py-3">Cidade</th>
+                  <th class="px-4 py-3">Modalidade</th>
+                  <th class="px-4 py-3">Etapa</th>
+                  <th class="px-4 py-3">Dia</th>
+                  <th class="px-4 py-3">Materiais</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3">Confirmação</th>
+                  <th class="px-4 py-3">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="adminTableBody" class="divide-y divide-gray-100"></tbody>
+            </table>
+            <div id="emptyState" class="hidden text-center py-16 text-gray-400">
+              <p class="text-lg">Nenhuma inscrição registrada ainda.</p>
+            </div>
           </div>
         </div>
+
       </div>
 
       <!-- ===== SUB-ABA: CRONOGRAMA ===== -->
@@ -2936,11 +2946,14 @@
     }
 
     // Checagem de duplicidade: bloqueia reenvio se já existe inscrição
-    // com mesmo e-mail do regente OU mesmo nome de coro (case-insensitive)
+    // com mesmo nome de coro OU mesmo e-mail do regente (case-insensitive)
     const nomeCoroDigitado = fd.get('nomeCoro')?.trim().toLowerCase();
+    const emailDigitado = fd.get('emailRegente')?.trim().toLowerCase();
     const jaExiste = getInscricoes().find(i =>
-      !i.isInstitucional &&
-      i.nomeCoro && i.nomeCoro.toLowerCase() === nomeCoroDigitado
+      !i.isInstitucional && (
+        (i.nomeCoro && i.nomeCoro.toLowerCase() === nomeCoroDigitado) ||
+        (emailDigitado && i.emailRegente && i.emailRegente.toLowerCase() === emailDigitado)
+      )
     );
     if(jaExiste){
       const msgDup = jaExiste.etapa === 'completo'
@@ -3562,30 +3575,152 @@
 
   function renderAdminTable(){
     const lista = getInscricoes();
-    totalInscricoesEl.textContent = lista.length;
+    const amadores = lista.filter(i => !i.isInstitucional);
+    totalInscricoesEl.textContent = amadores.length + ' inscrição(ões) registrada(s)';
 
     renderPainelVagasAdmin();
 
-    if(lista.length === 0){
-      adminTableBody.innerHTML = '';
-      emptyState.classList.remove('hidden');
+    // ── ALERTAS AUTOMÁTICOS ──────────────────────────────────────────────
+    const alertasEl = document.getElementById('adminAlertas');
+    const agora = Date.now();
+    const _24h = 24 * 60 * 60 * 1000;
+
+    // Detecta duplicatas (mesmo nome ou mesmo e-mail, ignorando institucionais)
+    const duplicatas = [];
+    const nomesVistos = {};
+    const emailsVistos = {};
+    amadores.forEach(i => {
+      const nome = (i.nomeCoro || '').toLowerCase().trim();
+      const email = (i.emailRegente || '').toLowerCase().trim();
+      if(nome && nomesVistos[nome] && nomesVistos[nome] !== i.id){
+        duplicatas.push(i.nomeCoro);
+      }
+      if(email && emailsVistos[email] && emailsVistos[email] !== i.id){
+        if(!duplicatas.includes(i.nomeCoro)) duplicatas.push(i.nomeCoro + ' (mesmo e-mail)');
+      }
+      if(nome && !nomesVistos[nome]) nomesVistos[nome] = i.id;
+      if(email && !emailsVistos[email]) emailsVistos[email] = i.id;
+    });
+
+    const novos24h = amadores.filter(i => (agora - new Date(i.dataEnvio || 0).getTime()) < _24h);
+    const faltamEtapa2 = amadores.filter(i => i.etapa !== 'completo' && i.status === 'Aprovado');
+
+    let alertasHtml = '';
+    if(duplicatas.length > 0){
+      alertasHtml += `<div class="flex items-start gap-3 bg-red-50 border border-red-300 rounded-xl px-5 py-4">
+        <span class="text-lg shrink-0">⚠️</span>
+        <div>
+          <p class="font-bold text-red-800 text-sm">Possível duplicata detectada</p>
+          <p class="text-red-700 text-xs mt-1">Coros com nome ou e-mail repetido: <strong>${duplicatas.join(', ')}</strong>. Verifique e exclua o registro duplicado.</p>
+        </div>
+      </div>`;
+    }
+    if(novos24h.length > 0){
+      alertasHtml += `<div class="flex items-start gap-3 bg-amber-50 border border-amber-300 rounded-xl px-5 py-4">
+        <span class="text-lg shrink-0">✨</span>
+        <div>
+          <p class="font-bold text-amber-800 text-sm">${novos24h.length} nova(s) inscrição(ões) nas últimas 24h</p>
+          <p class="text-amber-700 text-xs mt-1">${novos24h.map(i => escapeHtml(i.nomeCoro)).join(', ')}</p>
+        </div>
+      </div>`;
+    }
+    if(faltamEtapa2.length > 0){
+      alertasHtml += `<div class="flex items-start gap-3 bg-blue-50 border border-blue-300 rounded-xl px-5 py-4">
+        <span class="text-lg shrink-0">📋</span>
+        <div>
+          <p class="font-bold text-blue-800 text-sm">${faltamEtapa2.length} coro(s) aprovado(s) ainda sem Etapa 2</p>
+          <p class="text-blue-700 text-xs mt-1">${faltamEtapa2.map(i => escapeHtml(i.nomeCoro)).join(', ')}</p>
+        </div>
+      </div>`;
+    }
+    alertasEl.innerHTML = alertasHtml;
+
+    if(amadores.length === 0){
+      document.getElementById('adminRelatorioDia').innerHTML = '';
+      document.getElementById('emptyState').classList.remove('hidden');
+      document.getElementById('adminTableBody').innerHTML = '';
       return;
     }
-    emptyState.classList.add('hidden');
+    document.getElementById('emptyState').classList.add('hidden');
 
-    // Verifica se um nome de coro está marcado como "anfitrião" em algum dia
-    // da programação (PROGRAMACAO_DATA.corosFixos), para refletir o mesmo
-    // critério usado na Programação pública.
+    // ── HELPER: card compacto de inscrição ───────────────────────────────
     function isCoroAnfitriao(nomeCoro){
       return PROGRAMACAO_DATA.some(dia =>
         (dia.corosFixos || []).some(c => c.nomeCoro === nomeCoro && c.anfitriao)
       );
     }
 
-    // Ordena do mais recente para o mais antigo (último inscrito aparece primeiro)
-    const listaOrdenada = [...lista]
-      .filter(i => !i.isInstitucional)
-      .sort((a, b) => new Date(b.dataEnvio || 0) - new Date(a.dataEnvio || 0));
+    function cardInscricao(item){
+      const isNovo = (agora - new Date(item.dataEnvio || 0).getTime()) < _24h;
+      const etapaOk = item.etapa === 'completo';
+      const bordaCor = isNovo ? '#f59e0b' : (etapaOk ? '#16a34a' : '#d1d5db');
+      const novoTag = isNovo ? '<span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5 ml-1">✨ Novo</span>' : '';
+      const etapaBadge = etapaOk
+        ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">✓ Completo</span>'
+        : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Falta Etapa 2</span>';
+      const linkBtn = item.status === 'Aprovado'
+        ? `<button data-id="${item.id}" class="btnCopiarLink text-[11px] font-semibold text-gold border border-gold/40 rounded-full px-2 py-1 hover:bg-amber-50 transition">🔗 Link</button>`
+        : '';
+
+      return `
+        <div class="border-2 rounded-xl p-4 bg-white" style="border-color:${bordaCor}">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-sm truncate" style="color:var(--azul-petroleo)">${escapeHtml(nomeCompletoCoro(item.nomeCoro))}${novoTag}</p>
+              <p class="text-xs text-gray-500 truncate">${escapeHtml(item.nomeRegente)} · ${escapeHtml(item.cidadeEstado)}</p>
+            </div>
+            <div class="flex flex-col gap-1 items-end shrink-0">
+              ${etapaBadge}
+              <select data-id="${item.id}" data-status-anterior="${item.status}" class="status-select text-[11px] font-semibold border rounded-full px-2 py-1 cursor-pointer ${statusBadgeClass(item.status)}">
+                <option value="Pendente" ${item.status==='Pendente'?'selected':''}>Pendente</option>
+                <option value="Aprovado" ${item.status==='Aprovado'?'selected':''}>Aprovado</option>
+                <option value="Rejeitado" ${item.status==='Rejeitado'?'selected':''}>Rejeitado</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            ${linkBtn}
+            <button data-id="${item.id}" class="btnEditarInscricao text-[11px] font-semibold text-blue-600 border border-blue-300 rounded-full px-2 py-1 hover:bg-blue-50 transition">✎ Editar</button>
+            <button data-id="${item.id}" data-nome="${escapeHtml(item.nomeCoro)}" class="btnExcluirInscricao text-[11px] font-semibold text-red-600 border border-red-300 rounded-full px-2 py-1 hover:bg-red-50 transition">🗑 Excluir</button>
+          </div>
+        </div>`;
+    }
+
+    // ── VISTA POR DIA ────────────────────────────────────────────────────
+    const diasOrdem = ['sexta','sabado','domingo','segunda'];
+    const diasLabel = {sexta:'Sexta-feira — 04/09',sabado:'Sábado — 05/09',domingo:'Domingo — 06/09',segunda:'Segunda-feira — 07/09 (Virtual)'};
+    let relatorioHtml = '';
+    diasOrdem.forEach(diaId => {
+      const corosDia = amadores.filter(i => i.diaApresentacao === diaId);
+      if(corosDia.length === 0) return;
+      const completos = corosDia.filter(i => i.etapa === 'completo').length;
+      relatorioHtml += `
+        <div class="mb-8">
+          <div class="flex items-center gap-3 mb-4">
+            <h3 class="font-serif-display text-lg" style="color:var(--azul-petroleo)">${diasLabel[diaId] || diaId}</h3>
+            <span class="text-xs text-gray-500">${corosDia.length} coro(s) · ${completos} completo(s)</span>
+          </div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            ${corosDia.sort((a,b) => new Date(b.dataEnvio||0) - new Date(a.dataEnvio||0)).map(cardInscricao).join('')}
+          </div>
+        </div>`;
+    });
+
+    // Coros sem dia definido
+    const semDia = amadores.filter(i => !i.diaApresentacao || !diasOrdem.includes(i.diaApresentacao));
+    if(semDia.length > 0){
+      relatorioHtml += `
+        <div class="mb-8">
+          <h3 class="font-serif-display text-lg mb-4" style="color:var(--azul-petroleo)">Sem dia definido (${semDia.length})</h3>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            ${semDia.map(cardInscricao).join('')}
+          </div>
+        </div>`;
+    }
+    document.getElementById('adminRelatorioDia').innerHTML = relatorioHtml;
+
+    // ── VISTA TABELA (toggle) ────────────────────────────────────────────
+    const listaOrdenada = [...amadores].sort((a,b) => new Date(b.dataEnvio||0) - new Date(a.dataEnvio||0));
     const institucionais = lista.filter(i => i.isInstitucional);
     const listaFinal = [...listaOrdenada, ...institucionais];
 
@@ -3596,75 +3731,38 @@
         : (!item.isInstitucional && item.fluxoInscricao === 'convidado'
             ? '<span class="text-[10px] font-semibold text-blue-600 block mt-0.5">Convidado/Fixo</span>'
             : '');
-
       const etapaBadge = item.etapa === 'completo'
         ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-700">Completo</span>'
         : '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Preliminar</span>';
-
       const materiaisLinks = [];
-      if(item.linkVideo) materiaisLinks.push(`<a href="${escapeHtml(item.linkVideo)}" target="_blank" rel="noopener" class="text-gold underline">Vídeo</a>`);
-      if(item.linkDrive) materiaisLinks.push(`<a href="${escapeHtml(item.linkDrive)}" target="_blank" rel="noopener" class="text-gold underline">Fotos</a>`);
-
-      // Conta quantas redes sociais foram informadas pelo coro e pelo regente
-      const qtdRedesCoro = item.redesSociaisCoro ? Object.values(item.redesSociaisCoro).filter(v => v).length : 0;
-      const qtdRedesRegente = item.redesSociaisRegente ? Object.values(item.redesSociaisRegente).filter(v => v).length : 0;
-      if(qtdRedesCoro > 0 || qtdRedesRegente > 0){
-        materiaisLinks.push(`<span class="text-gray-500">Redes: ${qtdRedesCoro} coro / ${qtdRedesRegente} regente</span>`);
-      }
-
+      if(item.linkVideo) materiaisLinks.push(`<a href="${escapeHtml(item.linkVideo)}" target="_blank" class="text-gold underline">Vídeo</a>`);
+      if(item.linkDrive) materiaisLinks.push(`<a href="${escapeHtml(item.linkDrive)}" target="_blank" class="text-gold underline">Fotos</a>`);
+      const qtdRedesCoro = item.redesSociaisCoro ? Object.values(item.redesSociaisCoro).filter(v=>v).length : 0;
+      const qtdRedesRegente = item.redesSociaisRegente ? Object.values(item.redesSociaisRegente).filter(v=>v).length : 0;
+      if(qtdRedesCoro > 0 || qtdRedesRegente > 0) materiaisLinks.push(`<span class="text-gray-500">Redes: ${qtdRedesCoro} coro / ${qtdRedesRegente} regente</span>`);
       const materiaisHtml = materiaisLinks.length > 0 ? materiaisLinks.join(' · ') : '<span class="text-gray-400">—</span>';
-      const repertorioInfo = item.duracaoTotalRepertorio
-        ? `<span class="block text-gray-400 mt-0.5">${item.obrasRepertorio.length} obra(s) · ${item.duracaoTotalRepertorio} min</span>`
-        : '';
-
+      const repertorioInfo = item.duracaoTotalRepertorio ? `<span class="block text-gray-400 mt-0.5">${(item.obrasRepertorio||[]).length} obra(s) · ${item.duracaoTotalRepertorio} min</span>` : '';
       const linkConfirmacaoHtml = item.status === 'Aprovado'
-        ? `<button type="button" data-id="${item.id}" class="btnCopiarLink text-xs font-semibold text-gold border border-gold/40 rounded-full px-3 py-1.5 hover:bg-amber-50 transition whitespace-nowrap">
-             🔗 Copiar link
-           </button>`
+        ? `<button data-id="${item.id}" class="btnCopiarLink text-xs font-semibold text-gold border border-gold/40 rounded-full px-3 py-1.5 hover:bg-amber-50 transition whitespace-nowrap">🔗 Copiar link</button>`
         : '<span class="text-gray-400 text-xs">Aprove para gerar</span>';
-
-      const trClass = isMaisRecente
-        ? 'bg-amber-50 border-l-4 border-amber-400'
-        : 'hover:bg-gray-50';
-      const novoTag = isMaisRecente
-        ? '<span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5 inline-block ml-1">✨ Novo</span>'
-        : '';
-
+      const novoTag = isMaisRecente ? '<span class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5 inline-block ml-1">✨ Novo</span>' : '';
+      const trClass = isMaisRecente ? 'bg-amber-50 border-l-4 border-amber-400' : 'hover:bg-gray-50';
       return `
         <tr class="${trClass}">
           <td class="px-4 py-3 font-semibold text-gray-800">${escapeHtml(nomeCompletoCoro(item.nomeCoro))}${fluxoBadge}${novoTag}</td>
           <td class="px-4 py-3 text-gray-600">${escapeHtml(item.nomeRegente)}</td>
           <td class="px-4 py-3 text-gray-600">${escapeHtml(item.cidadeEstado)}</td>
-          <td class="px-4 py-3">
-            <span class="text-xs font-semibold px-2 py-1 rounded-full ${item.modalidade === 'Virtual' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}">
-              ${escapeHtml(item.modalidade)}
-            </span>
-          </td>
+          <td class="px-4 py-3"><span class="text-xs font-semibold px-2 py-1 rounded-full ${item.modalidade==='Virtual'?'bg-blue-100 text-blue-700':'bg-gray-100 text-gray-700'}">${escapeHtml(item.modalidade)}</span></td>
           <td class="px-4 py-3">${etapaBadge}</td>
           <td class="px-4 py-3 text-gray-600 text-xs">${diaLabel(item.diaApresentacao)}</td>
           <td class="px-4 py-3 text-xs">${materiaisHtml}${repertorioInfo}</td>
-          <td class="px-4 py-3">
-            <select data-id="${item.id}" data-status-anterior="${item.status}" class="status-select text-xs font-semibold border rounded-full px-2 py-1.5 cursor-pointer ${statusBadgeClass(item.status)}">
-              <option value="Pendente" ${item.status==='Pendente'?'selected':''}>Pendente</option>
-              <option value="Aprovado" ${item.status==='Aprovado'?'selected':''}>Aprovado</option>
-              <option value="Rejeitado" ${item.status==='Rejeitado'?'selected':''}>Rejeitado</option>
-            </select>
-          </td>
+          <td class="px-4 py-3"><select data-id="${item.id}" data-status-anterior="${item.status}" class="status-select text-xs font-semibold border rounded-full px-2 py-1.5 cursor-pointer ${statusBadgeClass(item.status)}"><option value="Pendente" ${item.status==='Pendente'?'selected':''}>Pendente</option><option value="Aprovado" ${item.status==='Aprovado'?'selected':''}>Aprovado</option><option value="Rejeitado" ${item.status==='Rejeitado'?'selected':''}>Rejeitado</option></select></td>
           <td class="px-4 py-3">${linkConfirmacaoHtml}</td>
-          <td class="px-4 py-3">
-            <div class="flex gap-2">
-              <button type="button" data-id="${item.id}" class="btnEditarInscricao text-xs font-semibold text-blue-600 border border-blue-300 rounded-full px-3 py-1.5 hover:bg-blue-50 transition whitespace-nowrap">
-                ✎ Editar
-              </button>
-              <button type="button" data-id="${item.id}" data-nome="${escapeHtml(item.nomeCoro)}" class="btnExcluirInscricao text-xs font-semibold text-red-600 border border-red-300 rounded-full px-3 py-1.5 hover:bg-red-50 transition whitespace-nowrap">
-                🗑 Excluir
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
+          <td class="px-4 py-3"><div class="flex gap-2"><button data-id="${item.id}" class="btnEditarInscricao text-xs font-semibold text-blue-600 border border-blue-300 rounded-full px-3 py-1.5 hover:bg-blue-50 transition whitespace-nowrap">✎ Editar</button><button data-id="${item.id}" data-nome="${escapeHtml(item.nomeCoro)}" class="btnExcluirInscricao text-xs font-semibold text-red-600 border border-red-300 rounded-full px-3 py-1.5 hover:bg-red-50 transition whitespace-nowrap">🗑 Excluir</button></div></td>
+        </tr>`;
     }).join('');
 
+    // ── LISTENERS COMPARTILHADOS (relatório + tabela) ────────────────────
     document.querySelectorAll('.status-select').forEach(sel=>{
       sel.addEventListener('change', async function(){
         const id = this.dataset.id;
@@ -3672,12 +3770,10 @@
         this.disabled = true;
         try{
           await window.firebaseDataLayer.updateInscricao(id, { status: this.value });
-          // renderAdminTable() roda automaticamente via onSnapshot (tempo real),
-          // mas chamamos aqui também para feedback visual imediato.
           renderAdminTable();
         }catch(err){
-          console.error('Erro ao atualizar status na nuvem:', err);
-          alert('Não foi possível atualizar o status agora. Verifique sua conexão e tente novamente.');
+          console.error('Erro ao atualizar status:', err);
+          alert('Não foi possível atualizar. Verifique sua conexão.');
           this.value = statusAnterior;
           this.disabled = false;
         }
@@ -3686,48 +3782,45 @@
 
     document.querySelectorAll('.btnCopiarLink').forEach(btn=>{
       btn.addEventListener('click', function(){
-        const id = this.dataset.id;
-        const link = getLinkConfirmacao(id);
+        const link = getLinkConfirmacao(this.dataset.id);
         navigator.clipboard.writeText(link).then(()=>{
-          const textoOriginal = this.textContent;
+          const orig = this.textContent;
           this.textContent = '✓ Copiado!';
-          setTimeout(()=>{ this.textContent = textoOriginal; }, 2000);
-        }).catch(()=>{
-          prompt('Copie o link manualmente:', link);
-        });
+          setTimeout(()=>{ this.textContent = orig; }, 2000);
+        }).catch(()=>{ prompt('Copie manualmente:', link); });
       });
     });
 
     document.querySelectorAll('.btnEditarInscricao').forEach(btn=>{
-      btn.addEventListener('click', function(){
-        abrirModalEdicao(this.dataset.id);
-      });
+      btn.addEventListener('click', function(){ abrirModalEdicao(this.dataset.id); });
     });
 
     document.querySelectorAll('.btnExcluirInscricao').forEach(btn=>{
       btn.addEventListener('click', async function(){
         const id = this.dataset.id;
         const nome = this.dataset.nome || 'esta inscrição';
-        const confirmacao = confirm(
-          'Tem certeza que deseja EXCLUIR a inscrição de "' + nome + '"?\n\n' +
-          'Esta ação remove o registro permanentemente da nuvem e não pode ser desfeita.'
-        );
-        if(!confirmacao) return;
-
+        if(!confirm('Excluir a inscrição de "' + nome + '"?\n\nEsta ação não pode ser desfeita.')) return;
         this.disabled = true;
         this.textContent = 'Excluindo...';
         try{
           await window.firebaseDataLayer.deleteInscricao(id);
-          // renderAdminTable() roda automaticamente via onSnapshot, mas
-          // chamamos aqui também para feedback visual imediato.
           renderAdminTable();
         }catch(err){
-          console.error('Erro ao excluir inscrição:', err);
-          alert('Não foi possível excluir agora. Verifique sua conexão e tente novamente.');
+          console.error('Erro ao excluir:', err);
+          alert('Não foi possível excluir. Verifique sua conexão.');
           this.disabled = false;
           this.textContent = '🗑 Excluir';
         }
       });
+    });
+  }
+
+  // Toggle vista relatório / tabela
+  const toggleVistaRelatorio = document.getElementById('toggleVistaRelatorio');
+  if(toggleVistaRelatorio){
+    toggleVistaRelatorio.addEventListener('change', function(){
+      document.getElementById('adminRelatorioDia').classList.toggle('hidden', !this.checked);
+      document.getElementById('adminVistaTabela').classList.toggle('hidden', this.checked);
     });
   }
 
