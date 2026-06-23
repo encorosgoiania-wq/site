@@ -1225,6 +1225,9 @@
         <button type="button" id="adminTabBlog" class="admin-subtab px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 transition">
           Blog
         </button>
+        <button type="button" id="adminTabFichas" class="admin-subtab px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 transition">
+          Fichas Completas
+        </button>
       </div>
 
       <!-- ===== SUB-ABA: INSCRIÇÕES ===== -->
@@ -1404,12 +1407,35 @@
             <p class="text-sm text-gray-500 mt-1">Aprove para publicar no blog público, ou rejeite/exclua posts indesejados.</p>
           </div>
         </div>
-
-        <div id="adminBlogLista" class="space-y-3">
-          <!-- preenchido via JS -->
-        </div>
+        <div id="adminBlogLista" class="space-y-3"></div>
         <div id="adminBlogEmptyState" class="hidden text-center py-16 text-gray-400">
           <p class="text-lg">Nenhum post foi sugerido ainda.</p>
+        </div>
+      </div>
+
+      <!-- ===== SUB-ABA: FICHAS COMPLETAS ===== -->
+      <div id="adminSubviewFichas" class="hidden">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="font-serif-display text-xl" style="color:var(--azul-petroleo)">Fichas Completas de Todos os Coros</h2>
+            <p class="text-sm text-gray-500 mt-1">Todos os dados cadastrados — inscrições preliminares e completas, institucionais e amadores.</p>
+          </div>
+          <div class="flex gap-3">
+            <select id="fichasFiltroModalidade" class="input-field bg-white text-sm max-w-[160px]">
+              <option value="">Todas modalidades</option>
+              <option value="Presencial">Presencial</option>
+              <option value="Virtual">Virtual</option>
+            </select>
+            <select id="fichasFiltroEtapa" class="input-field bg-white text-sm max-w-[160px]">
+              <option value="">Todas etapas</option>
+              <option value="completo">Completo</option>
+              <option value="preliminar">Preliminar</option>
+            </select>
+          </div>
+        </div>
+        <div id="fichasLista" class="space-y-6"></div>
+        <div id="fichasEmptyState" class="hidden text-center py-16 text-gray-400">
+          <p class="text-lg">Nenhuma inscrição encontrada.</p>
         </div>
       </div>
 
@@ -3958,22 +3984,34 @@
     const diasLabel = {sexta:'Sexta-feira — 04/09',sabado:'Sábado — 05/09',domingo:'Domingo — 06/09',segunda:'Segunda-feira — 07/09 (Virtual)'};
     let relatorioHtml = '';
     diasOrdem.forEach(diaId => {
-      const corosDia = amadores.filter(i => i.diaApresentacao === diaId);
+      // Inclui TODOS (amadores + institucionais) no relatório por dia
+      const corosDia = lista.filter(i => i.diaApresentacao === diaId);
       if(corosDia.length === 0) return;
+      const amadoresDia = corosDia.filter(i => !i.isInstitucional);
+      const institucionaisDia = corosDia.filter(i => i.isInstitucional);
       const completos = corosDia.filter(i => i.etapa === 'completo').length;
       relatorioHtml += `
         <div class="mb-8">
           <div class="flex items-center gap-3 mb-4">
             <h3 class="font-serif-display text-lg" style="color:var(--azul-petroleo)">${diasLabel[diaId] || diaId}</h3>
-            <span class="text-xs text-gray-500">${corosDia.length} coro(s) · ${completos} completo(s)</span>
+            <span class="text-xs text-gray-500">${amadoresDia.length} amador(es) · ${institucionaisDia.length} institucional(is) · ${completos} completo(s)</span>
           </div>
-          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            ${corosDia.sort((a,b) => new Date(b.dataEnvio||0) - new Date(a.dataEnvio||0)).map(cardInscricao).join('')}
-          </div>
+          ${institucionaisDia.length > 0 ? `
+            <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Coros Institucionais / Fixos</p>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+              ${institucionaisDia.map(cardInscricao).join('')}
+            </div>
+          ` : ''}
+          ${amadoresDia.length > 0 ? `
+            ${institucionaisDia.length > 0 ? '<p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Coros Amadores / Inscritos</p>' : ''}
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              ${amadoresDia.sort((a,b) => new Date(b.dataEnvio||0) - new Date(a.dataEnvio||0)).map(cardInscricao).join('')}
+            </div>
+          ` : ''}
         </div>`;
     });
 
-    // Coros sem dia definido
+    // Coros sem dia definido (apenas amadores sem dia)
     const semDia = amadores.filter(i => !i.diaApresentacao || !diasOrdem.includes(i.diaApresentacao));
     if(semDia.length > 0){
       relatorioHtml += `
@@ -3984,7 +4022,7 @@
           </div>
         </div>`;
     }
-    document.getElementById('adminRelatorioDia').innerHTML = relatorioHtml;
+    document.getElementById('adminRelatorioDia').innerHTML = relatorioHtml || '<p class="text-gray-400 text-sm">Nenhuma inscrição com dia definido ainda.</p>';
 
     // ── VISTA TABELA (toggle) ────────────────────────────────────────────
     const listaOrdenada = [...amadores].sort((a,b) => new Date(b.dataEnvio||0) - new Date(a.dataEnvio||0));
@@ -4346,19 +4384,268 @@
   }
 
   // ======================================================================
-  // SUB-NAVEGAÇÃO DO PAINEL ADMIN (Inscrições / Cronograma / Blog)
+  // ADMIN — FICHAS COMPLETAS (todos os coros, todos os dados)
+  // ======================================================================
+  function renderAdminFichas(){
+    const fichasLista = document.getElementById('fichasLista');
+    const fichasEmpty = document.getElementById('fichasEmptyState');
+    if(!fichasLista) return;
+
+    const filtroModalidade = document.getElementById('fichasFiltroModalidade')?.value || '';
+    const filtroEtapa = document.getElementById('fichasFiltroEtapa')?.value || '';
+
+    let lista = getInscricoes();
+    if(filtroModalidade) lista = lista.filter(i => i.modalidade === filtroModalidade);
+    if(filtroEtapa === 'completo') lista = lista.filter(i => i.etapa === 'completo');
+    if(filtroEtapa === 'preliminar') lista = lista.filter(i => i.etapa !== 'completo');
+
+    // Institucionais primeiro, depois amadores por dia
+    const inst = lista.filter(i => i.isInstitucional);
+    const ama = lista.filter(i => !i.isInstitucional).sort((a,b) => (a.diaApresentacao||'').localeCompare(b.diaApresentacao||''));
+    const listaOrdenada = [...inst, ...ama];
+
+    if(listaOrdenada.length === 0){
+      fichasLista.innerHTML = '';
+      fichasEmpty.classList.remove('hidden');
+      return;
+    }
+    fichasEmpty.classList.add('hidden');
+
+    fichasLista.innerHTML = listaOrdenada.map(item => {
+      const obras = item.obrasRepertorio || [];
+      const videos = item.videosVirtual || [];
+      const isVirt = item.modalidade === 'Virtual';
+
+      let repertorioHtml = '';
+      if(isVirt && videos.length > 0){
+        repertorioHtml = videos.map((v,i) => `
+          <div class="text-xs border border-blue-200 rounded-lg p-2 bg-blue-50">
+            <span class="font-bold text-blue-700">Vídeo ${i+1}:</span>
+            ${escapeHtml(v.titulo||'—')} · ${escapeHtml(v.compositor||'—')}
+            ${v.link ? `· <a href="${escapeHtml(v.link)}" target="_blank" class="text-gold underline">Link</a>` : ''}
+          </div>`).join('');
+      } else if(!isVirt && obras.length > 0){
+        repertorioHtml = `<table class="w-full text-xs border border-gray-200 rounded-lg overflow-hidden"><thead class="bg-gray-50"><tr><th class="px-2 py-1.5 text-left">Obra</th><th class="px-2 py-1.5 text-left">Compositor</th><th class="px-2 py-1.5 text-left">Arranjador</th><th class="px-2 py-1.5 text-left">Min</th></tr></thead><tbody>${obras.map(o=>`<tr class="border-t border-gray-100"><td class="px-2 py-1">${escapeHtml(o.nomeObra||'—')}</td><td class="px-2 py-1">${escapeHtml(o.compositor||'—')}</td><td class="px-2 py-1">${escapeHtml(o.arranjador||'—')}</td><td class="px-2 py-1">${o.duracaoMinutos||'—'}</td></tr>`).join('')}</tbody></table>`;
+      } else {
+        repertorioHtml = `<span class="text-xs text-gray-400 italic">Etapa 2 pendente</span>`;
+      }
+
+      const redesCoro = item.redesSociaisCoro || {};
+      const redesRegente = item.redesSociaisRegente || {};
+      const redesLinhas = [];
+      ['instagram','facebook','youtube','tiktok','outra'].forEach(r => {
+        if(redesCoro[r]) redesLinhas.push(`<span class="text-gray-500">Coro ${r}:</span> <a href="${redesCoro[r].startsWith('http')?escapeHtml(redesCoro[r]):'https://'+escapeHtml(redesCoro[r])}" target="_blank" class="text-gold underline">${escapeHtml(redesCoro[r])}</a>`);
+        if(redesRegente[r]) redesLinhas.push(`<span class="text-gray-500">Regente ${r}:</span> <a href="${redesRegente[r].startsWith('http')?escapeHtml(redesRegente[r]):'https://'+escapeHtml(redesRegente[r])}" target="_blank" class="text-gold underline">${escapeHtml(redesRegente[r])}</a>`);
+      });
+
+      const instTag = item.isInstitucional ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 ml-1">Institucional</span>' : '';
+      const etapaTag = item.etapa === 'completo'
+        ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">✓ Completo</span>'
+        : '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Preliminar</span>';
+
+      return `
+        <div class="card-soft p-6 border-l-4" style="border-left-color:${item.isInstitucional?'#7c3aed':'#D4AF37'}">
+          <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+            <div>
+              <h3 class="font-serif-display text-xl" style="color:var(--azul-petroleo)">${escapeHtml(nomeCompletoCoro(item.nomeCoro))}${instTag}</h3>
+              <p class="text-sm text-gray-500 mt-1">${escapeHtml(item.nomeRegente)} · ${escapeHtml(item.cidadeEstado)} · ${escapeHtml(item.modalidade)} · ${diaLabel(item.diaApresentacao)}</p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              ${etapaTag}
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${statusBadgeClass(item.status)}">${item.status}</span>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4 text-sm mb-5">
+            <div><p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Contato</p>
+              <p class="text-gray-700">${escapeHtml(item.emailRegente||'—')}</p>
+              <p class="text-gray-700">${escapeHtml(item.telefoneRegente||'—')}</p>
+            </div>
+            <div><p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Materiais</p>
+              ${item.linkVideo ? `<a href="${escapeHtml(item.linkVideo)}" target="_blank" class="block text-gold underline text-xs">▶ Vídeo de apresentação</a>` : '<span class="text-gray-400 text-xs">Sem vídeo</span>'}
+              ${item.linkDrive ? `<a href="${escapeHtml(item.linkDrive)}" target="_blank" class="block text-gold underline text-xs">📁 Fotos (Drive)</a>` : '<span class="text-gray-400 text-xs">Sem fotos</span>'}
+            </div>
+            <div><p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Equipamento</p>
+              <p class="text-xs ${item.levaEquipamento?'text-red-700 font-semibold':'text-gray-400'}">${item.levaEquipamento?'⚠️ Traz equipamento próprio':'Sem equipamento extra'}</p>
+            </div>
+          </div>
+
+          ${redesLinhas.length > 0 ? `<div class="mb-4"><p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Redes Sociais</p><div class="flex flex-wrap gap-x-4 gap-y-1 text-xs">${redesLinhas.map(l=>`<div>${l}</div>`).join('')}</div></div>` : ''}
+
+          ${item.historicoCoro ? `<div class="mb-4"><p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Histórico / Currículo</p><p class="text-sm text-gray-600 leading-relaxed bg-gray-50 rounded-lg p-3">${escapeHtml(item.historicoCoro)}</p></div>` : ''}
+
+          <div><p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Repertório ${isVirt?'(Vídeos Virtuais)':'(ECAD)'}</p>${repertorioHtml}</div>
+        </div>`;
+    }).join('');
+
+    // Listeners de filtro
+    ['fichasFiltroModalidade','fichasFiltroEtapa'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el && !el._listenerFichas){
+        el.addEventListener('change', renderAdminFichas);
+        el._listenerFichas = true;
+      }
+    });
+  }
+
+  // ── EXPORTAR FICHAS COMO CSV (Excel) ────────────────────────────────────
+  document.getElementById('adminTabFichas')?.addEventListener('dblclick', function(){
+    // duplo clique na aba Fichas baixa o CSV completo
+  });
+
+  // Botão de exportar Excel e PDF ficam dentro da sub-view Fichas,
+  // mas precisam ser criados no HTML — vou injetar dinamicamente:
+  function injetarBotoesFichasExport(){
+    const painel = document.getElementById('adminSubviewFichas');
+    if(!painel || painel.querySelector('#btnExportarFichasCSV')) return;
+    const controles = painel.querySelector('.flex.flex-wrap.items-center');
+    if(!controles) return;
+    const divBtns = document.createElement('div');
+    divBtns.className = 'flex gap-2';
+    divBtns.innerHTML = `
+      <button id="btnExportarFichasCSV" class="px-4 py-2 rounded-lg border text-sm font-semibold transition" style="border-color:var(--dourado);color:var(--azul-petroleo)">⬇ Excel (CSV)</button>
+      <button id="btnExportarFichasPDF" class="px-4 py-2 rounded-lg border text-sm font-semibold text-gray-700 border-gray-300 hover:bg-gray-50 transition">🖨️ PDF</button>`;
+    controles.appendChild(divBtns);
+
+    document.getElementById('btnExportarFichasCSV').addEventListener('click', exportarFichasCSV);
+    document.getElementById('btnExportarFichasPDF').addEventListener('click', exportarFichasPDF);
+  }
+
+  function exportarFichasCSV(){
+    const lista = getInscricoes();
+    const cabecalho = ['Tipo','Coro','Regente','E-mail','Telefone','Cidade','Modalidade','Dia','Status','Etapa','Equipamento','Link Vídeo','Link Fotos','Qtd Obras','Duração Total (min)','Obra 1','Compositor 1','Obra 2','Compositor 2','Obra 3','Compositor 3','Instagram Coro','Instagram Regente'];
+    const linhas = lista.map(i => {
+      const obras = i.obrasRepertorio || [];
+      const videos = i.videosVirtual || [];
+      const isVirt = i.modalidade === 'Virtual';
+      const itens = isVirt ? videos : obras;
+      const redesCoro = i.redesSociaisCoro || {};
+      const redesRegente = i.redesSociaisRegente || {};
+      return [
+        i.isInstitucional ? 'Institucional' : 'Amador',
+        i.nomeCoro || '',
+        i.nomeRegente || '',
+        i.emailRegente || '',
+        i.telefoneRegente || '',
+        i.cidadeEstado || '',
+        i.modalidade || '',
+        diaLabel(i.diaApresentacao),
+        i.status || '',
+        i.etapa === 'completo' ? 'Completo' : 'Preliminar',
+        i.levaEquipamento ? 'Sim' : 'Não',
+        i.linkVideo || '',
+        i.linkDrive || '',
+        itens.length,
+        i.duracaoTotalRepertorio || '',
+        itens[0] ? (isVirt ? itens[0].titulo : itens[0].nomeObra) : '',
+        itens[0] ? itens[0].compositor : '',
+        itens[1] ? (isVirt ? itens[1].titulo : itens[1].nomeObra) : '',
+        itens[1] ? itens[1].compositor : '',
+        itens[2] ? (isVirt ? itens[2].titulo : itens[2].nomeObra) : '',
+        itens[2] ? itens[2].compositor : '',
+        redesCoro.instagram || '',
+        redesRegente.instagram || ''
+      ];
+    });
+    const csv = [cabecalho, ...linhas].map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'encoros2026_inscricoes_completo.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportarFichasPDF(){
+    const lista = getInscricoes();
+    const diasLabel2 = {quinta:'Quinta 04/09',sexta:'Sexta 04/09',sabado:'Sábado 05/09',domingo:'Domingo 06/09',segunda:'Segunda 07/09'};
+    let corpo = '';
+    // Agrupa por dia
+    ['quinta','sexta','sabado','domingo','segunda',''].forEach(diaId => {
+      const grupo = diaId === '' ? lista.filter(i => !i.diaApresentacao) : lista.filter(i => i.diaApresentacao === diaId);
+      if(grupo.length === 0) return;
+      corpo += `<h2>${diaId ? diasLabel2[diaId] : 'Sem dia definido'}</h2>`;
+      grupo.forEach(i => {
+        const obras = i.obrasRepertorio || [];
+        const videos = i.videosVirtual || [];
+        const isVirt = i.modalidade === 'Virtual';
+        const itens = isVirt ? videos : obras;
+        corpo += `
+          <div class="ficha">
+            <div class="ficha-header">
+              <strong>${i.nomeCoro}</strong>
+              <span>${i.isInstitucional?'Institucional':'Amador'} · ${i.modalidade} · ${i.status}</span>
+            </div>
+            <table class="dados"><tr>
+              <td><b>Regente:</b> ${i.nomeRegente||'—'}</td>
+              <td><b>E-mail:</b> ${i.emailRegente||'—'}</td>
+              <td><b>Telefone:</b> ${i.telefoneRegente||'—'}</td>
+              <td><b>Cidade:</b> ${i.cidadeEstado||'—'}</td>
+            </tr></table>
+            ${itens.length > 0 ? `
+              <p class="subtitulo">${isVirt ? 'Vídeos Virtuais' : 'Repertório ECAD'} (${itens.length} item${itens.length>1?'s':''}${!isVirt&&i.duracaoTotalRepertorio?' · '+i.duracaoTotalRepertorio+' min':''})</p>
+              <table><thead><tr><th>${isVirt?'Título':'Obra'}</th><th>Compositor</th><th>${isVirt?'Link':'Duração'}</th></tr></thead><tbody>
+                ${itens.map(o=>`<tr><td>${isVirt?(o.titulo||'—'):(o.nomeObra||'—')}</td><td>${o.compositor||'—'}</td><td>${isVirt?(o.link||'—'):(o.duracaoMinutos?o.duracaoMinutos+' min':'—')}</td></tr>`).join('')}
+              </tbody></table>` : '<p class="sem-dados">Etapa 2 pendente</p>'}
+            ${i.linkDrive || i.linkVideo ? `<p class="links">
+              ${i.linkDrive?`📁 Fotos: ${i.linkDrive}`:''}
+              ${i.linkVideo?`  ▶ Vídeo: ${i.linkVideo}`:''}
+            </p>` : ''}
+          </div>`;
+      });
+    });
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+      <title>Fichas — VII ENCoros 2026</title>
+      <style>
+        body{font-family:Arial,sans-serif;font-size:11px;color:#1a2326;margin:0;padding:20px}
+        h1{font-size:18px;color:#0F2027;margin-bottom:4px}
+        h2{font-size:14px;color:#0F2027;border-bottom:2px solid #D4AF37;padding-bottom:4px;margin:24px 0 10px;page-break-before:auto}
+        .ficha{border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;margin-bottom:12px;page-break-inside:avoid}
+        .ficha-header{display:flex;justify-content:space-between;margin-bottom:6px}
+        .ficha-header strong{font-size:13px;color:#0F2027}
+        .ficha-header span{font-size:10px;color:#6b7280}
+        table{width:100%;border-collapse:collapse;font-size:10px;margin-top:4px}
+        th{background:#f3f4f6;text-align:left;padding:3px 6px;border:1px solid #e5e7eb;font-weight:600}
+        td{padding:3px 6px;border:1px solid #e5e7eb;vertical-align:top}
+        .dados td{border:none;padding:2px 8px 2px 0}
+        .subtitulo{font-weight:bold;font-size:10px;color:#4b5563;margin:6px 0 3px;text-transform:uppercase;letter-spacing:.05em}
+        .sem-dados{color:#9ca3af;font-style:italic;font-size:10px;margin:4px 0}
+        .links{font-size:9px;color:#6b7280;margin-top:4px;word-break:break-all}
+        .no-print{margin-bottom:16px}
+        @media print{.no-print{display:none}}
+      </style></head><body>
+      <div class="no-print">
+        <button onclick="window.print()" style="background:#D4AF37;color:#0F2027;font-weight:bold;border:none;padding:10px 24px;border-radius:999px;cursor:pointer">🖨️ Imprimir / Salvar como PDF</button>
+      </div>
+      <h1>Fichas de Inscrição — VII ENCoros 2026</h1>
+      <p style="color:#6b7280;font-size:11px;margin-bottom:20px">Gerado em: ${new Date().toLocaleString('pt-BR')} · ${lista.length} coro(s) total</p>
+      ${corpo}
+    </body></html>`;
+
+    const blob = new Blob([html], {type:'text/html;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  // ======================================================================
+  // SUB-NAVEGAÇÃO DO PAINEL ADMIN (Inscrições / Cronograma / Blog / Fichas)
   // ======================================================================
   const adminTabInscricoes = document.getElementById('adminTabInscricoes');
   const adminTabCronograma = document.getElementById('adminTabCronograma');
   const adminTabBlog = document.getElementById('adminTabBlog');
+  const adminTabFichas = document.getElementById('adminTabFichas');
   const adminSubviewInscricoes = document.getElementById('adminSubviewInscricoes');
   const adminSubviewCronograma = document.getElementById('adminSubviewCronograma');
   const adminSubviewBlog = document.getElementById('adminSubviewBlog');
+  const adminSubviewFichas = document.getElementById('adminSubviewFichas');
 
   const ADMIN_ABAS = {
     inscricoes: { botao: adminTabInscricoes, painel: adminSubviewInscricoes },
     cronograma: { botao: adminTabCronograma, painel: adminSubviewCronograma },
-    blog: { botao: adminTabBlog, painel: adminSubviewBlog }
+    blog: { botao: adminTabBlog, painel: adminSubviewBlog },
+    fichas: { botao: adminTabFichas, painel: adminSubviewFichas }
   };
 
   function setAdminSubview(tab){
@@ -4379,11 +4666,13 @@
 
     if(tab === 'cronograma') renderCronogramaAdmin();
     if(tab === 'blog') renderAdminBlog();
+    if(tab === 'fichas'){ injetarBotoesFichasExport(); renderAdminFichas(); }
   }
 
   adminTabInscricoes.addEventListener('click', () => setAdminSubview('inscricoes'));
   adminTabCronograma.addEventListener('click', () => setAdminSubview('cronograma'));
   adminTabBlog.addEventListener('click', () => setAdminSubview('blog'));
+  adminTabFichas.addEventListener('click', () => setAdminSubview('fichas'));
 
   // ======================================================================
   // GESTÃO DE CRONOGRAMA — montagem de blocos de apresentação por dia
@@ -4406,7 +4695,6 @@
 
   function popularSelectDiaCronograma(){
     cronogramaSelectDia.innerHTML = PROGRAMACAO_DATA
-      .filter(d => d.id !== 'segunda') // Mostra Virtual não usa bloco de palco com tempo de entrada/saída
       .map(dia => `<option value="${dia.id}">${dia.diaSemana} (${dia.data})</option>`)
       .join('');
   }
@@ -4893,6 +5181,7 @@
     if(viewAtiva === 'admin' && isAdminLoggedIn()){
       renderAdminTable();
       if(typeof renderAdminBlog === 'function') renderAdminBlog();
+      if(typeof renderAdminFichas === 'function') renderAdminFichas();
     }
     if(viewAtiva === 'programacao'){
       renderPainelMacro();
