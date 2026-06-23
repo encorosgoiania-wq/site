@@ -1009,8 +1009,8 @@
               <input type="text" id="inputNomeCoroEdicao" name="nomeCoroEdicao" class="input-field" placeholder="Nome completo do coro">
             </div>
 
-            <!-- REPERTÓRIO TÉCNICO (ECAD) -->
-            <div class="card-soft p-6 sm:p-8">
+            <!-- REPERTÓRIO TÉCNICO (ECAD) — Presencial -->
+            <div id="secaoRepertorioPresencial" class="card-soft p-6 sm:p-8">
               <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Repertório Técnico</h2>
               <p class="text-sm text-gray-500 mb-4">Informe cada obra do repertório. Estes dados são obrigatórios para a prestação de contas junto ao ECAD.</p>
 
@@ -1019,9 +1019,7 @@
                 <span>A soma da duração de todas as obras deve estar dentro do limite de 15 minutos, incluindo entrada e saída de palco.</span>
               </div>
 
-              <div id="repertorioLista" class="space-y-4">
-                <!-- linhas de obra geradas via JS -->
-              </div>
+              <div id="repertorioLista" class="space-y-4"></div>
 
               <button type="button" id="btnAddObra" class="mt-4 text-sm font-semibold text-gold border border-gold/40 rounded-full px-4 py-2 hover:bg-amber-50 transition">
                 + Adicionar obra
@@ -1030,6 +1028,92 @@
               <div class="mt-4 flex items-center justify-between text-sm bg-bg-claro border border-gray-200 rounded-lg px-4 py-2.5" style="background-color:var(--bg-claro)">
                 <span class="text-gray-600">Duração total do repertório:</span>
                 <span id="duracaoTotalRepertorio" class="font-bold" style="color:var(--azul-petroleo)">0 min</span>
+              </div>
+            </div>
+
+            <!-- VÍDEOS DA MOSTRA VIRTUAL (só para modalidade Virtual) -->
+            <div id="secaoVideosVirtual" class="hidden card-soft p-6 sm:p-8 border-2" style="border-color:#60a5fa">
+              <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Vídeos para a Mostra Virtual</h2>
+              <p class="text-sm text-gray-500 mb-2">Cadastre até 3 vídeos que serão exibidos durante a Mostra de Coros Virtuais (Segunda-feira, 07/09).</p>
+              <div class="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-4 py-3 mb-6">
+                <strong>Formatos aceitos:</strong> YouTube (link público ou não listado) ou Google Drive (link compartilhado com "qualquer pessoa com o link"). Certifique-se de que o vídeo está em qualidade adequada para exibição em projetor.
+              </div>
+
+              <div class="space-y-6" id="videosVirtualLista">
+                <!-- Vídeo 1 -->
+                <div class="border border-gray-200 rounded-xl p-4">
+                  <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Vídeo 1 <span class="text-red-500">*</span></p>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="label-field">Link do vídeo *</label>
+                      <input type="text" name="video1_link" id="video1_link" class="input-field" placeholder="https://youtube.com/... ou https://drive.google.com/...">
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="label-field">Título da obra *</label>
+                        <input type="text" name="video1_titulo" id="video1_titulo" class="input-field" placeholder="Nome da música">
+                      </div>
+                      <div>
+                        <label class="label-field">Compositor *</label>
+                        <input type="text" name="video1_compositor" id="video1_compositor" class="input-field" placeholder="Nome do compositor">
+                      </div>
+                    </div>
+                    <div>
+                      <label class="label-field">Arranjador (se houver)</label>
+                      <input type="text" name="video1_arranjador" id="video1_arranjador" class="input-field" placeholder="Nome do arranjador">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Vídeo 2 -->
+                <div class="border border-gray-200 rounded-xl p-4">
+                  <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Vídeo 2 (opcional)</p>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="label-field">Link do vídeo</label>
+                      <input type="text" name="video2_link" id="video2_link" class="input-field" placeholder="https://youtube.com/... ou https://drive.google.com/...">
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="label-field">Título da obra</label>
+                        <input type="text" name="video2_titulo" id="video2_titulo" class="input-field" placeholder="Nome da música">
+                      </div>
+                      <div>
+                        <label class="label-field">Compositor</label>
+                        <input type="text" name="video2_compositor" id="video2_compositor" class="input-field" placeholder="Nome do compositor">
+                      </div>
+                    </div>
+                    <div>
+                      <label class="label-field">Arranjador (se houver)</label>
+                      <input type="text" name="video2_arranjador" id="video2_arranjador" class="input-field" placeholder="Nome do arranjador">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Vídeo 3 -->
+                <div class="border border-gray-200 rounded-xl p-4">
+                  <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Vídeo 3 (opcional)</p>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="label-field">Link do vídeo</label>
+                      <input type="text" name="video3_link" id="video3_link" class="input-field" placeholder="https://youtube.com/... ou https://drive.google.com/...">
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="label-field">Título da obra</label>
+                        <input type="text" name="video3_titulo" id="video3_titulo" class="input-field" placeholder="Nome da música">
+                      </div>
+                      <div>
+                        <label class="label-field">Compositor</label>
+                        <input type="text" name="video3_compositor" id="video3_compositor" class="input-field" placeholder="Nome do compositor">
+                      </div>
+                    </div>
+                    <div>
+                      <label class="label-field">Arranjador (se houver)</label>
+                      <input type="text" name="video3_arranjador" id="video3_arranjador" class="input-field" placeholder="Nome do arranjador">
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -3181,14 +3265,37 @@
       wrapperNomeCoroEdicao.classList.add('hidden');
     }
 
-    // Pré-popula repertório com 1 linha vazia (ou as obras já salvas, se o coro voltar para editar)
-    repertorioLista.innerHTML = '';
-    if(inscricao.obrasRepertorio && inscricao.obrasRepertorio.length > 0){
-      inscricao.obrasRepertorio.forEach(o => criarLinhaObra(o));
+    // Adapta Etapa 2 conforme modalidade:
+    // - Presencial → mostra repertório ECAD, oculta seção de vídeos
+    // - Virtual    → mostra seção de vídeos, oculta repertório ECAD
+    const isVirtual = inscricao.modalidade === 'Virtual';
+    const secaoPresencial = document.getElementById('secaoRepertorioPresencial');
+    const secaoVirtual = document.getElementById('secaoVideosVirtual');
+    if(isVirtual){
+      secaoPresencial.classList.add('hidden');
+      secaoVirtual.classList.remove('hidden');
+      // Pré-popula vídeos se já salvos
+      const videos = inscricao.videosVirtual || [];
+      [1,2,3].forEach(n => {
+        const v = videos[n-1] || {};
+        const el = id => document.getElementById(id);
+        if(el('video'+n+'_link')) el('video'+n+'_link').value = v.link || '';
+        if(el('video'+n+'_titulo')) el('video'+n+'_titulo').value = v.titulo || '';
+        if(el('video'+n+'_compositor')) el('video'+n+'_compositor').value = v.compositor || '';
+        if(el('video'+n+'_arranjador')) el('video'+n+'_arranjador').value = v.arranjador || '';
+      });
     } else {
-      criarLinhaObra();
+      secaoPresencial.classList.remove('hidden');
+      secaoVirtual.classList.add('hidden');
+      // Pré-popula repertório ECAD
+      repertorioLista.innerHTML = '';
+      if(inscricao.obrasRepertorio && inscricao.obrasRepertorio.length > 0){
+        inscricao.obrasRepertorio.forEach(o => criarLinhaObra(o));
+      } else {
+        criarLinhaObra();
+      }
+      atualizarDuracaoTotalRepertorio();
     }
-    atualizarDuracaoTotalRepertorio();
 
     return true;
   }
@@ -3284,27 +3391,6 @@
     formConfirmacao.addEventListener('submit', async function(e){
       e.preventDefault();
 
-      if(!formConfirmacao.checkValidity()){
-        formConfirmacao.reportValidity();
-        return;
-      }
-
-      const obras = coletarObrasRepertorio();
-      if(obras.length === 0){
-        mostrarMensagem(confirmacaoMsg, 'Adicione ao menos uma obra ao repertório.', 'erro');
-        return;
-      }
-      const obraIncompleta = obras.some(o => !o.nomeObra || !o.compositor || !o.duracaoMinutos);
-      if(obraIncompleta){
-        mostrarMensagem(confirmacaoMsg, 'Preencha Nome da Obra, Compositor e Duração em todas as obras do repertório.', 'erro');
-        return;
-      }
-      const duracaoTotal = obras.reduce((acc, o) => acc + o.duracaoMinutos, 0);
-      if(duracaoTotal > 15){
-        mostrarMensagem(confirmacaoMsg, 'A duração total do repertório (' + duracaoTotal + ' min) ultrapassa o limite de 15 minutos.', 'erro');
-        return;
-      }
-
       const lista = getInscricoes();
       const inscricao = lista.find(i => i.id === inscricaoEmConfirmacaoId);
       if(!inscricao){
@@ -3313,23 +3399,72 @@
       }
 
       const fd = new FormData(formConfirmacao);
+      const isVirtualSubmit = inscricao.modalidade === 'Virtual';
 
-      // Se o campo de edição de nome estiver visível (coro institucional),
-      // usa o nome digitado; senão mantém o nome já gravado na inscrição
       const nomeCoroEdicaoVal = fd.get('nomeCoroEdicao')?.trim();
       const inscricaoAtual = getInscricoes().find(i => i.id === inscricaoEmConfirmacaoId);
       const nomeCoroFinal = (nomeCoroEdicaoVal && inscricaoAtual?.isInstitucional)
         ? nomeCoroEdicaoVal
         : (inscricaoAtual?.nomeCoro || '');
 
-      const camposAtualizados = {
+      let camposAtualizados = {
         nomeCoro: nomeCoroFinal,
-        obrasRepertorio: obras,
-        duracaoTotalRepertorio: duracaoTotal,
-        levaEquipamento: checkboxEquipamento.checked,
         linkDrive: fd.get('linkDrive')?.trim(),
         etapa: 'completo'
       };
+
+      if(isVirtualSubmit){
+        // Coleta os até 3 vídeos da Mostra Virtual
+        const videosVirtual = [];
+        [1,2,3].forEach(n => {
+          const link = (fd.get('video'+n+'_link') || '').trim();
+          const titulo = (fd.get('video'+n+'_titulo') || '').trim();
+          const compositor = (fd.get('video'+n+'_compositor') || '').trim();
+          const arranjador = (fd.get('video'+n+'_arranjador') || '').trim();
+          if(link || titulo){
+            videosVirtual.push({ link, titulo, compositor, arranjador });
+          }
+        });
+        if(videosVirtual.length === 0){
+          mostrarMensagem(confirmacaoMsg, 'Adicione ao menos um vídeo para a Mostra Virtual.', 'erro');
+          return;
+        }
+        const video1Incompleto = !videosVirtual[0].link || !videosVirtual[0].titulo || !videosVirtual[0].compositor;
+        if(video1Incompleto){
+          mostrarMensagem(confirmacaoMsg, 'Preencha Link, Título e Compositor do Vídeo 1.', 'erro');
+          return;
+        }
+        camposAtualizados.videosVirtual = videosVirtual;
+        camposAtualizados.obrasRepertorio = videosVirtual.map(v => ({
+          nomeObra: v.titulo,
+          compositor: v.compositor,
+          arranjador: v.arranjador,
+          duracaoMinutos: 0,
+          linkVideo: v.link
+        }));
+        camposAtualizados.duracaoTotalRepertorio = 0;
+        camposAtualizados.levaEquipamento = false;
+      } else {
+        // Presencial: coleta repertório ECAD normal
+        const obras = coletarObrasRepertorio();
+        if(obras.length === 0){
+          mostrarMensagem(confirmacaoMsg, 'Adicione ao menos uma obra ao repertório.', 'erro');
+          return;
+        }
+        const obraIncompleta = obras.some(o => !o.nomeObra || !o.compositor || !o.duracaoMinutos);
+        if(obraIncompleta){
+          mostrarMensagem(confirmacaoMsg, 'Preencha Nome da Obra, Compositor e Duração em todas as obras.', 'erro');
+          return;
+        }
+        const duracaoTotal = obras.reduce((acc, o) => acc + o.duracaoMinutos, 0);
+        if(duracaoTotal > 15){
+          mostrarMensagem(confirmacaoMsg, 'A duração total (' + duracaoTotal + ' min) ultrapassa o limite de 15 minutos.', 'erro');
+          return;
+        }
+        camposAtualizados.obrasRepertorio = obras;
+        camposAtualizados.duracaoTotalRepertorio = duracaoTotal;
+        camposAtualizados.levaEquipamento = checkboxEquipamento.checked;
+      }
 
       const btnSubmit = formConfirmacao.querySelector('button[type="submit"]');
       btnSubmit.disabled = true;
@@ -3569,7 +3704,24 @@
     const repContainer = document.getElementById('editRepertorioContainer');
     const repResumo = document.getElementById('editRepertorioResumo');
     const obras = item.obrasRepertorio || [];
-    if(obras.length > 0){
+    const videosVirtual = item.videosVirtual || [];
+    const isVirtualFicha = item.modalidade === 'Virtual';
+
+    if(isVirtualFicha && videosVirtual.length > 0){
+      repContainer.innerHTML = `
+        <div class="space-y-3">
+          ${videosVirtual.map((v,i) => `
+            <div class="border border-blue-200 rounded-xl p-4 bg-blue-50">
+              <p class="text-xs font-bold uppercase tracking-wide text-blue-600 mb-2">Vídeo ${i+1}</p>
+              <p class="font-semibold text-sm text-gray-800">${escapeHtml(v.titulo || '—')}</p>
+              <p class="text-xs text-gray-500 mt-0.5">${escapeHtml(v.compositor || '—')}${v.arranjador ? ' · arr. ' + escapeHtml(v.arranjador) : ''}</p>
+              ${v.link ? `<a href="${escapeHtml(v.link)}" target="_blank" rel="noopener" class="inline-block mt-2 text-xs font-semibold text-gold underline break-all">${escapeHtml(v.link)}</a>` : ''}
+            </div>
+          `).join('')}
+        </div>`;
+      repResumo.textContent = `${videosVirtual.length} vídeo(s) cadastrado(s)`;
+      repResumo.classList.remove('hidden');
+    } else if(!isVirtualFicha && obras.length > 0){
       repContainer.innerHTML = `
         <div class="overflow-x-auto">
           <table class="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
@@ -3587,7 +3739,7 @@
                   <td class="px-3 py-2 font-medium text-gray-800">${escapeHtml(o.nomeObra || '—')}</td>
                   <td class="px-3 py-2 text-gray-600">${escapeHtml(o.compositor || '—')}</td>
                   <td class="px-3 py-2 text-gray-500">${escapeHtml(o.arranjador || '—')}</td>
-                  <td class="px-3 py-2 text-gray-500 whitespace-nowrap">${o.duracaoObra ? o.duracaoObra + ' min' : '—'}</td>
+                  <td class="px-3 py-2 text-gray-500 whitespace-nowrap">${o.duracaoMinutos ? o.duracaoMinutos + ' min' : '—'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -3596,7 +3748,7 @@
       repResumo.textContent = `${obras.length} obra(s) · ${item.duracaoTotalRepertorio || '?'} min no total`;
       repResumo.classList.remove('hidden');
     } else {
-      repContainer.innerHTML = '<p class="text-sm text-gray-400 italic">Repertório não informado ainda (Etapa 2 pendente).</p>';
+      repContainer.innerHTML = `<p class="text-sm text-gray-400 italic">${isVirtualFicha ? 'Vídeos não enviados ainda (Etapa 2 pendente).' : 'Repertório não informado ainda (Etapa 2 pendente).'}</p>`;
       repResumo.classList.add('hidden');
     }
 
