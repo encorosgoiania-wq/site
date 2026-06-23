@@ -300,26 +300,17 @@
       <div class="max-w-5xl mx-auto px-6 text-center">
         <span class="text-xs font-semibold tracking-[0.2em] uppercase text-gray-500">Realização e Parceria</span>
         <div id="logosParceirosGrid" class="flex flex-wrap items-start justify-center gap-x-14 gap-y-10 mt-8">
-          <!-- Realizadora -->
           <div class="flex flex-col items-center gap-3">
             <span class="text-[10px] font-bold uppercase tracking-wider text-gold">Realizadora</span>
-            <div class="flex items-center gap-6">
-              <img src="Logo%20pref%20secult%20vert%202.png" alt="Prefeitura de Goiânia / SECULT" class="h-20 sm:h-24 w-auto max-w-[180px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
-              <img src="Osgo%20-%20marca%20-%202.png" alt="Orquestra Sinfônica de Goiânia" class="h-16 sm:h-20 w-auto max-w-[140px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
-            </div>
+            <img src="logo%20prefeitura.png" alt="Prefeitura de Goiânia / OSGO" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
           </div>
-          <!-- Co-realizadora UFG + Basileu -->
           <div class="flex flex-col items-center gap-3">
             <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Co-realizadora</span>
-            <div class="flex items-center gap-6">
-              <img src="logo-ufg.png" alt="UFG – Universidade Federal de Goiás" class="h-14 sm:h-16 w-auto max-w-[130px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
-              <img src="logo-basileu-franca.png" alt="Escola do Futuro em Artes Basileu França" class="h-16 sm:h-20 w-auto max-w-[150px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
-            </div>
+            <img src="logo%20basileu.png" alt="Escola do Futuro de Goiás em Artes Basileu França" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
           </div>
-          <!-- Co-realizadora Onix -->
           <div class="flex flex-col items-center gap-3">
             <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Co-realizadora</span>
-            <img src="logo%20onix.png" alt="Onix Brasil Vocal Internacional" class="h-20 sm:h-24 w-auto max-w-[160px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
+            <img src="logo%20onix.png" alt="Onix Brasil Vocal Internacional" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
           </div>
         </div>
       </div>
@@ -813,9 +804,10 @@
             <p class="text-sm text-gray-700 mb-6">Informações sobre o grupo vocal participante.</p>
 
             <div class="grid sm:grid-cols-2 gap-5">
-              <div>
+              <div class="relative">
                 <label class="label-field">Nome do Coro *</label>
-                <input required type="text" name="nomeCoro" class="input-field" placeholder="Nome do grupo">
+                <input required type="text" id="inputNomeCoro" name="nomeCoro" class="input-field" placeholder="Nome do grupo" autocomplete="off">
+                <ul id="nomeCoroSugestoes" class="hidden absolute z-50 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto"></ul>
               </div>
               <div>
                 <label class="label-field">Cidade / Estado de Origem *</label>
@@ -980,6 +972,17 @@
         </div>
       </div>
 
+      <!-- Estado: inscrição já completada anteriormente -->
+      <div id="confirmacaoJaFeito" class="hidden min-h-[60vh] flex items-center justify-center px-6">
+        <div class="card-soft p-8 max-w-md text-center">
+          <div class="text-4xl mb-4">✅</div>
+          <h2 class="font-serif-display text-2xl mb-3" style="color:var(--azul-petroleo)">Inscrição já confirmada!</h2>
+          <p id="confirmacaoJaFeitoNome" class="text-sm font-semibold mb-3" style="color:var(--azul-petroleo)">—</p>
+          <p class="text-sm text-gray-600 leading-relaxed">O repertório e os dados desta inscrição já foram enviados com sucesso. Fique atento às comunicações da organização sobre logística e horário de apresentação.</p>
+          <p class="text-sm text-gray-500 mt-4">Dúvidas? <a href="mailto:encorosgoiania@gmail.com" class="text-gold underline">encorosgoiania@gmail.com</a></p>
+        </div>
+      </div>
+
       <!-- Estado: formulário de confirmação -->
       <div id="confirmacaoConteudo" class="hidden">
         <div class="bg-petroleo text-white py-16">
@@ -998,6 +1001,13 @@
           </div>
 
           <form id="formConfirmacao" class="space-y-12" novalidate>
+
+            <!-- NOME DO CORO — visível só para coros institucionais (pré-cadastrados com sigla) -->
+            <div id="wrapperNomeCoroEdicao" class="hidden card-soft p-6 sm:p-8 border-2" style="border-color:var(--dourado)">
+              <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Nome do Coro</h2>
+              <p class="text-sm text-gray-500 mb-4">Confirme ou corrija o nome do seu coro como deve aparecer nos materiais de divulgação do evento.</p>
+              <input type="text" id="inputNomeCoroEdicao" name="nomeCoroEdicao" class="input-field" placeholder="Nome completo do coro">
+            </div>
 
             <!-- REPERTÓRIO TÉCNICO (ECAD) -->
             <div class="card-soft p-6 sm:p-8">
@@ -2492,6 +2502,22 @@
 
   function montarVariaveisComunicacao(nomeCoro, dia, horaInicioCoro, inscricao){
     const linkEtapa2 = (inscricao && inscricao.id) ? getLinkConfirmacao(inscricao.id) : '';
+    const hoje = new Date();
+    const dataEvento = dia ? (() => {
+      // Extrai data do campo dia.data (ex: "04 de Setembro") e monta Date
+      const meses = {janeiro:0,fevereiro:1,março:2,abril:3,maio:4,junho:5,julho:6,agosto:7,setembro:8,outubro:9,novembro:10,dezembro:11};
+      const partes = (dia.data || '').toLowerCase().split(' de ');
+      if(partes.length === 2){
+        const d = parseInt(partes[0]);
+        const m = meses[partes[1].trim()];
+        if(!isNaN(d) && m !== undefined) return new Date(2026, m, d);
+      }
+      return null;
+    })() : null;
+    const diasRestantes = dataEvento
+      ? Math.ceil((dataEvento - new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())) / 86400000)
+      : null;
+
     return {
       NOME_DO_CORO: nomeCoro,
       LOCAL: (cronogramaEdicaoAtual && cronogramaEdicaoAtual.local) || LOCAL_PADRAO_PROGRAMACAO,
@@ -2501,11 +2527,14 @@
         ? '\n📍 Como chegar: ' + cronogramaEdicaoAtual.linkMapa
         : '',
       LINK_ETAPA2: linkEtapa2,
-      PRAZO_REPERTORIO: '07 de agosto de 2026'
+      PRAZO_REPERTORIO: '07 de agosto de 2026',
+      DIAS_RESTANTES: diasRestantes !== null ? String(diasRestantes) : '?',
+      DATA_EVENTO_CURTA: dia ? dia.data : ''
     };
   }
 
-  const TEMPLATE_WHATSAPP_PADRAO =
+  // TEMPLATE 1 — Etapa 2 (pedir repertório e logística)
+  const TEMPLATE_WHATSAPP_ETAPA2 =
     'Olá, [NOME_DO_CORO]! 🎶\n\n' +
     'Que alegria ter vocês no VII ENCoros 2026! Ficamos muito felizes com a inscrição!\n\n' +
     'Estamos organizando os detalhes finais e precisamos dos dados do repertório e da logística da apresentação de vocês.\n\n' +
@@ -2516,6 +2545,30 @@
     'Por favor, acesse o link abaixo para completar o cadastro (Etapa 2) com as obras do repertório e informações de logística:\n' +
     '👉 [LINK_ETAPA2]\n\n' +
     'Qualquer dúvida, estamos à disposição! 😊\n' +
+    'Organização VII ENCoros 2026';
+
+  // Mantém compatibilidade com o nome antigo (usado em getLinkWhatsAppCoro)
+  const TEMPLATE_WHATSAPP_PADRAO = TEMPLATE_WHATSAPP_ETAPA2;
+
+  // TEMPLATE 2 — Contagem regressiva
+  const TEMPLATE_WHATSAPP_CONTAGEM =
+    '🎶 [NOME_DO_CORO], faltam apenas *[DIAS_RESTANTES] dias* para o VII ENCoros 2026!\n\n' +
+    'Sua apresentação está marcada para *[DATA]*, às *[HORA]*, em *[LOCAL]*.[LINK_MAPA]\n\n' +
+    'Lembre-se: o prazo para enviar o repertório é *[PRAZO_REPERTORIO]*.\n\n' +
+    'Se ainda não completou a Etapa 2, acesse agora:\n' +
+    '👉 [LINK_ETAPA2]\n\n' +
+    'Nos vemos em Goiânia! 🏛️\n' +
+    'Organização VII ENCoros 2026';
+
+  // TEMPLATE 3 — Dia do evento / programação do dia
+  const TEMPLATE_WHATSAPP_DIA =
+    '🎉 É hoje, [NOME_DO_CORO]!\n\n' +
+    'O VII ENCoros 2026 chegou e estamos muito felizes em receber vocês!\n\n' +
+    '📅 Hoje, [DATA]\n' +
+    '🕐 Horário de apresentação: *[HORA]*\n' +
+    '📍 Local: *[LOCAL]*[LINK_MAPA]\n\n' +
+    'Por favor, cheguem com antecedência para acomodação e organização do palco.\n\n' +
+    'Qualquer dúvida de última hora, estamos aqui! 💛\n' +
     'Organização VII ENCoros 2026';
 
   const TEMPLATE_EMAIL_ASSUNTO_PADRAO = 'VII ENCoros 2026 — Complete sua inscrição (Etapa 2)';
@@ -2535,16 +2588,26 @@
     'Organização VII ENCoros 2026\n' +
     'encorosgoiania@gmail.com';
 
+  function montarLinkWpp(inscricao, mensagem){
+    const telefone = (inscricao.telefoneRegente || '').replace(/\D/g, '');
+    const numero = telefone.length > 0 && !telefone.startsWith('55') ? '55' + telefone : telefone;
+    const base = numero ? 'https://wa.me/' + numero : 'https://wa.me/';
+    return base + '?text=' + encodeURIComponent(mensagem);
+  }
+
   function getLinkWhatsAppCoro(inscricao, dia, horaInicioCoro){
     const vars = montarVariaveisComunicacao(inscricao.nomeCoro, dia, horaInicioCoro, inscricao);
-    const mensagem = preencherTemplate(TEMPLATE_WHATSAPP_PADRAO, vars);
-    const telefone = (inscricao.telefoneRegente || '').replace(/\D/g, '');
-    const numeroComDDI = telefone.length > 0 && !telefone.startsWith('55') ? '55' + telefone : telefone;
-    // Se não tiver telefone cadastrado, abre WhatsApp sem número (admin digita na hora)
-    if(!numeroComDDI){
-      return 'https://wa.me/?text=' + encodeURIComponent(mensagem);
-    }
-    return 'https://wa.me/' + numeroComDDI + '?text=' + encodeURIComponent(mensagem);
+    return montarLinkWpp(inscricao, preencherTemplate(TEMPLATE_WHATSAPP_ETAPA2, vars));
+  }
+
+  function getLinkWhatsAppContagem(inscricao, dia, horaInicioCoro){
+    const vars = montarVariaveisComunicacao(inscricao.nomeCoro, dia, horaInicioCoro, inscricao);
+    return montarLinkWpp(inscricao, preencherTemplate(TEMPLATE_WHATSAPP_CONTAGEM, vars));
+  }
+
+  function getLinkWhatsAppDia(inscricao, dia, horaInicioCoro){
+    const vars = montarVariaveisComunicacao(inscricao.nomeCoro, dia, horaInicioCoro, inscricao);
+    return montarLinkWpp(inscricao, preencherTemplate(TEMPLATE_WHATSAPP_DIA, vars));
   }
 
   function getLinkEmailCoro(inscricao, dia, horaInicioCoro){
@@ -2552,13 +2615,59 @@
     const assunto = preencherTemplate(TEMPLATE_EMAIL_ASSUNTO_PADRAO, vars);
     const corpo = preencherTemplate(TEMPLATE_EMAIL_CORPO_PADRAO, vars);
     const email = inscricao.emailRegente || '';
-    // Se não tiver e-mail cadastrado, abre cliente de e-mail sem destinatário
     return 'mailto:' + email + '?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(corpo);
   }
 
   // ---------- ELEMENTOS: MODO PRELIMINAR (Etapa 1) ----------
   const inscricaoModoPreliminar = document.getElementById('inscricaoModoPreliminar');
   const formPreliminar = document.getElementById('formInscricaoPreliminar');
+
+  // Autocomplete do campo "Nome do Coro" — a partir do 3º caractere,
+  // sugere nomes já cadastrados no Firestore (coros do mesmo regente
+  // que voltam para inscrever outro coro, ou coros já existentes).
+  const inputNomeCoro = document.getElementById('inputNomeCoro');
+  const nomeCoroSugestoes = document.getElementById('nomeCoroSugestoes');
+
+  function fecharSugestoes(){
+    nomeCoroSugestoes.classList.add('hidden');
+    nomeCoroSugestoes.innerHTML = '';
+  }
+
+  inputNomeCoro.addEventListener('input', function(){
+    const termo = this.value.trim().toLowerCase();
+    fecharSugestoes();
+    if(termo.length < 3) return;
+
+    const matches = getInscricoes()
+      .filter(i => !i.isInstitucional && i.nomeCoro && i.nomeCoro.toLowerCase().includes(termo))
+      .map(i => i.nomeCoro)
+      .filter((v, idx, arr) => arr.indexOf(v) === idx) // deduplica
+      .slice(0, 6);
+
+    if(matches.length === 0) return;
+
+    nomeCoroSugestoes.innerHTML = matches.map(nome => `
+      <li data-nome="${escapeHtml(nome)}"
+          class="px-4 py-2.5 text-sm text-gray-800 cursor-pointer hover:bg-amber-50 hover:text-amber-900 transition">
+        ${escapeHtml(nome)}
+      </li>`).join('');
+
+    nomeCoroSugestoes.classList.remove('hidden');
+
+    nomeCoroSugestoes.querySelectorAll('li').forEach(li => {
+      li.addEventListener('mousedown', function(e){
+        e.preventDefault(); // evita blur antes do clique
+        inputNomeCoro.value = this.dataset.nome;
+        fecharSugestoes();
+        inputNomeCoro.dispatchEvent(new Event('input')); // reavalia duplicidade
+      });
+    });
+  });
+
+  inputNomeCoro.addEventListener('blur', () => setTimeout(fecharSugestoes, 150));
+  inputNomeCoro.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') fecharSugestoes();
+  });
   const checkbox = document.getElementById('aceiteRegulamento');
   const btnEnviar = document.getElementById('btnEnviar');
   const formMsg = document.getElementById('formMsg');
@@ -2826,6 +2935,23 @@
       return;
     }
 
+    // Checagem de duplicidade: bloqueia reenvio se já existe inscrição
+    // com mesmo e-mail do regente OU mesmo nome de coro (case-insensitive)
+    const nomeCoroDigitado = fd.get('nomeCoro')?.trim().toLowerCase();
+    const jaExiste = getInscricoes().find(i =>
+      !i.isInstitucional &&
+      i.nomeCoro && i.nomeCoro.toLowerCase() === nomeCoroDigitado
+    );
+    if(jaExiste){
+      const msgDup = jaExiste.etapa === 'completo'
+        ? `O coro "${jaExiste.nomeCoro}" já possui inscrição completa no VII ENCoros 2026. Verifique seu e-mail para mais informações ou entre em contato: encorosgoiania@gmail.com`
+        : `O coro "${jaExiste.nomeCoro}" já possui inscrição preliminar. Verifique seu e-mail (inclusive spam) para o link de confirmação da Etapa 2 ou entre em contato: encorosgoiania@gmail.com`;
+      mostrarMensagem(formMsg, msgDup, 'erro');
+      btnEnviar.disabled = false;
+      btnEnviar.textContent = 'Enviar Inscrição Preliminar';
+      return;
+    }
+
     const inscricao = {
       dataEnvio: new Date().toISOString(),
       fluxoInscricao: fluxo, // 'novo' | 'convidado'
@@ -2938,6 +3064,8 @@
   const confirmacaoLinkInvalido = document.getElementById('confirmacaoLinkInvalido');
   const confirmacaoConteudo = document.getElementById('confirmacaoConteudo');
   const confirmacaoNomeCoro = document.getElementById('confirmacaoNomeCoro');
+  const confirmacaoJaFeito = document.getElementById('confirmacaoJaFeito');
+  const confirmacaoJaFeitoNome = document.getElementById('confirmacaoJaFeitoNome');
   const formConfirmacao = document.getElementById('formConfirmacao');
   const confirmacaoMsg = document.getElementById('confirmacaoMsg');
   const repertorioLista = document.getElementById('repertorioLista');
@@ -2974,8 +3102,27 @@
 
     inscricaoEmConfirmacaoId = id;
     confirmacaoLinkInvalido.classList.add('hidden');
+
+    // Se a etapa já foi completada, mostra tela de "já confirmado" em vez do formulário
+    if(inscricao.etapa === 'completo'){
+      confirmacaoConteudo.classList.add('hidden');
+      confirmacaoJaFeito.classList.remove('hidden');
+      confirmacaoJaFeitoNome.textContent = inscricao.nomeCoro + ' · ' + inscricao.nomeRegente;
+      return true;
+    }
+
     confirmacaoConteudo.classList.remove('hidden');
     confirmacaoNomeCoro.textContent = inscricao.nomeCoro + ' · ' + inscricao.nomeRegente;
+
+    // Para coros institucionais, exibe o campo de edição do nome do coro
+    const wrapperNomeCoroEdicao = document.getElementById('wrapperNomeCoroEdicao');
+    const inputNomeCoroEdicao = document.getElementById('inputNomeCoroEdicao');
+    if(inscricao.isInstitucional){
+      wrapperNomeCoroEdicao.classList.remove('hidden');
+      inputNomeCoroEdicao.value = inscricao.nomeCoro;
+    } else {
+      wrapperNomeCoroEdicao.classList.add('hidden');
+    }
 
     // Pré-popula repertório com 1 linha vazia (ou as obras já salvas, se o coro voltar para editar)
     repertorioLista.innerHTML = '';
@@ -3109,7 +3256,17 @@
       }
 
       const fd = new FormData(formConfirmacao);
+
+      // Se o campo de edição de nome estiver visível (coro institucional),
+      // usa o nome digitado; senão mantém o nome já gravado na inscrição
+      const nomeCoroEdicaoVal = fd.get('nomeCoroEdicao')?.trim();
+      const inscricaoAtual = getInscricoes().find(i => i.id === inscricaoEmConfirmacaoId);
+      const nomeCoroFinal = (nomeCoroEdicaoVal && inscricaoAtual?.isInstitucional)
+        ? nomeCoroEdicaoVal
+        : (inscricaoAtual?.nomeCoro || '');
+
       const camposAtualizados = {
+        nomeCoro: nomeCoroFinal,
         obrasRepertorio: obras,
         duracaoTotalRepertorio: duracaoTotal,
         levaEquipamento: checkboxEquipamento.checked,
@@ -3123,6 +3280,54 @@
 
       try{
         await window.firebaseDataLayer.updateInscricao(inscricaoEmConfirmacaoId, camposAtualizados);
+
+        // E-mail de confirmação da Etapa 2 — só envia se era a primeira conclusão
+        if(inscricao.emailRegente && inscricao.etapa !== 'completo'){
+          const corpoEmail = `
+            <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
+              <div style="background:#0F2027;padding:32px 40px;text-align:center">
+                <img src="https://encorosgoiania-wq.github.io/site/logoencorosTransparente.png" alt="VII ENCoros 2026" style="height:64px;object-fit:contain">
+              </div>
+              <div style="padding:40px">
+                <h1 style="font-family:'Playfair Display',serif;color:#0F2027;font-size:24px;margin:0 0 8px">Inscrição Confirmada!</h1>
+                <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 16px">
+                  Olá, ${escapeHtml(inscricao.nomeRegente)}! A inscrição do
+                  <strong>${escapeHtml(inscricao.nomeCoro)}</strong> no VII ENCoros 2026 está
+                  <strong style="color:#16a34a">completa</strong> — repertório e dados recebidos com sucesso.
+                </p>
+                <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin:24px 0;font-size:14px;color:#374151">
+                  <p style="margin:0 0 6px"><strong>Coro:</strong> ${escapeHtml(inscricao.nomeCoro)}</p>
+                  <p style="margin:0 0 6px"><strong>Regente:</strong> ${escapeHtml(inscricao.nomeRegente)}</p>
+                  <p style="margin:0"><strong>Repertório:</strong> ${obras.length} obra(s) — ${duracaoTotal} min no total</p>
+                </div>
+                <p style="color:#4b5563;font-size:14px;line-height:1.6;margin:0 0 24px">
+                  A Comissão Artística analisará o material enviado e, se necessário, entrará em contato.
+                  Fique atento às nossas comunicações sobre logística e horário de apresentação.
+                </p>
+                <p style="color:#6b7280;font-size:13px;margin:0">
+                  Dúvidas? Fale conosco pelo WhatsApp
+                  <a href="https://wa.me/5562991546757" style="color:#D4AF37">(62) 99154-6757</a>
+                  ou pelo e-mail
+                  <a href="mailto:encorosgoiania@gmail.com" style="color:#D4AF37">encorosgoiania@gmail.com</a>.
+                </p>
+              </div>
+              <div style="background:#0F2027;padding:16px 40px;text-align:center">
+                <p style="color:#9ca3af;font-size:12px;margin:0">VII ENCoros 2026 · Goiânia, GO · 04 a 07 de setembro de 2026</p>
+              </div>
+            </div>`;
+          try{
+            await window.firebaseDataLayer.enviarEmail(
+              inscricao.emailRegente,
+              'Inscrição confirmada — VII ENCoros 2026',
+              corpoEmail
+            );
+            await window.firebaseDataLayer.updateInscricao(inscricaoEmConfirmacaoId, { emailEtapa2Enviado: true });
+          }catch(emailErr){
+            console.warn('E-mail de confirmação Etapa 2 não enviado:', emailErr);
+            // Não interrompe o fluxo — inscrição já foi salva com sucesso
+          }
+        }
+
         mostrarMensagem(confirmacaoMsg, '✓ Participação confirmada com sucesso! Nos vemos no VII ENCoros 2026.', 'sucesso');
         btnSubmit.classList.add('btn-disabled');
         btnSubmit.classList.remove('btn-gold');
@@ -3972,21 +4177,30 @@
       }
 
       if(inscricaoDoCoro){
-        const linkWpp = getLinkWhatsAppCoro(inscricaoDoCoro, dia, horaInicio);
-        const linkEmail = getLinkEmailCoro(inscricaoDoCoro, dia, horaInicio);
-        const tituloWpp = inscricaoDoCoro.nomeRegente
-          ? 'WhatsApp para ' + escapeHtml(inscricaoDoCoro.nomeRegente)
-          : 'WhatsApp (sem número cadastrado — abre sem destinatário)';
-        const tituloEmail = inscricaoDoCoro.emailRegente
-          ? 'E-mail para ' + escapeHtml(inscricaoDoCoro.emailRegente)
-          : 'E-mail (sem endereço cadastrado — abre sem destinatário)';
+        const linkWppEtapa2   = getLinkWhatsAppCoro(inscricaoDoCoro, dia, horaInicio);
+        const linkWppContagem = getLinkWhatsAppContagem(inscricaoDoCoro, dia, horaInicio);
+        const linkWppDia      = getLinkWhatsAppDia(inscricaoDoCoro, dia, horaInicio);
+        const linkEmail       = getLinkEmailCoro(inscricaoDoCoro, dia, horaInicio);
+
+        const svgWpp = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.45 1.29 4.89L2 22l5.32-1.4a9.86 9.86 0 0 0 4.72 1.2h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.84 14.04c-.25.7-1.25 1.29-1.97 1.42-.5.09-1.15.16-3.32-.71-2.79-1.12-4.6-3.93-4.74-4.11-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.02.96-2.3.25-.27.55-.34.73-.34h.53c.17 0 .4-.03.62.48.25.59.85 2.04.93 2.19.08.15.13.32.03.51-.1.18-.15.3-.3.46-.15.16-.3.36-.43.48-.15.14-.3.3-.13.59.17.3.76 1.26 1.64 2.04 1.13 1.01 2.07 1.32 2.37 1.47.3.15.47.13.65-.08.18-.2.76-.88.96-1.18.2-.3.4-.25.66-.15.27.1 1.71.81 2 .96.29.15.48.22.55.35.07.13.07.74-.18 1.44z"/></svg>`;
+
         botoesComunicacao = `
-          <a href="${linkWpp}" target="_blank" rel="noopener" class="shrink-0 w-7 h-7 rounded-full bg-green-50 border border-green-300 flex items-center justify-center hover:bg-green-100 transition" title="${tituloWpp}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.45 1.29 4.89L2 22l5.32-1.4a9.86 9.86 0 0 0 4.72 1.2h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.84 14.04c-.25.7-1.25 1.29-1.97 1.42-.5.09-1.15.16-3.32-.71-2.79-1.12-4.6-3.93-4.74-4.11-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.02.96-2.3.25-.27.55-.34.73-.34h.53c.17 0 .4-.03.62.48.25.59.85 2.04.93 2.19.08.15.13.32.03.51-.1.18-.15.3-.3.46-.15.16-.3.36-.43.48-.15.14-.3.3-.13.59.17.3.76 1.26 1.64 2.04 1.13 1.01 2.07 1.32 2.37 1.47.3.15.47.13.65-.08.18-.2.76-.88.96-1.18.2-.3.4-.25.66-.15.27.1 1.71.81 2 .96.29.15.48.22.55.35.07.13.07.74-.18 1.44z"/></svg>
-          </a>
-          <a href="${linkEmail}" class="shrink-0 w-7 h-7 rounded-full bg-blue-50 border border-blue-300 flex items-center justify-center hover:bg-blue-100 transition" title="${tituloEmail}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"/></svg>
-          </a>
+          <div class="flex items-center gap-1 shrink-0">
+            <a href="${linkWppEtapa2}" target="_blank" rel="noopener"
+               class="flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-300 rounded-full px-2 py-1 hover:bg-green-100 transition whitespace-nowrap"
+               title="WhatsApp — Pedir Etapa 2 (repertório)">${svgWpp} Etapa 2</a>
+            <a href="${linkWppContagem}" target="_blank" rel="noopener"
+               class="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-300 rounded-full px-2 py-1 hover:bg-amber-100 transition whitespace-nowrap"
+               title="WhatsApp — Contagem regressiva">${svgWpp} Contagem</a>
+            <a href="${linkWppDia}" target="_blank" rel="noopener"
+               class="flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-300 rounded-full px-2 py-1 hover:bg-blue-100 transition whitespace-nowrap"
+               title="WhatsApp — É hoje!">${svgWpp} É hoje!</a>
+            <a href="${linkEmail}"
+               class="shrink-0 w-6 h-6 rounded-full bg-gray-50 border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition"
+               title="E-mail — Pedir Etapa 2">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"/></svg>
+            </a>
+          </div>
         `;
       }
 
@@ -4200,11 +4414,67 @@
     }
   };
 
+  // Varre inscrições completas que ainda não receberam o e-mail de confirmação
+  // da Etapa 2 (campo emailEtapa2Enviado ausente ou false). Roda uma vez ao
+  // carregar o site — garante que inscrições feitas antes dessa funcionalidade
+  // também recebam o e-mail, sem reenviar para quem já recebeu.
+  async function enviarEmailsPendentesEtapa2(){
+    const lista = getInscricoes();
+    const pendentes = lista.filter(i =>
+      !i.isInstitucional &&
+      i.etapa === 'completo' &&
+      i.emailRegente &&
+      !i.emailEtapa2Enviado
+    );
+    for(const inscricao of pendentes){
+      const corpoEmail = `
+        <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
+          <div style="background:#0F2027;padding:32px 40px;text-align:center">
+            <img src="https://encorosgoiania-wq.github.io/site/logoencorosTransparente.png" alt="VII ENCoros 2026" style="height:64px;object-fit:contain">
+          </div>
+          <div style="padding:40px">
+            <h1 style="font-family:'Playfair Display',serif;color:#0F2027;font-size:24px;margin:0 0 8px">Inscrição Confirmada!</h1>
+            <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 16px">
+              Olá, ${escapeHtml(inscricao.nomeRegente)}! A inscrição do
+              <strong>${escapeHtml(inscricao.nomeCoro)}</strong> no VII ENCoros 2026 está
+              <strong style="color:#16a34a">completa</strong> — repertório e dados recebidos com sucesso.
+            </p>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin:24px 0;font-size:14px;color:#374151">
+              <p style="margin:0 0 6px"><strong>Coro:</strong> ${escapeHtml(inscricao.nomeCoro)}</p>
+              <p style="margin:0"><strong>Regente:</strong> ${escapeHtml(inscricao.nomeRegente)}</p>
+            </div>
+            <p style="color:#4b5563;font-size:14px;line-height:1.6;margin:0 0 24px">
+              Fique atento às nossas comunicações sobre logística e horário de apresentação.
+            </p>
+            <p style="color:#6b7280;font-size:13px;margin:0">
+              Dúvidas? <a href="https://wa.me/5562991546757" style="color:#D4AF37">(62) 99154-6757</a>
+              ou <a href="mailto:encorosgoiania@gmail.com" style="color:#D4AF37">encorosgoiania@gmail.com</a>.
+            </p>
+          </div>
+          <div style="background:#0F2027;padding:16px 40px;text-align:center">
+            <p style="color:#9ca3af;font-size:12px;margin:0">VII ENCoros 2026 · Goiânia, GO · 04 a 07 de setembro de 2026</p>
+          </div>
+        </div>`;
+      try{
+        await window.firebaseDataLayer.enviarEmail(
+          inscricao.emailRegente,
+          'Inscrição confirmada — VII ENCoros 2026',
+          corpoEmail
+        );
+        // Marca como enviado para não reenviar nas próximas visitas
+        await window.firebaseDataLayer.updateInscricao(inscricao.id, { emailEtapa2Enviado: true });
+      }catch(err){
+        console.warn('Erro ao enviar e-mail pendente Etapa 2 para', inscricao.nomeCoro, err);
+      }
+    }
+  }
+
   async function iniciarApp(){
     try{
       await inicializarSincronizacaoFirebase();
       await garantirSeedInstitucionais();
       await garantirSeedCronograma();
+      await enviarEmailsPendentesEtapa2();
     }catch(err){
       console.error('Erro ao conectar com o banco de dados em nuvem:', err);
       // Mesmo com erro, deixamos a página seguir — formulários mostrarão
