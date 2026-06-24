@@ -300,9 +300,19 @@
       <div class="max-w-5xl mx-auto px-6 text-center">
         <span class="text-xs font-semibold tracking-[0.2em] uppercase text-gray-500">Realização e Parceria</span>
         <div id="logosParceirosGrid" class="flex flex-wrap items-start justify-center gap-x-14 gap-y-10 mt-8">
+          <!-- REALIZADORA -->
           <div class="flex flex-col items-center gap-3">
             <span class="text-[10px] font-bold uppercase tracking-wider text-gold">Realizadora</span>
-            <img src="logo%20prefeitura.png" alt="Prefeitura de Goiânia / OSGO" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
+            <img src="Logo%20pref%20secult%20vert%202.png" alt="Prefeitura de Goiânia / Secult" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
+          </div>
+          <!-- CO-REALIZADORAS -->
+          <div class="flex flex-col items-center gap-3">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Co-realizadora</span>
+            <img src="Osgo%20-%20marca%20-%202.png" alt="Orquestra Sinfônica de Goiânia" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
+          </div>
+          <div class="flex flex-col items-center gap-3">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Co-realizadora</span>
+            <img src="Marca_UFG_cor_completa_horizontal%20.png" alt="Universidade Federal de Goiás" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
           </div>
           <div class="flex flex-col items-center gap-3">
             <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Co-realizadora</span>
@@ -1378,7 +1388,7 @@
               <p id="cronogramaTempoAviso" class="hidden text-xs text-red-600 font-semibold mt-2">
                 ⚠ O tempo total dos coros ultrapassa o limite disponível do bloco (1h20 úteis, fora abertura e encerramento).
               </p>
-              <p class="text-[11px] text-gray-400 mt-2">10 min reservados para Abertura + 10 min para Encerramento, automaticamente incluídos no horário final.</p>
+              <p id="cronogramaTempoInfo" class="text-[11px] text-gray-400 mt-2">10 min reservados para Abertura + 10 min para Encerramento, automaticamente incluídos no horário final.</p>
             </div>
 
             <div id="cronogramaOrdemLista" class="space-y-2">
@@ -1887,7 +1897,14 @@
       fixos: [],
       corosFixos: [],
       maxAmadores: null,
-      vagasInscricao: false
+      vagasInscricao: false,
+      // Mostra Virtual: 15 min de abertura + coros virtuais (10 min cada) + 15 min encerramento
+      // Máximo total: 120 min (2h). Tempo útil para coros = 120 - 15 - 15 = 90 min.
+      // Com 10 min por coro: até 9 coros virtuais por noite.
+      tempoUtilLivre: 90,
+      duracaoCoroVirtual: 10, // minutos por coro virtual
+      aberturaVirtual: 15,    // minutos de abertura
+      encerramentoVirtual: 15 // minutos de encerramento
     }
   ];
 
@@ -2119,10 +2136,14 @@
         anfitriao: !!c.anfitriao
       };
     });
+    // Segunda-feira (Mostra Virtual) usa 15 min de abertura/encerramento
+    // em vez dos 10 min padrão dos outros dias.
+    const abertura = diaId === 'segunda' ? 15 : CRONOGRAMA_DURACAO_PADRAO_ABERTURA;
+    const encerramento = diaId === 'segunda' ? 15 : CRONOGRAMA_DURACAO_PADRAO_ENCERRAMENTO;
     return {
       diaId: diaId,
-      duracaoAbertura: CRONOGRAMA_DURACAO_PADRAO_ABERTURA,
-      duracaoEncerramento: CRONOGRAMA_DURACAO_PADRAO_ENCERRAMENTO,
+      duracaoAbertura: abertura,
+      duracaoEncerramento: encerramento,
       local: diaId === 'segunda' ? 'Virtual / YouTube' : LOCAL_PADRAO_PROGRAMACAO,
       linkMapa: '',
       coros: coros,
@@ -4756,6 +4777,16 @@
       };
     }
     atualizarCamposLocalNaTela();
+
+    // Atualiza o texto explicativo de tempo conforme o dia
+    const infoEl = document.getElementById('cronogramaTempoInfo');
+    if(infoEl){
+      if(diaId === 'segunda'){
+        infoEl.textContent = '15 min de Abertura + 15 min de Encerramento (Mostra Virtual). Máximo total: 2h (120 min). Coros virtuais: 10 min cada.';
+      } else {
+        infoEl.textContent = `${cronogramaEdicaoAtual.duracaoAbertura} min reservados para Abertura + ${cronogramaEdicaoAtual.duracaoEncerramento} min para Encerramento, automaticamente incluídos no horário final.`;
+      }
+    }
   }
 
   // Lista os coros inscritos (Presencial, status != Rejeitado) para o dia selecionado,
@@ -4796,9 +4827,12 @@
         if(!inscricao) return;
 
         // Duração padrão sugerida: a mais próxima das opções válidas (15/20/30) com base no repertório
-        let duracaoSugerida = 15;
+        // Duração sugerida: usa a duração cadastrada no repertório se existir;
+        // senão usa 10 min para a Mostra Virtual (Segunda) ou 15 min para os demais dias.
+        const duracaoPadraoDia = cronogramaDiaAtual === 'segunda' ? 10 : 15;
+        let duracaoSugerida = duracaoPadraoDia;
         if(inscricao.duracaoTotalRepertorio){
-          duracaoSugerida = CRONOGRAMA_DURACOES_VALIDAS.find(d => d >= inscricao.duracaoTotalRepertorio) || 30;
+          duracaoSugerida = CRONOGRAMA_DURACOES_VALIDAS.find(d => d >= inscricao.duracaoTotalRepertorio) || duracaoPadraoDia;
         }
 
         cronogramaEdicaoAtual.coros.push({
