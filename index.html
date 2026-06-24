@@ -4972,7 +4972,9 @@
       }
 
       // Fallback para coro fixo sem inscrição: cria um objeto mínimo com o nome do coro
-      const ehCoroFixo = !c.inscricaoId;
+      // Coro fixo = institucional (tem inscricaoId mas isInstitucional=true no Firestore)
+      const inscricaoParaCheck = c.inscricaoId ? getInscricoes().find(i => i.id === c.inscricaoId) : null;
+      const ehCoroFixo = !c.inscricaoId || (inscricaoParaCheck && inscricaoParaCheck.isInstitucional === true);
       if(!inscricaoDoCoro && c.nomeCoro){
         inscricaoDoCoro = {
           id: null,
