@@ -5208,7 +5208,7 @@
     });
   }
 
-  function renderCronogramaAdmin(forcarRecarregar){
+  function renderCronogramaAdmin(){
     if(!cronogramaSelectDia) return;
     if(cronogramaSelectDia.options.length === 0){
       popularSelectDiaCronograma();
@@ -5217,10 +5217,8 @@
       cronogramaDiaAtual = cronogramaSelectDia.value || PROGRAMACAO_DATA[1].id;
       cronogramaSelectDia.value = cronogramaDiaAtual;
     }
-    // Só recarrega do Firestore se forçado (troca de dia) ou se ainda não tem dados em edição
-    if(forcarRecarregar || !cronogramaEdicaoAtual || !cronogramaEdicaoAtual.coros){
-      carregarCronogramaParaEdicao(cronogramaDiaAtual);
-    }
+    // Sempre carrega do cache (que já tem os dados do Firestore se firebasePronto=true)
+    carregarCronogramaParaEdicao(cronogramaDiaAtual);
     renderCorosDisponiveis();
     renderOrdemBloco();
     cronogramaSalvoMsg.classList.add('hidden');
@@ -5232,7 +5230,6 @@
       renderCorosDisponiveis();
       renderOrdemBloco();
       cronogramaSalvoMsg.classList.add('hidden');
-      cronogramaEdicaoAtual = null; // força recarregar na próxima vez que abrir
     });
   }
 
@@ -5306,6 +5303,11 @@
       renderAdminTable();
       if(typeof renderAdminBlog === 'function') renderAdminBlog();
       if(typeof renderAdminFichas === 'function') renderAdminFichas();
+      // Re-renderiza o cronograma se a aba estiver ativa, para refletir dados do Firestore
+      const subCronograma = document.getElementById('adminSubviewCronograma');
+      if(subCronograma && !subCronograma.classList.contains('hidden') && typeof renderCronogramaAdmin === 'function'){
+        renderCronogramaAdmin();
+      }
     }
     if(viewAtiva === 'programacao'){
       renderPainelMacro();
