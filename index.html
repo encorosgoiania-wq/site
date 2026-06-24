@@ -5066,11 +5066,11 @@
         if(ehCoroFixo){
           // Coro institucional: botão para copiar mensagem com link de confirmação
           const nomeCoro = inscricaoDoCoro.nomeCoro;
-          const dataApresentacao = dia ? dia.diaSemana + ', ' + dia.dataFormatada : '';
+          const dataApresentacao = dia ? dia.diaSemana + ', ' + (dia.data || dia.dataFormatada || '') : '';
           const horaApresentacao = horaInicio || '';
           const localApresentacao = cronogramaEdicaoAtual.local || LOCAL_PADRAO_PROGRAMACAO;
           // Gera link de confirmação real usando o id do coro institucional
-          const linkConfirmacaoFixo = inscricaoDoCoro.id ? getLinkConfirmacao(inscricaoDoCoro.id) : '';
+          const linkConfirmacaoFixo = c.inscricaoId ? getLinkConfirmacao(c.inscricaoId) : (inscricaoDoCoro.id ? getLinkConfirmacao(inscricaoDoCoro.id) : '');
           const msgFixo =
             'Olá! 🎶\n\n' +
             'Que alegria contar com *' + nomeCoro + '* no VII ENCoros 2026! Estamos muito felizes em tê-los conosco nesta edição.\n\n' +
