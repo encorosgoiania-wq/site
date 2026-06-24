@@ -1922,6 +1922,7 @@
   // ======================================================================
   let cacheInscricoes = [];
   let cacheCronograma = {};
+  let cronogramaEditandoAtivo = false; // true quando admin está editando e não salvou ainda
   let cachePostsBlog = [];
   let firebasePronto = false;
   let onCacheAtualizadoCallback = null; // setado depois, pela UI (re-renderiza a tela atual)
@@ -4837,6 +4838,7 @@
           fixo: false
         });
 
+        cronogramaEditandoAtivo = true;
         renderCorosDisponiveis();
         renderOrdemBloco();
       });
@@ -5285,6 +5287,7 @@
         atualizadoEm: new Date().toISOString()
       };
       salvarCronogramaData(todosCronogramas);
+      cronogramaEditandoAtivo = false;
 
       cronogramaSalvoMsg.classList.remove('hidden');
       setTimeout(() => cronogramaSalvoMsg.classList.add('hidden'), 5000);
@@ -5303,9 +5306,9 @@
       renderAdminTable();
       if(typeof renderAdminBlog === 'function') renderAdminBlog();
       if(typeof renderAdminFichas === 'function') renderAdminFichas();
-      // Re-renderiza o cronograma se a aba estiver ativa, para refletir dados do Firestore
+      // Re-renderiza o cronograma se a aba estiver ativa e não houver edição em andamento
       const subCronograma = document.getElementById('adminSubviewCronograma');
-      if(subCronograma && !subCronograma.classList.contains('hidden') && typeof renderCronogramaAdmin === 'function'){
+      if(subCronograma && !subCronograma.classList.contains('hidden') && typeof renderCronogramaAdmin === 'function' && !cronogramaEditandoAtivo){
         renderCronogramaAdmin();
       }
     }
