@@ -1013,6 +1013,46 @@
               <input type="text" id="inputNomeCoroEdicao" name="nomeCoroEdicao" class="input-field" placeholder="Nome completo do coro">
             </div>
 
+            <!-- DADOS DO REGENTE — visível só para coros institucionais -->
+            <div id="secaoDadosRegente" class="hidden card-soft p-6 sm:p-8 border-2" style="border-color:var(--dourado)">
+              <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Dados do Regente e do Coro</h2>
+              <p class="text-sm text-gray-500 mb-5">Preencha os dados de contato do regente e informações do grupo para nossa organização.</p>
+              <div class="space-y-4">
+                <div>
+                  <label class="label-field">Nome completo do regente *</label>
+                  <input type="text" id="confirmNomeRegente" name="confirmNomeRegente" class="input-field" placeholder="Nome completo" required>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="label-field">Telefone/WhatsApp *</label>
+                    <input type="tel" id="confirmTelefone" name="confirmTelefone" class="input-field" placeholder="(62) 90000-0000" required>
+                  </div>
+                  <div>
+                    <label class="label-field">E-mail do regente *</label>
+                    <input type="email" id="confirmEmail" name="confirmEmail" class="input-field" placeholder="email@exemplo.com" required>
+                  </div>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="label-field">Cidade / Estado de origem *</label>
+                    <input type="text" id="confirmCidade" name="confirmCidade" class="input-field" placeholder="Ex: Goiânia / GO" required>
+                  </div>
+                  <div>
+                    <label class="label-field">Número de cantores *</label>
+                    <input type="number" id="confirmCantores" name="confirmCantores" class="input-field" placeholder="Ex: 40" min="1" required>
+                  </div>
+                </div>
+                <div>
+                  <label class="label-field">Redes sociais do coro</label>
+                  <input type="text" id="confirmRedes" name="confirmRedes" class="input-field" placeholder="@instagram, youtube.com/..., etc.">
+                </div>
+                <div>
+                  <label class="label-field">Breve histórico do coro</label>
+                  <textarea id="confirmHistorico" name="confirmHistorico" class="input-field" rows="3" placeholder="Conte um pouco sobre o coro..."></textarea>
+                </div>
+              </div>
+            </div>
+
             <!-- REPERTÓRIO TÉCNICO (ECAD) — Presencial -->
             <div id="secaoRepertorioPresencial" class="card-soft p-6 sm:p-8">
               <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Repertório Técnico</h2>
@@ -3297,14 +3337,28 @@
     confirmacaoConteudo.classList.remove('hidden');
     confirmacaoNomeCoro.textContent = inscricao.nomeCoro + ' · ' + inscricao.nomeRegente;
 
-    // Para coros institucionais, exibe o campo de edição do nome do coro
+    // Para coros institucionais, exibe campo de nome + seção de dados do regente
     const wrapperNomeCoroEdicao = document.getElementById('wrapperNomeCoroEdicao');
     const inputNomeCoroEdicao = document.getElementById('inputNomeCoroEdicao');
+    const secaoDadosRegente = document.getElementById('secaoDadosRegente');
     if(inscricao.isInstitucional){
       wrapperNomeCoroEdicao.classList.remove('hidden');
       inputNomeCoroEdicao.value = inscricao.nomeCoro;
+      if(secaoDadosRegente) secaoDadosRegente.classList.remove('hidden');
+      // Pré-preencher se já tiver dados
+      if(inscricao.nomeRegente && inscricao.nomeRegente !== 'Organização VII ENCoros'){
+        const el = document.getElementById('confirmNomeRegente');
+        if(el) el.value = inscricao.nomeRegente;
+      }
+      if(inscricao.telefoneRegente){ const el = document.getElementById('confirmTelefone'); if(el) el.value = inscricao.telefoneRegente; }
+      if(inscricao.emailRegente){ const el = document.getElementById('confirmEmail'); if(el) el.value = inscricao.emailRegente; }
+      if(inscricao.cidadeEstado){ const el = document.getElementById('confirmCidade'); if(el) el.value = inscricao.cidadeEstado; }
+      if(inscricao.numCantores){ const el = document.getElementById('confirmCantores'); if(el) el.value = inscricao.numCantores; }
+      if(inscricao.redesSociais){ const el = document.getElementById('confirmRedes'); if(el) el.value = inscricao.redesSociais; }
+      if(inscricao.historicoCoro){ const el = document.getElementById('confirmHistorico'); if(el) el.value = inscricao.historicoCoro; }
     } else {
       wrapperNomeCoroEdicao.classList.add('hidden');
+      if(secaoDadosRegente) secaoDadosRegente.classList.add('hidden');
     }
 
     // Adapta Etapa 2 conforme modalidade:
@@ -3454,6 +3508,24 @@
         linkDrive: fd.get('linkDrive')?.trim(),
         etapa: 'completo'
       };
+
+      // Para coros institucionais: salvar dados da Etapa 1 preenchidos no formulário
+      if(inscricaoAtual?.isInstitucional){
+        const nomeReg = fd.get('confirmNomeRegente')?.trim();
+        const telReg = fd.get('confirmTelefone')?.trim();
+        const emailReg = fd.get('confirmEmail')?.trim();
+        const cidade = fd.get('confirmCidade')?.trim();
+        const cantores = fd.get('confirmCantores')?.trim();
+        const redes = fd.get('confirmRedes')?.trim();
+        const historico = fd.get('confirmHistorico')?.trim();
+        if(nomeReg) camposAtualizados.nomeRegente = nomeReg;
+        if(telReg) camposAtualizados.telefoneRegente = telReg;
+        if(emailReg) camposAtualizados.emailRegente = emailReg;
+        if(cidade) camposAtualizados.cidadeEstado = cidade;
+        if(cantores) camposAtualizados.numCantores = parseInt(cantores);
+        if(redes) camposAtualizados.redesSociais = redes;
+        if(historico) camposAtualizados.historicoCoro = historico;
+      }
 
       if(isVirtualSubmit){
         // Coleta os até 3 vídeos da Mostra Virtual
@@ -4992,34 +5064,22 @@
         const svgWpp = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.45 1.29 4.89L2 22l5.32-1.4a9.86 9.86 0 0 0 4.72 1.2h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.84 14.04c-.25.7-1.25 1.29-1.97 1.42-.5.09-1.15.16-3.32-.71-2.79-1.12-4.6-3.93-4.74-4.11-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.02.96-2.3.25-.27.55-.34.73-.34h.53c.17 0 .4-.03.62.48.25.59.85 2.04.93 2.19.08.15.13.32.03.51-.1.18-.15.3-.3.46-.15.16-.3.36-.43.48-.15.14-.3.3-.13.59.17.3.76 1.26 1.64 2.04 1.13 1.01 2.07 1.32 2.37 1.47.3.15.47.13.65-.08.18-.2.76-.88.96-1.18.2-.3.4-.25.66-.15.27.1 1.71.81 2 .96.29.15.48.22.55.35.07.13.07.74-.18 1.44z"/></svg>`;
 
         if(ehCoroFixo){
-          // Coro institucional: botão para copiar mensagem completa (Etapa 1 + repertório + logística)
+          // Coro institucional: botão para copiar mensagem com link de confirmação
           const nomeCoro = inscricaoDoCoro.nomeCoro;
           const dataApresentacao = dia ? dia.diaSemana + ', ' + dia.dataFormatada : '';
           const horaApresentacao = horaInicio || '';
           const localApresentacao = cronogramaEdicaoAtual.local || LOCAL_PADRAO_PROGRAMACAO;
+          // Gera link de confirmação real usando o id do coro institucional
+          const linkConfirmacaoFixo = inscricaoDoCoro.id ? getLinkConfirmacao(inscricaoDoCoro.id) : '';
           const msgFixo =
             'Olá! 🎶\n\n' +
-            'Que alegria contar com ' + nomeCoro + ' no VII ENCoros 2026! Estamos muito felizes em tê-los conosco nesta edição.\n\n' +
-            'Para finalizarmos a organização do evento, precisamos de algumas informações do grupo:\n\n' +
-            '📋 *DADOS DO GRUPO*\n' +
-            '• Nome completo do regente:\n' +
-            '• Número de cantores:\n' +
-            '• Cidade/Estado de origem:\n' +
-            '• E-mail de contato:\n' +
-            '• Telefone/WhatsApp do regente:\n' +
-            '• Redes sociais do coro (Instagram, YouTube, etc.):\n\n' +
-            '🎵 *REPERTÓRIO*\n' +
-            'Por favor, informe as obras que serão apresentadas (título, compositor e arranjador de cada peça):\n\n' +
-            '1.\n2.\n3.\n\n' +
-            '🚌 *LOGÍSTICA*\n' +
-            '• Necessidades técnicas (microfones, estante, piano, etc.):\n' +
-            '• Levará equipamento próprio? (sim/não)\n' +
-            '• Número de ônibus/veículos:\n\n' +
-            '📅 *SUA APRESENTAÇÃO*\n' +
-            '• Data: ' + dataApresentacao + '\n' +
-            '• Horário: ' + horaApresentacao + '\n' +
-            '• Local: ' + localApresentacao + '\n\n' +
-            '⚠️ Prazo para envio das informações: *07 de agosto de 2026* (impreterivelmente)\n\n' +
+            'Que alegria contar com *' + nomeCoro + '* no VII ENCoros 2026! Estamos muito felizes em tê-los conosco nesta edição.\n\n' +
+            '📅 *Data:* ' + dataApresentacao + '\n' +
+            '🕐 *Horário:* ' + horaApresentacao + '\n' +
+            '📍 *Local:* ' + localApresentacao + '\n\n' +
+            'Para finalizarmos a organização, precisamos que o(a) maestro(a) acesse o link abaixo e preencha os dados do grupo e o repertório:\n\n' +
+            '👉 ' + linkConfirmacaoFixo + '\n\n' +
+            '⚠️ *Prazo:* 07 de agosto de 2026 (impreterivelmente)\n\n' +
             'Qualquer dúvida, estamos à disposição! 😊\n' +
             'Organização VII ENCoros 2026\n' +
             'encorosgoiania@gmail.com';
