@@ -2432,7 +2432,8 @@
 
       // COROS
       cronogramaSalvo.coros.forEach(c=>{
-        const horaInicio = minutosParaHHMM(cursorMin, horarioBaseMin);
+        const horBasePublico = (cronogramaSalvo && cronogramaSalvo.horarioInicioMinutos != null) ? cronogramaSalvo.horarioInicioMinutos : dia.horarioInicioMinutos;
+        const horaInicio = minutosParaHHMM(cursorMin, horBasePublico);
 
         // Busca o repertório completo na inscrição original, se houver
         const inscricaoOriginal = c.inscricaoId ? todasInscricoes.find(i => i.id === c.inscricaoId) : null;
