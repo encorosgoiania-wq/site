@@ -5367,10 +5367,18 @@
   if(btnSalvarCronograma){
     btnSalvarCronograma.addEventListener('click', function(){
       const dia = PROGRAMACAO_DATA.find(d => d.id === cronogramaDiaAtual);
-      const limiteCoros = calcularTempoUtilCoros(dia);
       const tempoCoros = calcularTempoCorosBloco();
-      if(tempoCoros > limiteCoros){
-        alert('Não é possível salvar: a soma dos tempos dos coros (' + tempoCoros + ' min) ultrapassa o limite de ' + limiteCoros + ' min definido para ' + dia.diaSemana + '.');
+      // Calcular limite real (usa horário de término se definido)
+      let limiteCorosSalvar;
+      if(cronogramaEdicaoAtual.horarioTerminoMinutos != null){
+        const horBase = cronogramaEdicaoAtual.horarioInicioMinutos ?? dia.horarioInicioMinutos;
+        const totalDisponivel = cronogramaEdicaoAtual.horarioTerminoMinutos - horBase;
+        limiteCorosSalvar = totalDisponivel - cronogramaEdicaoAtual.duracaoAbertura - cronogramaEdicaoAtual.duracaoEncerramento;
+      } else {
+        limiteCorosSalvar = calcularTempoUtilCoros(dia);
+      }
+      if(tempoCoros > limiteCorosSalvar){
+        alert('Não é possível salvar: a soma dos tempos dos coros (' + tempoCoros + ' min) ultrapassa o limite de ' + limiteCorosSalvar + ' min definido para ' + dia.diaSemana + '.');
         return;
       }
 
