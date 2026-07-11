@@ -1343,6 +1343,10 @@
             <label class="label-field">Horário de início do bloco</label>
             <input type="time" id="cronogramaHorarioInicio" class="input-field">
           </div>
+          <div>
+            <label class="label-field">Horário de término do bloco</label>
+            <input type="time" id="cronogramaHorarioTermino" class="input-field">
+          </div>
         </div>
 
         <div class="grid lg:grid-cols-5 gap-8">
@@ -4735,7 +4739,7 @@
   // apenas ao clicar "Salvar Cronograma". Inclui abertura/encerramento (editáveis),
   // local/linkMapa (para os templates de comunicação) e a lista de coros
   // (institucionais fixos + amadores), na ordem de apresentação.
-  let cronogramaEdicaoAtual = { duracaoAbertura: 10, duracaoEncerramento: 10, local: '', linkMapa: '', horarioInicioMinutos: null, coros: [] };
+  let cronogramaEdicaoAtual = { duracaoAbertura: 10, duracaoEncerramento: 10, local: '', linkMapa: '', horarioInicioMinutos: null, horarioTerminoMinutos: null, coros: [] };
   let cronogramaDiaAtual = null;
 
   function popularSelectDiaCronograma(){
@@ -4775,6 +4779,16 @@
       localCustomInput.value = local;
     }
     linkMapaInput.value = cronogramaEdicaoAtual.linkMapa || '';
+    // Preencher horário de término
+    const horarioTerminoInput = document.getElementById('cronogramaHorarioTermino');
+    if(horarioTerminoInput){
+      const minTerm = cronogramaEdicaoAtual.horarioTerminoMinutos;
+      if(minTerm != null){
+        horarioTerminoInput.value = String(Math.floor(minTerm/60)).padStart(2,'0') + ':' + String(minTerm%60).padStart(2,'0');
+      } else {
+        horarioTerminoInput.value = '';
+      }
+    }
     // Preencher horário de início
     const horarioInicioInput = document.getElementById('cronogramaHorarioInicio');
     if(horarioInicioInput){
@@ -4807,6 +4821,7 @@
         local: salvo.local || LOCAL_PADRAO_PROGRAMACAO,
         linkMapa: salvo.linkMapa || '',
         horarioInicioMinutos: salvo.horarioInicioMinutos ?? null,
+        horarioTerminoMinutos: salvo.horarioTerminoMinutos ?? null,
         coros: salvo.coros.map(c => ({...c}))
       };
     } else {
@@ -4948,10 +4963,20 @@
   // institucionais marcados como Fixo + amadores) + Encerramento (editável)
   function renderOrdemBloco(){
     const dia = PROGRAMACAO_DATA.find(d => d.id === cronogramaDiaAtual);
-    const limiteCoros = calcularTempoUtilCoros(dia);
     const tempoCoros = calcularTempoCorosBloco();
     const tempoTotalBloco = cronogramaEdicaoAtual.duracaoAbertura + tempoCoros + cronogramaEdicaoAtual.duracaoEncerramento;
-    const limiteMaximoBloco = cronogramaEdicaoAtual.duracaoAbertura + limiteCoros + cronogramaEdicaoAtual.duracaoEncerramento;
+    // Se horário de término foi definido, calcular limite a partir da diferença início-término
+    let limiteMaximoBloco;
+    if(cronogramaEdicaoAtual.horarioTerminoMinutos != null && cronogramaEdicaoAtual.horarioInicioMinutos != null){
+      limiteMaximoBloco = cronogramaEdicaoAtual.horarioTerminoMinutos - cronogramaEdicaoAtual.horarioInicioMinutos;
+    } else if(cronogramaEdicaoAtual.horarioTerminoMinutos != null){
+      const horBaseMin = dia.horarioInicioMinutos;
+      limiteMaximoBloco = cronogramaEdicaoAtual.horarioTerminoMinutos - horBaseMin;
+    } else {
+      const limiteCoros = calcularTempoUtilCoros(dia);
+      limiteMaximoBloco = cronogramaEdicaoAtual.duracaoAbertura + limiteCoros + cronogramaEdicaoAtual.duracaoEncerramento;
+    }
+    const limiteCoros = limiteMaximoBloco - cronogramaEdicaoAtual.duracaoAbertura - cronogramaEdicaoAtual.duracaoEncerramento;
     const estourou = tempoCoros > limiteCoros;
 
     cronogramaTempoLabel.textContent = minutosParaHHMM(tempoTotalBloco) + ' / ' + minutosParaHHMM(limiteMaximoBloco);
@@ -5282,6 +5307,20 @@
   // ---------- CAMPOS DE LOCAL E LINK DO GOOGLE MAPS ----------
   // Listener: horário de início
   const cronogramaHorarioInicioInput = document.getElementById('cronogramaHorarioInicio');
+  const cronogramaHorarioTerminoInput = document.getElementById('cronogramaHorarioTermino');
+  if(cronogramaHorarioTerminoInput){
+    ['change','input'].forEach(ev => {
+      cronogramaHorarioTerminoInput.addEventListener(ev, function(){
+        if(!this.value) return;
+        const [h, m] = this.value.split(':').map(Number);
+        if(isNaN(h) || isNaN(m)) return;
+        cronogramaEdicaoAtual.horarioTerminoMinutos = h * 60 + m;
+        cronogramaEditandoAtivo = true;
+        renderOrdemBloco();
+      });
+    });
+  }
+
   if(cronogramaHorarioInicioInput){
     ['change','input'].forEach(ev => {
       cronogramaHorarioInicioInput.addEventListener(ev, function(){
@@ -5343,6 +5382,7 @@
         local: cronogramaEdicaoAtual.local || LOCAL_PADRAO_PROGRAMACAO,
         linkMapa: cronogramaEdicaoAtual.linkMapa || '',
         horarioInicioMinutos: cronogramaEdicaoAtual.horarioInicioMinutos ?? null,
+        horarioTerminoMinutos: cronogramaEdicaoAtual.horarioTerminoMinutos ?? null,
         coros: cronogramaEdicaoAtual.coros,
         atualizadoEm: new Date().toISOString()
       };
