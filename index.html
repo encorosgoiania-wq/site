@@ -299,22 +299,28 @@
     <div class="bg-bg-claro py-16" style="background-color:var(--bg-claro)">
       <div class="max-w-5xl mx-auto px-6 text-center">
         <span class="text-xs font-semibold tracking-[0.2em] uppercase text-gray-500">Realização e Parceria</span>
-        <div id="logosParceirosGrid" class="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-x-10 mt-8">
-          <!-- REALIZAÇÃO -->
+        <div id="logosParceirosGrid" class="flex flex-wrap items-start justify-center gap-x-14 gap-y-10 mt-8">
+          <!-- REALIZADORA -->
           <div class="flex flex-col items-center gap-3">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-gold">Realização</span>
-            <img src="Logo%20pref%20secult%20vert%202.png" alt="Prefeitura de Goiânia / Secult" style="width:160px;height:72px;object-fit:contain;" class="grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gold">Realizadora</span>
+            <img src="Logo%20pref%20secult%20vert%202.png" alt="Prefeitura de Goiânia / Secult" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
           </div>
-          <!-- SEPARADOR vertical só no desktop -->
-          <div class="hidden sm:block w-px bg-gray-200" style="height:80px"></div>
-          <!-- CORREALIZAÇÃO -->
+          <!-- CO-REALIZADORAS -->
           <div class="flex flex-col items-center gap-3">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Correalização</span>
-            <div class="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
-              <img src="Osgo%20-%20marca%20-%202.png" alt="Orquestra Sinfônica de Goiânia" style="width:120px;height:60px;object-fit:contain;" class="grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
-              <img src="logo%20basileu.png" alt="Escola do Futuro de Goiás em Artes Basileu França" style="width:120px;height:60px;object-fit:contain;" class="grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
-              <img src="logo%20onix.png" alt="Onix Brasil Vocal Internacional" style="width:120px;height:60px;object-fit:contain;" class="grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
-            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Co-realizadora</span>
+            <img src="Osgo%20-%20marca%20-%202.png" alt="Orquestra Sinfônica de Goiânia" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
+          </div>
+          <div class="flex flex-col items-center gap-3">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Co-realizadora</span>
+            <img src="Marca_UFG_cor_completa_horizontal%20.png" alt="Universidade Federal de Goiás" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
+          </div>
+          <div class="flex flex-col items-center gap-3">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Co-realizadora</span>
+            <img src="logo%20basileu.png" alt="Escola do Futuro de Goiás em Artes Basileu França" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
+          </div>
+          <div class="flex flex-col items-center gap-3">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Co-realizadora</span>
+            <img src="logo%20onix.png" alt="Onix Brasil Vocal Internacional" class="h-24 sm:h-28 w-auto max-w-[260px] object-contain grayscale hover:grayscale-0 transition opacity-80 hover:opacity-100">
           </div>
         </div>
       </div>
@@ -1011,46 +1017,6 @@
               <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Nome do Coro</h2>
               <p class="text-sm text-gray-500 mb-4">Confirme ou corrija o nome do seu coro como deve aparecer nos materiais de divulgação do evento.</p>
               <input type="text" id="inputNomeCoroEdicao" name="nomeCoroEdicao" class="input-field" placeholder="Nome completo do coro">
-            </div>
-
-            <!-- DADOS DO REGENTE — visível só para coros institucionais -->
-            <div id="secaoDadosRegente" class="hidden card-soft p-6 sm:p-8 border-2" style="border-color:var(--dourado)">
-              <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Dados do Regente e do Coro</h2>
-              <p class="text-sm text-gray-500 mb-5">Preencha os dados de contato do regente e informações do grupo para nossa organização.</p>
-              <div class="space-y-4">
-                <div>
-                  <label class="label-field">Nome completo do regente *</label>
-                  <input type="text" id="confirmNomeRegente" name="confirmNomeRegente" class="input-field" placeholder="Nome completo" required>
-                </div>
-                <div class="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label class="label-field">Telefone/WhatsApp *</label>
-                    <input type="tel" id="confirmTelefone" name="confirmTelefone" class="input-field" placeholder="(62) 90000-0000" required>
-                  </div>
-                  <div>
-                    <label class="label-field">E-mail do regente *</label>
-                    <input type="email" id="confirmEmail" name="confirmEmail" class="input-field" placeholder="email@exemplo.com" required>
-                  </div>
-                </div>
-                <div class="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label class="label-field">Cidade / Estado de origem *</label>
-                    <input type="text" id="confirmCidade" name="confirmCidade" class="input-field" placeholder="Ex: Goiânia / GO" required>
-                  </div>
-                  <div>
-                    <label class="label-field">Número de cantores *</label>
-                    <input type="number" id="confirmCantores" name="confirmCantores" class="input-field" placeholder="Ex: 40" min="1" required>
-                  </div>
-                </div>
-                <div>
-                  <label class="label-field">Redes sociais do coro</label>
-                  <input type="text" id="confirmRedes" name="confirmRedes" class="input-field" placeholder="@instagram, youtube.com/..., etc.">
-                </div>
-                <div>
-                  <label class="label-field">Breve histórico do coro</label>
-                  <textarea id="confirmHistorico" name="confirmHistorico" class="input-field" rows="3" placeholder="Conte um pouco sobre o coro..."></textarea>
-                </div>
-              </div>
             </div>
 
             <!-- REPERTÓRIO TÉCNICO (ECAD) — Presencial -->
@@ -1962,7 +1928,6 @@
   // ======================================================================
   let cacheInscricoes = [];
   let cacheCronograma = {};
-  let cronogramaEditandoAtivo = false; // true quando admin está editando e não salvou ainda
   let cachePostsBlog = [];
   let firebasePronto = false;
   let onCacheAtualizadoCallback = null; // setado depois, pela UI (re-renderiza a tela atual)
@@ -2421,6 +2386,27 @@
     // Cada coro mostra seu repertório (obras), buscado da inscrição original via inscricaoId.
     let sequenciaBlock = '';
     const cronogramaSalvo = getCronogramaDoDia(dia.id);
+
+    // Bloco de local e mapa
+    let localBlock = '';
+    if(cronogramaSalvo && cronogramaSalvo.local){
+      const localNome = cronogramaSalvo.local;
+      const linkMapa = cronogramaSalvo.linkMapa || '';
+      localBlock = `
+        <div class="mt-6 flex items-center justify-center gap-3 flex-wrap">
+          <div class="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border border-gray-200 bg-bg-claro" style="background-color:var(--bg-claro); color:var(--azul-petroleo)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            ${escapeHtml(localNome)}
+          </div>
+          ${linkMapa ? `<a href="${linkMapa}" target="_blank" rel="noopener"
+            class="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border border-gold/40 text-gold hover:bg-amber-50 transition">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            Ver no mapa
+          </a>` : ''}
+        </div>
+      `;
+    }
+
     if(cronogramaSalvo && cronogramaSalvo.coros && cronogramaSalvo.coros.length > 0){
       const durAbertura = cronogramaSalvo.duracaoAbertura ?? 10;
       const durEncerramento = cronogramaSalvo.duracaoEncerramento ?? 10;
@@ -2502,6 +2488,7 @@
         <p class="text-gray-600 leading-relaxed max-w-xl mx-auto mt-4">${dia.descricao}</p>
         ${fixosBlock}
         ${vagasBlock}
+        ${localBlock}
         ${sequenciaBlock}
       </div>
     `;
@@ -3337,28 +3324,14 @@
     confirmacaoConteudo.classList.remove('hidden');
     confirmacaoNomeCoro.textContent = inscricao.nomeCoro + ' · ' + inscricao.nomeRegente;
 
-    // Para coros institucionais, exibe campo de nome + seção de dados do regente
+    // Para coros institucionais, exibe o campo de edição do nome do coro
     const wrapperNomeCoroEdicao = document.getElementById('wrapperNomeCoroEdicao');
     const inputNomeCoroEdicao = document.getElementById('inputNomeCoroEdicao');
-    const secaoDadosRegente = document.getElementById('secaoDadosRegente');
     if(inscricao.isInstitucional){
       wrapperNomeCoroEdicao.classList.remove('hidden');
       inputNomeCoroEdicao.value = inscricao.nomeCoro;
-      if(secaoDadosRegente) secaoDadosRegente.classList.remove('hidden');
-      // Pré-preencher se já tiver dados
-      if(inscricao.nomeRegente && inscricao.nomeRegente !== 'Organização VII ENCoros'){
-        const el = document.getElementById('confirmNomeRegente');
-        if(el) el.value = inscricao.nomeRegente;
-      }
-      if(inscricao.telefoneRegente){ const el = document.getElementById('confirmTelefone'); if(el) el.value = inscricao.telefoneRegente; }
-      if(inscricao.emailRegente){ const el = document.getElementById('confirmEmail'); if(el) el.value = inscricao.emailRegente; }
-      if(inscricao.cidadeEstado){ const el = document.getElementById('confirmCidade'); if(el) el.value = inscricao.cidadeEstado; }
-      if(inscricao.numCantores){ const el = document.getElementById('confirmCantores'); if(el) el.value = inscricao.numCantores; }
-      if(inscricao.redesSociais){ const el = document.getElementById('confirmRedes'); if(el) el.value = inscricao.redesSociais; }
-      if(inscricao.historicoCoro){ const el = document.getElementById('confirmHistorico'); if(el) el.value = inscricao.historicoCoro; }
     } else {
       wrapperNomeCoroEdicao.classList.add('hidden');
-      if(secaoDadosRegente) secaoDadosRegente.classList.add('hidden');
     }
 
     // Adapta Etapa 2 conforme modalidade:
@@ -3508,24 +3481,6 @@
         linkDrive: fd.get('linkDrive')?.trim(),
         etapa: 'completo'
       };
-
-      // Para coros institucionais: salvar dados da Etapa 1 preenchidos no formulário
-      if(inscricaoAtual?.isInstitucional){
-        const nomeReg = fd.get('confirmNomeRegente')?.trim();
-        const telReg = fd.get('confirmTelefone')?.trim();
-        const emailReg = fd.get('confirmEmail')?.trim();
-        const cidade = fd.get('confirmCidade')?.trim();
-        const cantores = fd.get('confirmCantores')?.trim();
-        const redes = fd.get('confirmRedes')?.trim();
-        const historico = fd.get('confirmHistorico')?.trim();
-        if(nomeReg) camposAtualizados.nomeRegente = nomeReg;
-        if(telReg) camposAtualizados.telefoneRegente = telReg;
-        if(emailReg) camposAtualizados.emailRegente = emailReg;
-        if(cidade) camposAtualizados.cidadeEstado = cidade;
-        if(cantores) camposAtualizados.numCantores = parseInt(cantores);
-        if(redes) camposAtualizados.redesSociais = redes;
-        if(historico) camposAtualizados.historicoCoro = historico;
-      }
 
       if(isVirtualSubmit){
         // Coleta os até 3 vídeos da Mostra Virtual
@@ -4862,10 +4817,9 @@
     const inscricoes = getInscricoes();
     const idsNoBloco = new Set(cronogramaEdicaoAtual.coros.filter(c => c.inscricaoId).map(c => c.inscricaoId));
 
-    const modalidadeEsperada = cronogramaDiaAtual === 'segunda' ? 'Virtual' : 'Presencial';
     const disponiveis = inscricoes.filter(i =>
-      i.modalidade === modalidadeEsperada &&
-      (i.diaApresentacao === cronogramaDiaAtual || (cronogramaDiaAtual === 'segunda' && i.modalidade === 'Virtual' && !i.diaApresentacao)) &&
+      i.modalidade === 'Presencial' &&
+      i.diaApresentacao === cronogramaDiaAtual &&
       i.status !== 'Rejeitado' &&
       !i.isInstitucional &&
       !idsNoBloco.has(i.id)
@@ -4910,7 +4864,6 @@
           fixo: false
         });
 
-        cronogramaEditandoAtivo = true;
         renderCorosDisponiveis();
         renderOrdemBloco();
       });
@@ -5046,78 +4999,42 @@
       }
 
       // Fallback para coro fixo sem inscrição: cria um objeto mínimo com o nome do coro
-      // Coro fixo = institucional (tem inscricaoId mas isInstitucional=true no Firestore)
-      const inscricaoParaCheck = c.inscricaoId ? getInscricoes().find(i => i.id === c.inscricaoId) : null;
-      // Fixo = item do seed (c.fixo=true) OU tem inscricaoId institucional. Nunca itens livres.
-      const ehCoroFixo = !c.livre && (c.fixo === true || (c.inscricaoId && inscricaoParaCheck && inscricaoParaCheck.isInstitucional === true));
       if(!inscricaoDoCoro && c.nomeCoro){
         inscricaoDoCoro = {
           id: null,
           nomeCoro: c.nomeCoro,
           nomeRegente: '',
           telefoneRegente: '',
-          emailRegente: '',
-          isInstitucional: true
+          emailRegente: ''
         };
       }
 
       if(inscricaoDoCoro){
+        const linkWppEtapa2   = getLinkWhatsAppCoro(inscricaoDoCoro, dia, horaInicio);
+        const linkWppContagem = getLinkWhatsAppContagem(inscricaoDoCoro, dia, horaInicio);
+        const linkWppDia      = getLinkWhatsAppDia(inscricaoDoCoro, dia, horaInicio);
+        const linkEmail       = getLinkEmailCoro(inscricaoDoCoro, dia, horaInicio);
+
         const svgWpp = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.45 1.29 4.89L2 22l5.32-1.4a9.86 9.86 0 0 0 4.72 1.2h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.84 14.04c-.25.7-1.25 1.29-1.97 1.42-.5.09-1.15.16-3.32-.71-2.79-1.12-4.6-3.93-4.74-4.11-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.02.96-2.3.25-.27.55-.34.73-.34h.53c.17 0 .4-.03.62.48.25.59.85 2.04.93 2.19.08.15.13.32.03.51-.1.18-.15.3-.3.46-.15.16-.3.36-.43.48-.15.14-.3.3-.13.59.17.3.76 1.26 1.64 2.04 1.13 1.01 2.07 1.32 2.37 1.47.3.15.47.13.65-.08.18-.2.76-.88.96-1.18.2-.3.4-.25.66-.15.27.1 1.71.81 2 .96.29.15.48.22.55.35.07.13.07.74-.18 1.44z"/></svg>`;
 
-        if(ehCoroFixo){
-          // Coro institucional: botão para copiar mensagem com link de confirmação
-          const nomeCoro = inscricaoDoCoro.nomeCoro;
-          const dataApresentacao = dia ? dia.diaSemana + ', ' + (dia.data || dia.dataFormatada || '') : '';
-          const horaApresentacao = horaInicio || '';
-          const localApresentacao = cronogramaEdicaoAtual.local || LOCAL_PADRAO_PROGRAMACAO;
-          // Gera link de confirmação real usando o id do coro institucional
-          const linkConfirmacaoFixo = c.inscricaoId ? getLinkConfirmacao(c.inscricaoId) : (inscricaoDoCoro.id ? getLinkConfirmacao(inscricaoDoCoro.id) : '');
-          const msgFixo =
-            'Olá! 🎶\n\n' +
-            'Que alegria contar com *' + nomeCoro + '* no VII ENCoros 2026! Estamos muito felizes em tê-los conosco nesta edição.\n\n' +
-            '📅 *Data:* ' + dataApresentacao + '\n' +
-            '🕐 *Horário:* ' + horaApresentacao + '\n' +
-            '📍 *Local:* ' + localApresentacao + '\n\n' +
-            'Para finalizarmos a organização, precisamos que o(a) maestro(a) acesse o link abaixo e preencha os dados do grupo e o repertório:\n\n' +
-            '👉 ' + linkConfirmacaoFixo + '\n\n' +
-            '⚠️ *Prazo:* 07 de agosto de 2026 (impreterivelmente)\n\n' +
-            'Qualquer dúvida, estamos à disposição! 😊\n' +
-            'Organização VII ENCoros 2026\n' +
-            'encorosgoiania@gmail.com';
-
-          botoesComunicacao = `
-            <div class="flex items-center gap-1 shrink-0">
-              <button type="button"
-                data-msg-fixo="${encodeURIComponent(msgFixo)}"
-                class="btnMsgFixo flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-300 rounded-full px-2 py-1 hover:bg-purple-100 transition whitespace-nowrap"
-                title="Copiar mensagem para coro institucional">📋 Mensagem</button>
-            </div>
-          `;
-        } else {
-          const linkWppEtapa2   = getLinkWhatsAppCoro(inscricaoDoCoro, dia, horaInicio);
-          const linkWppContagem = getLinkWhatsAppContagem(inscricaoDoCoro, dia, horaInicio);
-          const linkWppDia      = getLinkWhatsAppDia(inscricaoDoCoro, dia, horaInicio);
-          const linkEmail       = getLinkEmailCoro(inscricaoDoCoro, dia, horaInicio);
-
-          botoesComunicacao = `
-            <div class="flex items-center gap-1 shrink-0">
-              <a href="${linkWppEtapa2}" target="_blank" rel="noopener"
-                 class="flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-300 rounded-full px-2 py-1 hover:bg-green-100 transition whitespace-nowrap"
-                 title="WhatsApp — Pedir Etapa 2 (repertório)">${svgWpp} Etapa 2</a>
-              <a href="${linkWppContagem}" target="_blank" rel="noopener"
-                 class="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-300 rounded-full px-2 py-1 hover:bg-amber-100 transition whitespace-nowrap"
-                 title="WhatsApp — Contagem regressiva">${svgWpp} Contagem</a>
-              <a href="${linkWppDia}" target="_blank" rel="noopener"
-                 class="flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-300 rounded-full px-2 py-1 hover:bg-blue-100 transition whitespace-nowrap"
-                 title="WhatsApp — É hoje!">${svgWpp} É hoje!</a>
-              <a href="${linkEmail}"
-                 class="shrink-0 w-6 h-6 rounded-full bg-gray-50 border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition"
-                 title="E-mail — Pedir Etapa 2">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"/></svg>
-              </a>
-            </div>
-          `;
-        }
+        botoesComunicacao = `
+          <div class="flex items-center gap-1 shrink-0">
+            <a href="${linkWppEtapa2}" target="_blank" rel="noopener"
+               class="flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-300 rounded-full px-2 py-1 hover:bg-green-100 transition whitespace-nowrap"
+               title="WhatsApp — Pedir Etapa 2 (repertório)">${svgWpp} Etapa 2</a>
+            <a href="${linkWppContagem}" target="_blank" rel="noopener"
+               class="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-300 rounded-full px-2 py-1 hover:bg-amber-100 transition whitespace-nowrap"
+               title="WhatsApp — Contagem regressiva">${svgWpp} Contagem</a>
+            <a href="${linkWppDia}" target="_blank" rel="noopener"
+               class="flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-300 rounded-full px-2 py-1 hover:bg-blue-100 transition whitespace-nowrap"
+               title="WhatsApp — É hoje!">${svgWpp} É hoje!</a>
+            <a href="${linkEmail}"
+               class="shrink-0 w-6 h-6 rounded-full bg-gray-50 border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition"
+               title="E-mail — Pedir Etapa 2">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"/></svg>
+            </a>
+          </div>
+        `;
       }
 
       itensHtml.push(`
@@ -5227,50 +5144,6 @@
     });
   }
 
-  // Modal de mensagem para coros fixos
-  function abrirModalMsgFixo(msgTexto){
-    let modal = document.getElementById('modalMsgFixo');
-    if(!modal){
-      modal = document.createElement('div');
-      modal.id = 'modalMsgFixo';
-      modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50';
-      modal.innerHTML = `
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 flex flex-col gap-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold text-base" style="color:var(--azul-petroleo)">📋 Mensagem para coro institucional</h3>
-            <button id="fecharModalMsgFixo" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
-          </div>
-          <textarea id="modalMsgFixoTexto" class="w-full border border-gray-200 rounded-lg p-3 text-sm text-gray-700 resize-none" rows="16" readonly></textarea>
-          <button id="copiarMsgFixo" class="w-full py-2.5 rounded-xl text-sm font-bold text-white transition" style="background:var(--azul-petroleo)">Copiar mensagem</button>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      document.getElementById('fecharModalMsgFixo').addEventListener('click', () => modal.classList.add('hidden'));
-      modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.add('hidden'); });
-      document.getElementById('copiarMsgFixo').addEventListener('click', () => {
-        const ta = document.getElementById('modalMsgFixoTexto');
-        ta.select();
-        navigator.clipboard.writeText(ta.value).then(() => {
-          const btn = document.getElementById('copiarMsgFixo');
-          btn.textContent = '✅ Copiado!';
-          setTimeout(() => { btn.textContent = 'Copiar mensagem'; }, 2000);
-        });
-      });
-    }
-    document.getElementById('modalMsgFixoTexto').value = msgTexto;
-    modal.classList.remove('hidden');
-  }
-
-  // Listener delegado para btnMsgFixo (gerado dinamicamente em renderOrdemBloco)
-  if(cronogramaOrdemLista){
-    cronogramaOrdemLista.addEventListener('click', function(e){
-      const btn = e.target.closest('.btnMsgFixo');
-      if(!btn) return;
-      const msg = decodeURIComponent(btn.dataset.msgFixo || '');
-      abrirModalMsgFixo(msg);
-    });
-  }
-
   function renderCronogramaAdmin(){
     if(!cronogramaSelectDia) return;
     if(cronogramaSelectDia.options.length === 0){
@@ -5280,7 +5153,6 @@
       cronogramaDiaAtual = cronogramaSelectDia.value || PROGRAMACAO_DATA[1].id;
       cronogramaSelectDia.value = cronogramaDiaAtual;
     }
-    // Sempre carrega do cache (que já tem os dados do Firestore se firebasePronto=true)
     carregarCronogramaParaEdicao(cronogramaDiaAtual);
     renderCorosDisponiveis();
     renderOrdemBloco();
@@ -5348,7 +5220,6 @@
         atualizadoEm: new Date().toISOString()
       };
       salvarCronogramaData(todosCronogramas);
-      cronogramaEditandoAtivo = false;
 
       cronogramaSalvoMsg.classList.remove('hidden');
       setTimeout(() => cronogramaSalvoMsg.classList.add('hidden'), 5000);
@@ -5367,11 +5238,6 @@
       renderAdminTable();
       if(typeof renderAdminBlog === 'function') renderAdminBlog();
       if(typeof renderAdminFichas === 'function') renderAdminFichas();
-      // Re-renderiza o cronograma se a aba estiver ativa e não houver edição em andamento
-      const subCronograma = document.getElementById('adminSubviewCronograma');
-      if(subCronograma && !subCronograma.classList.contains('hidden') && typeof renderCronogramaAdmin === 'function' && !cronogramaEditandoAtivo){
-        renderCronogramaAdmin();
-      }
     }
     if(viewAtiva === 'programacao'){
       renderPainelMacro();
