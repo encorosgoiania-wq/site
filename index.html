@@ -5304,32 +5304,24 @@
   // ---------- CAMPOS DE LOCAL E LINK DO GOOGLE MAPS ----------
   // Listener: horário de início
   const cronogramaHorarioInicioInput = document.getElementById('cronogramaHorarioInicio');
-  const cronogramaHorarioTerminoInput = document.getElementById('cronogramaHorarioTermino');
-  if(cronogramaHorarioTerminoInput){
-    ['change','input'].forEach(ev => {
-      cronogramaHorarioTerminoInput.addEventListener(ev, function(){
+  function aplicarHorario(campo, prop){
+    const el = document.getElementById(campo);
+    if(!el) return;
+    ['change','input','blur'].forEach(ev => {
+      el.addEventListener(ev, function(){
         if(!this.value) return;
-        const [h, m] = this.value.split(':').map(Number);
+        const parts = this.value.split(':');
+        if(parts.length < 2) return;
+        const h = parseInt(parts[0]), m = parseInt(parts[1]);
         if(isNaN(h) || isNaN(m)) return;
-        cronogramaEdicaoAtual.horarioTerminoMinutos = h * 60 + m;
+        cronogramaEdicaoAtual[prop] = h * 60 + m;
         cronogramaEditandoAtivo = true;
         renderOrdemBloco();
       });
     });
   }
-
-  if(cronogramaHorarioInicioInput){
-    ['change','input'].forEach(ev => {
-      cronogramaHorarioInicioInput.addEventListener(ev, function(){
-        if(!this.value) return;
-        const [h, m] = this.value.split(':').map(Number);
-        if(isNaN(h) || isNaN(m)) return;
-        cronogramaEdicaoAtual.horarioInicioMinutos = h * 60 + m;
-        cronogramaEditandoAtivo = true;
-        renderOrdemBloco();
-      });
-    });
-  }
+  aplicarHorario('cronogramaHorarioInicio', 'horarioInicioMinutos');
+  aplicarHorario('cronogramaHorarioTermino', 'horarioTerminoMinutos');
 
   const cronogramaLocalSelect = document.getElementById('cronogramaLocalSelect');
   const cronogramaLocalCustom = document.getElementById('cronogramaLocalCustom');
