@@ -2047,23 +2047,25 @@
   function vagasRestantes(dia){
     if(!dia.vagasInscricao) return null;
     const ocupadas = contarVagasOcupadas(dia.id);
-    // Calcular maxAmadores dinamicamente a partir do cronograma salvo
     const cronSalvo = getCronogramaDoDia(dia.id);
-    let maxAmadores = dia.maxAmadores;
-    if(cronSalvo && (cronSalvo.horarioInicioMinutos != null || cronSalvo.horarioTerminoMinutos != null)){
+    // Se tem horário de término salvo, calcular vagas pelo tempo real disponível
+    if(cronSalvo && cronSalvo.horarioTerminoMinutos != null){
       const inicio = cronSalvo.horarioInicioMinutos ?? dia.horarioInicioMinutos;
-      const termino = cronSalvo.horarioTerminoMinutos;
-      if(termino != null){
-        const durAb = cronSalvo.duracaoAbertura ?? 10;
-        const durEnc = cronSalvo.duracaoEncerramento ?? 10;
-        const tempoCoros = termino - inicio - durAb - durEnc;
-        const ocupadasPorFixos = dia.vagasOcupadasPorFixos || 0;
-        maxAmadores = Math.max(0, Math.floor(tempoCoros / 15) - ocupadasPorFixos);
-        return Math.max(maxAmadores - ocupadas, 0);
-      }
+      const durAb = cronSalvo.duracaoAbertura ?? 10;
+      const durEnc = cronSalvo.duracaoEncerramento ?? 10;
+      // Tempo total - abertura - encerramento
+      const tempoDisponivel = cronSalvo.horarioTerminoMinutos - inicio - durAb - durEnc;
+      // Descontar tempo dos coros fixos (institucionais) já no bloco
+      const tempoFixos = (cronSalvo.coros || [])
+        .filter(c => c.fixo || c.anfitriao)
+        .reduce((acc, c) => acc + (c.duracaoMinutos || 15), 0);
+      const tempoParaAmadores = Math.max(0, tempoDisponivel - tempoFixos);
+      const maxAmadores = Math.floor(tempoParaAmadores / 15);
+      return Math.max(maxAmadores - ocupadas, 0);
     }
+    // Fallback: usar maxAmadores fixo do PROGRAMACAO_DATA
     const ocupadasPorFixos = dia.vagasOcupadasPorFixos || 0;
-    return Math.max(maxAmadores - ocupadas - ocupadasPorFixos, 0);
+    return Math.max(dia.maxAmadores - ocupadas - ocupadasPorFixos, 0);
   }
 
   // ======================================================================
@@ -2381,15 +2383,18 @@
     let vagasBlock = '';
     if(dia.vagasInscricao){
       const restantes = vagasRestantes(dia);
-      // Calcular total de vagas real (pode ter mudado com horário editado)
+      // Calcular total de vagas real usando mesma lógica de vagasRestantes
       const cronSalvoVagas = getCronogramaDoDia(dia.id);
       let totalVagas = dia.maxAmadores;
       if(cronSalvoVagas && cronSalvoVagas.horarioTerminoMinutos != null){
         const ini = cronSalvoVagas.horarioInicioMinutos ?? dia.horarioInicioMinutos;
         const durAb = cronSalvoVagas.duracaoAbertura ?? 10;
         const durEnc = cronSalvoVagas.duracaoEncerramento ?? 10;
-        const tempoCoros = cronSalvoVagas.horarioTerminoMinutos - ini - durAb - durEnc;
-        totalVagas = Math.max(0, Math.floor(tempoCoros / 15) - (dia.vagasOcupadasPorFixos || 0));
+        const tempoDisp = cronSalvoVagas.horarioTerminoMinutos - ini - durAb - durEnc;
+        const tempoFixosV = (cronSalvoVagas.coros || [])
+          .filter(c => c.fixo || c.anfitriao)
+          .reduce((acc, c) => acc + (c.duracaoMinutos || 15), 0);
+        totalVagas = Math.max(0, Math.floor(Math.max(0, tempoDisp - tempoFixosV) / 15));
       }
       const ocupadas = totalVagas - restantes;
       const corBg = restantes === 0 ? 'bg-red-50 border-red-300 text-red-700' : 'bg-green-50 border-green-300 text-green-700';
@@ -2400,7 +2405,24 @@
         </div>
       `;
     } else if(dia.id === 'segunda'){
-      vagasBlock = `<div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border bg-blue-50 border-blue-300 text-blue-700">🎥 Modalidade exclusivamente Virtual</div>`;
+      // Segunda: calcular vagas virtuais (10 min cada) pelo horário salvo
+      const cronSegunda = getCronogramaDoDia('segunda');
+      if(cronSegunda && cronSegunda.horarioTerminoMinutos != null){
+        const iniSeg = cronSegunda.horarioInicioMinutos ?? dia.horarioInicioMinutos;
+        const durAbSeg = cronSegunda.duracaoAbertura ?? 15;
+        const durEncSeg = cronSegunda.duracaoEncerramento ?? 15;
+        const tempoFixosSeg = (cronSegunda.coros || [])
+          .filter(c => c.fixo || c.anfitriao)
+          .reduce((acc, c) => acc + (c.duracaoMinutos || 10), 0);
+        const tempoDispSeg = cronSegunda.horarioTerminoMinutos - iniSeg - durAbSeg - durEncSeg - tempoFixosSeg;
+        const maxVirtuais = Math.max(0, Math.floor(tempoDispSeg / 10));
+        const ocupadasVirtuais = getInscricoesData().filter(i => i.modalidade === 'Virtual').length;
+        const restantesVirtuais = Math.max(0, maxVirtuais - ocupadasVirtuais);
+        const corBgSeg = restantesVirtuais === 0 ? 'bg-red-50 border-red-300 text-red-700' : 'bg-blue-50 border-blue-300 text-blue-700';
+        vagasBlock = `<div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border ${corBgSeg}">🎥 Modalidade exclusivamente Virtual${restantesVirtuais > 0 ? ` — ${restantesVirtuais} vaga(s)` : ' — Vagas esgotadas'}</div>`;
+      } else {
+        vagasBlock = `<div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border bg-blue-50 border-blue-300 text-blue-700">🎥 Modalidade exclusivamente Virtual</div>`;
+      }
     }
 
     const fixosBlock = (dia.fixos.length && (!cronogramaSalvoPreCheck(dia.id)))
