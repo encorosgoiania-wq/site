@@ -1989,9 +1989,9 @@
   // completa). IDs fixos e previsíveis evitam duplicação.
   // ======================================================================
   const COROS_INSTITUCIONAIS_SEED = [
-    { id: '900000001', nomeCoro: 'CSUFG', diaApresentacao: 'sexta', duracaoMinutos: 20 },
+    { id: '900000001', nomeCoro: 'CSUFG', diaApresentacao: 'sabado', duracaoMinutos: 20 },
     { id: '900000002', nomeCoro: 'CSJGOIÁS', diaApresentacao: 'sabado', duracaoMinutos: 20 },
-    { id: '900000003', nomeCoro: 'CJGOIÂNIA', diaApresentacao: 'sabado', duracaoMinutos: 20 },
+    { id: '900000003', nomeCoro: 'CJGOIÂNIA', diaApresentacao: 'sexta', duracaoMinutos: 20 },
     { id: '900000004', nomeCoro: 'Onix Brasil Vocal Internacional', diaApresentacao: 'sabado', duracaoMinutos: 15 },
     { id: '900000005', nomeCoro: 'CSGOIÂNIA', diaApresentacao: 'domingo', duracaoMinutos: 30 }
   ];
@@ -2420,7 +2420,7 @@
       // ABERTURA
       cardsHtml.push(`
         <div class="flex items-center gap-4 bg-bg-claro border border-gray-200 rounded-xl px-5 py-3.5" style="background-color:var(--bg-claro)">
-          <span class="font-mono text-sm font-bold text-gray-400 w-14 shrink-0">${minutosParaHHMM(0, dia.horarioInicioMinutos)}</span>
+          <span class="font-mono text-sm font-bold text-gray-400 w-14 shrink-0">${minutosParaHHMM(0, (cronogramaSalvo && cronogramaSalvo.horarioInicioMinutos != null) ? cronogramaSalvo.horarioInicioMinutos : dia.horarioInicioMinutos)}</span>
           <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Abertura</span>
           <span class="text-xs text-gray-400">${durAbertura} min</span>
         </div>
@@ -2467,7 +2467,7 @@
       // ENCERRAMENTO
       cardsHtml.push(`
         <div class="flex items-center gap-4 bg-bg-claro border border-gray-200 rounded-xl px-5 py-3.5" style="background-color:var(--bg-claro)">
-          <span class="font-mono text-sm font-bold text-gray-400 w-14 shrink-0">${minutosParaHHMM(cursorMin, dia.horarioInicioMinutos)}</span>
+          <span class="font-mono text-sm font-bold text-gray-400 w-14 shrink-0">${minutosParaHHMM(cursorMin, (cronogramaSalvo && cronogramaSalvo.horarioInicioMinutos != null) ? cronogramaSalvo.horarioInicioMinutos : dia.horarioInicioMinutos)}</span>
           <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Encerramento</span>
           <span class="text-xs text-gray-400">${durEncerramento} min</span>
         </div>
@@ -4985,7 +4985,7 @@
     // travada nas 3 opções padrão; coros amadores e itens livres têm duração
     // 100% editável em minutos, para acomodar qualquer atividade customizada)
     cronogramaEdicaoAtual.coros.forEach((c, idx) => {
-      const horaInicio = minutosParaHHMM(cursorMin, dia.horarioInicioMinutos);
+      const horaInicio = minutosParaHHMM(cursorMin, horarioBaseMin);
       const badgeFixo = c.fixo
         ? '<span class="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 shrink-0">Fixo</span>'
         : (c.livre
@@ -5174,15 +5174,20 @@
           cronogramaEditandoAtivo = true;
 
           // Salvar dia atual
-          const todosCronogramas = getCronogramaData();
-          todosCronogramas[cronogramaDiaAtual] = { ...cronogramaEdicaoAtual };
-          await salvarCronogramaData(todosCronogramas);
+          // Clonar cache para evitar mutação acidental
+          const todosCronogramas = JSON.parse(JSON.stringify(getCronogramaData()));
+
+          // Salvar dia atual sem o coro removido
+          todosCronogramas[cronogramaDiaAtual] = JSON.parse(JSON.stringify(cronogramaEdicaoAtual));
 
           // Adicionar ao novo dia
-          const cronNovodia = todosCronogramas[novoDia] || gerarCronogramaSeed(novoDia);
-          cronNovodia.coros = cronNovodia.coros || [];
-          cronNovodia.coros.push({ ...coro });
-          todosCronogramas[novoDia] = cronNovodia;
+          if(!todosCronogramas[novoDia]){
+            todosCronogramas[novoDia] = gerarCronogramaSeed(novoDia);
+          }
+          if(!todosCronogramas[novoDia].coros) todosCronogramas[novoDia].coros = [];
+          todosCronogramas[novoDia].coros.push(JSON.parse(JSON.stringify(coro)));
+
+          // Salvar tudo de uma vez
           await salvarCronogramaData(todosCronogramas);
 
           // Atualizar inscrição se tiver (mudar diaApresentacao)
@@ -5278,11 +5283,15 @@
   // Listener: horário de início
   const cronogramaHorarioInicioInput = document.getElementById('cronogramaHorarioInicio');
   if(cronogramaHorarioInicioInput){
-    cronogramaHorarioInicioInput.addEventListener('change', function(){
-      const [h, m] = this.value.split(':').map(Number);
-      cronogramaEdicaoAtual.horarioInicioMinutos = h * 60 + m;
-      cronogramaEditandoAtivo = true;
-      renderOrdemBloco();
+    ['change','input'].forEach(ev => {
+      cronogramaHorarioInicioInput.addEventListener(ev, function(){
+        if(!this.value) return;
+        const [h, m] = this.value.split(':').map(Number);
+        if(isNaN(h) || isNaN(m)) return;
+        cronogramaEdicaoAtual.horarioInicioMinutos = h * 60 + m;
+        cronogramaEditandoAtivo = true;
+        renderOrdemBloco();
+      });
     });
   }
 
