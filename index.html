@@ -1325,7 +1325,7 @@
         </div>
 
         <!-- LOCAL DO BLOCO -->
-        <div class="card-soft p-5 mb-8 grid sm:grid-cols-2 gap-4">
+        <div class="card-soft p-5 mb-8 grid sm:grid-cols-3 gap-4">
           <div>
             <label class="label-field">Local da apresentação</label>
             <select id="cronogramaLocalSelect" class="input-field bg-white mb-2">
@@ -1338,6 +1338,10 @@
           <div>
             <label class="label-field">Link do Google Maps (opcional)</label>
             <input type="text" id="cronogramaLinkMapa" class="input-field" placeholder="https://maps.google.com/...">
+          </div>
+          <div>
+            <label class="label-field">Horário de início do bloco</label>
+            <input type="time" id="cronogramaHorarioInicio" class="input-field">
           </div>
         </div>
 
@@ -5170,7 +5174,7 @@
           cronogramaEditandoAtivo = true;
 
           // Salvar dia atual
-          const todosCronogramas = await getCronogramaCompleto();
+          const todosCronogramas = getCronogramaData();
           todosCronogramas[cronogramaDiaAtual] = { ...cronogramaEdicaoAtual };
           await salvarCronogramaData(todosCronogramas);
 
