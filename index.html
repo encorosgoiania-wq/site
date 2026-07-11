@@ -2047,8 +2047,23 @@
   function vagasRestantes(dia){
     if(!dia.vagasInscricao) return null;
     const ocupadas = contarVagasOcupadas(dia.id);
+    // Calcular maxAmadores dinamicamente a partir do cronograma salvo
+    const cronSalvo = getCronogramaDoDia(dia.id);
+    let maxAmadores = dia.maxAmadores;
+    if(cronSalvo && (cronSalvo.horarioInicioMinutos != null || cronSalvo.horarioTerminoMinutos != null)){
+      const inicio = cronSalvo.horarioInicioMinutos ?? dia.horarioInicioMinutos;
+      const termino = cronSalvo.horarioTerminoMinutos;
+      if(termino != null){
+        const durAb = cronSalvo.duracaoAbertura ?? 10;
+        const durEnc = cronSalvo.duracaoEncerramento ?? 10;
+        const tempoCoros = termino - inicio - durAb - durEnc;
+        const ocupadasPorFixos = dia.vagasOcupadasPorFixos || 0;
+        maxAmadores = Math.max(0, Math.floor(tempoCoros / 15) - ocupadasPorFixos);
+        return Math.max(maxAmadores - ocupadas, 0);
+      }
+    }
     const ocupadasPorFixos = dia.vagasOcupadasPorFixos || 0;
-    return Math.max(dia.maxAmadores - ocupadas - ocupadasPorFixos, 0);
+    return Math.max(maxAmadores - ocupadas - ocupadasPorFixos, 0);
   }
 
   // ======================================================================
@@ -2366,12 +2381,22 @@
     let vagasBlock = '';
     if(dia.vagasInscricao){
       const restantes = vagasRestantes(dia);
-      const ocupadas = dia.maxAmadores - restantes;
+      // Calcular total de vagas real (pode ter mudado com horário editado)
+      const cronSalvoVagas = getCronogramaDoDia(dia.id);
+      let totalVagas = dia.maxAmadores;
+      if(cronSalvoVagas && cronSalvoVagas.horarioTerminoMinutos != null){
+        const ini = cronSalvoVagas.horarioInicioMinutos ?? dia.horarioInicioMinutos;
+        const durAb = cronSalvoVagas.duracaoAbertura ?? 10;
+        const durEnc = cronSalvoVagas.duracaoEncerramento ?? 10;
+        const tempoCoros = cronSalvoVagas.horarioTerminoMinutos - ini - durAb - durEnc;
+        totalVagas = Math.max(0, Math.floor(tempoCoros / 15) - (dia.vagasOcupadasPorFixos || 0));
+      }
+      const ocupadas = totalVagas - restantes;
       const corBg = restantes === 0 ? 'bg-red-50 border-red-300 text-red-700' : 'bg-green-50 border-green-300 text-green-700';
       vagasBlock = `
         <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border ${corBg}">
           ${restantes === 0 ? '⛔ Vagas esgotadas' : `✓ ${restantes} vaga(s) disponível(eis)`}
-          <span class="opacity-60 font-normal">(${ocupadas}/${dia.maxAmadores} coros amadores)</span>
+          <span class="opacity-60 font-normal">(${ocupadas}/${totalVagas} coros amadores)</span>
         </div>
       `;
     } else if(dia.id === 'segunda'){
