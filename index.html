@@ -2424,7 +2424,7 @@
 
       // COROS
       cronogramaSalvo.coros.forEach(c=>{
-        const horaInicio = minutosParaHHMM(cursorMin, dia.horarioInicioMinutos);
+        const horaInicio = minutosParaHHMM(cursorMin, horarioBaseMin);
 
         // Busca o repertório completo na inscrição original, se houver
         const inscricaoOriginal = c.inscricaoId ? todasInscricoes.find(i => i.id === c.inscricaoId) : null;
@@ -4731,7 +4731,7 @@
   // apenas ao clicar "Salvar Cronograma". Inclui abertura/encerramento (editáveis),
   // local/linkMapa (para os templates de comunicação) e a lista de coros
   // (institucionais fixos + amadores), na ordem de apresentação.
-  let cronogramaEdicaoAtual = { duracaoAbertura: 10, duracaoEncerramento: 10, local: '', linkMapa: '', coros: [] };
+  let cronogramaEdicaoAtual = { duracaoAbertura: 10, duracaoEncerramento: 10, local: '', linkMapa: '', horarioInicioMinutos: null, coros: [] };
   let cronogramaDiaAtual = null;
 
   function popularSelectDiaCronograma(){
@@ -4771,6 +4771,24 @@
       localCustomInput.value = local;
     }
     linkMapaInput.value = cronogramaEdicaoAtual.linkMapa || '';
+    // Preencher horário de início
+    const horarioInicioInput = document.getElementById('cronogramaHorarioInicio');
+    if(horarioInicioInput){
+      const minutos = cronogramaEdicaoAtual.horarioInicioMinutos;
+      if(minutos != null){
+        const h = String(Math.floor(minutos/60)).padStart(2,'0');
+        const m = String(minutos%60).padStart(2,'0');
+        horarioInicioInput.value = h + ':' + m;
+      } else {
+        // fallback: pegar do PROGRAMACAO_DATA
+        const diaData = PROGRAMACAO_DATA.find(d => d.id === cronogramaDiaAtual);
+        if(diaData){
+          const hf = String(Math.floor(diaData.horarioInicioMinutos/60)).padStart(2,'0');
+          const mf = String(diaData.horarioInicioMinutos%60).padStart(2,'0');
+          horarioInicioInput.value = hf + ':' + mf;
+        }
+      }
+    }
   }
 
   // Carrega o cronograma para edição: usa o salvo se existir, senão gera o seed
@@ -4784,6 +4802,7 @@
         duracaoEncerramento: salvo.duracaoEncerramento ?? 10,
         local: salvo.local || LOCAL_PADRAO_PROGRAMACAO,
         linkMapa: salvo.linkMapa || '',
+        horarioInicioMinutos: salvo.horarioInicioMinutos ?? null,
         coros: salvo.coros.map(c => ({...c}))
       };
     } else {
@@ -4940,14 +4959,17 @@
       cronogramaTempoAviso.textContent = '⚠ O tempo dos coros (' + tempoCoros + ' min) ultrapassa o limite de ' + limiteCoros + ' min definido para ' + dia.diaSemana + '.';
     }
 
-    // Monta a sequência com horários reais, começando no horário oficial de início do dia
+    // Monta a sequência com horários reais, começando no horário de início (editável ou padrão do dia)
+    const horarioBaseMin = (cronogramaEdicaoAtual.horarioInicioMinutos != null)
+      ? cronogramaEdicaoAtual.horarioInicioMinutos
+      : dia.horarioInicioMinutos;
     let cursorMin = 0;
     const itensHtml = [];
 
     // ABERTURA (editável)
     itensHtml.push(`
       <div class="flex items-center gap-3 bg-bg-claro border border-gray-200 rounded-lg p-3" style="background-color:var(--bg-claro)">
-        <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin, dia.horarioInicioMinutos)}</span>
+        <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin, horarioBaseMin)}</span>
         <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Abertura</span>
         <input type="number" min="0" max="60" step="5" id="inputDuracaoAbertura" value="${cronogramaEdicaoAtual.duracaoAbertura}" class="w-16 text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 text-center">
         <span class="text-xs text-gray-500">min</span>
@@ -5041,7 +5063,11 @@
           <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${horaInicio}</span>
           <span class="text-sm font-semibold flex-1 truncate" style="color:var(--azul-petroleo)">${escapeHtml(c.nomeCoro)}</span>
           ${badgeFixo}
-          ${botoesComunicacao}
+          ${c.livre ? '' : botoesComunicacao}
+          ${c.livre ? '' : `<button type="button" data-idx="${idx}" title="Mover para outro dia"
+            class="btnMoverDia shrink-0 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-full px-2 py-1 hover:bg-indigo-100 transition whitespace-nowrap">
+            📅 Mover dia
+          </button>`}
           ${duracaoControl}
           ${removerBtn}
         </div>
@@ -5052,7 +5078,7 @@
     // ENCERRAMENTO (editável)
     itensHtml.push(`
       <div class="flex items-center gap-3 bg-bg-claro border border-gray-200 rounded-lg p-3" style="background-color:var(--bg-claro)">
-        <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin, dia.horarioInicioMinutos)}</span>
+        <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${minutosParaHHMM(cursorMin, horarioBaseMin)}</span>
         <span class="text-sm font-semibold flex-1" style="color:var(--azul-petroleo)">Encerramento</span>
         <input type="number" min="0" max="60" step="5" id="inputDuracaoEncerramento" value="${cronogramaEdicaoAtual.duracaoEncerramento}" class="w-16 text-xs font-semibold border border-gray-300 rounded-full px-2 py-1 text-center">
         <span class="text-xs text-gray-500">min</span>
@@ -5101,6 +5127,84 @@
         const valor = Math.max(parseInt(this.value, 10) || 1, 1);
         cronogramaEdicaoAtual.coros[idx].duracaoMinutos = valor;
         renderOrdemBloco();
+      });
+    });
+
+    // listeners: mover coro para outro dia
+    cronogramaOrdemLista.querySelectorAll('.btnMoverDia').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        const idx = Number(this.dataset.idx);
+        const coro = cronogramaEdicaoAtual.coros[idx];
+        const inscricao = coro.inscricaoId ? getInscricoes().find(i => i.id === coro.inscricaoId) : null;
+
+        // Montar modal de seleção de dia
+        let modalMover = document.getElementById('modalMoverDia');
+        if(!modalMover){
+          modalMover = document.createElement('div');
+          modalMover.id = 'modalMoverDia';
+          modalMover.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50';
+          document.body.appendChild(modalMover);
+        }
+        const diasOpcoes = PROGRAMACAO_DATA.filter(d => d.id !== cronogramaDiaAtual)
+          .map(d => `<option value="${d.id}">${d.diaSemana} (${d.data})</option>`).join('');
+        modalMover.innerHTML = `
+          <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4">
+            <h3 class="font-semibold text-base" style="color:var(--azul-petroleo)">📅 Mover coro para outro dia</h3>
+            <p class="text-sm text-gray-600">Coro: <strong>${escapeHtml(coro.nomeCoro)}</strong></p>
+            <select id="modalMoverDiaSelect" class="input-field bg-white">${diasOpcoes}</select>
+            <div class="flex gap-3">
+              <button id="modalMoverDiaConfirmar" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition" style="background:var(--azul-petroleo)">Mover</button>
+              <button id="modalMoverDiaCancelar" class="flex-1 py-2.5 rounded-xl text-sm font-bold border border-gray-300 text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
+            </div>
+          </div>
+        `;
+        modalMover.classList.remove('hidden');
+
+        document.getElementById('modalMoverDiaCancelar').onclick = () => modalMover.classList.add('hidden');
+        document.getElementById('modalMoverDiaConfirmar').onclick = async () => {
+          const novoDia = document.getElementById('modalMoverDiaSelect').value;
+          modalMover.classList.add('hidden');
+
+          // Remover do dia atual
+          cronogramaEdicaoAtual.coros.splice(idx, 1);
+          cronogramaEditandoAtivo = true;
+
+          // Salvar dia atual
+          const todosCronogramas = await getCronogramaCompleto();
+          todosCronogramas[cronogramaDiaAtual] = { ...cronogramaEdicaoAtual };
+          await salvarCronogramaData(todosCronogramas);
+
+          // Adicionar ao novo dia
+          const cronNovodia = todosCronogramas[novoDia] || gerarCronogramaSeed(novoDia);
+          cronNovodia.coros = cronNovodia.coros || [];
+          cronNovodia.coros.push({ ...coro });
+          todosCronogramas[novoDia] = cronNovodia;
+          await salvarCronogramaData(todosCronogramas);
+
+          // Atualizar inscrição se tiver (mudar diaApresentacao)
+          if(inscricao && inscricao.id){
+            const fdl = window.firebaseDataLayer;
+            await fdl.atualizarInscricao(inscricao.id, { diaApresentacao: novoDia });
+          }
+
+          // Gerar mensagem WhatsApp se tiver telefone
+          if(inscricao && inscricao.telefoneRegente){
+            const novoDiaData = PROGRAMACAO_DATA.find(d => d.id === novoDia);
+            const tel = inscricao.telefoneRegente.replace(/\D/g,'');
+            const msg = encodeURIComponent(
+              'Olá, ' + inscricao.nomeRegente + '! 📅\n\n' +
+              'Informamos que houve uma alteração na programação do VII ENCoros 2026.\n\n' +
+              '🔄 *Mudança de data para ' + escapeHtml(inscricao.nomeCoro) + '*\n' +
+              '• Nova data: ' + (novoDiaData ? novoDiaData.diaSemana + ', ' + novoDiaData.data : novoDia) + '\n\n' +
+              'Qualquer dúvida, estamos à disposição!\n' +
+              'Organização VII ENCoros 2026'
+            );
+            window.open('https://wa.me/55' + tel + '?text=' + msg, '_blank');
+          }
+
+          cronogramaEditandoAtivo = false;
+          renderCronogramaAdmin();
+        };
       });
     });
 
@@ -5167,6 +5271,17 @@
   }
 
   // ---------- CAMPOS DE LOCAL E LINK DO GOOGLE MAPS ----------
+  // Listener: horário de início
+  const cronogramaHorarioInicioInput = document.getElementById('cronogramaHorarioInicio');
+  if(cronogramaHorarioInicioInput){
+    cronogramaHorarioInicioInput.addEventListener('change', function(){
+      const [h, m] = this.value.split(':').map(Number);
+      cronogramaEdicaoAtual.horarioInicioMinutos = h * 60 + m;
+      cronogramaEditandoAtivo = true;
+      renderOrdemBloco();
+    });
+  }
+
   const cronogramaLocalSelect = document.getElementById('cronogramaLocalSelect');
   const cronogramaLocalCustom = document.getElementById('cronogramaLocalCustom');
   const cronogramaLinkMapaInput = document.getElementById('cronogramaLinkMapa');
@@ -5214,6 +5329,7 @@
         duracaoEncerramento: cronogramaEdicaoAtual.duracaoEncerramento,
         local: cronogramaEdicaoAtual.local || LOCAL_PADRAO_PROGRAMACAO,
         linkMapa: cronogramaEdicaoAtual.linkMapa || '',
+        horarioInicioMinutos: cronogramaEdicaoAtual.horarioInicioMinutos ?? null,
         coros: cronogramaEdicaoAtual.coros,
         atualizadoEm: new Date().toISOString()
       };
