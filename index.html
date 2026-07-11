@@ -4965,16 +4965,15 @@
     const dia = PROGRAMACAO_DATA.find(d => d.id === cronogramaDiaAtual);
     const tempoCoros = calcularTempoCorosBloco();
     const tempoTotalBloco = cronogramaEdicaoAtual.duracaoAbertura + tempoCoros + cronogramaEdicaoAtual.duracaoEncerramento;
-    // Se horário de término foi definido, calcular limite a partir da diferença início-término
+    // Horário de início real: editado ou padrão do dia
+    const horarioBaseMin = cronogramaEdicaoAtual.horarioInicioMinutos ?? dia.horarioInicioMinutos;
+    // Horário de término real: editado ou calculado pelo limite original
     let limiteMaximoBloco;
-    if(cronogramaEdicaoAtual.horarioTerminoMinutos != null && cronogramaEdicaoAtual.horarioInicioMinutos != null){
-      limiteMaximoBloco = cronogramaEdicaoAtual.horarioTerminoMinutos - cronogramaEdicaoAtual.horarioInicioMinutos;
-    } else if(cronogramaEdicaoAtual.horarioTerminoMinutos != null){
-      const horBaseMin = dia.horarioInicioMinutos;
-      limiteMaximoBloco = cronogramaEdicaoAtual.horarioTerminoMinutos - horBaseMin;
+    if(cronogramaEdicaoAtual.horarioTerminoMinutos != null){
+      limiteMaximoBloco = cronogramaEdicaoAtual.horarioTerminoMinutos - horarioBaseMin;
     } else {
-      const limiteCoros = calcularTempoUtilCoros(dia);
-      limiteMaximoBloco = cronogramaEdicaoAtual.duracaoAbertura + limiteCoros + cronogramaEdicaoAtual.duracaoEncerramento;
+      const limCoros = calcularTempoUtilCoros(dia);
+      limiteMaximoBloco = cronogramaEdicaoAtual.duracaoAbertura + limCoros + cronogramaEdicaoAtual.duracaoEncerramento;
     }
     const limiteCoros = limiteMaximoBloco - cronogramaEdicaoAtual.duracaoAbertura - cronogramaEdicaoAtual.duracaoEncerramento;
     const estourou = tempoCoros > limiteCoros;
@@ -4989,9 +4988,7 @@
     }
 
     // Monta a sequência com horários reais, começando no horário de início (editável ou padrão do dia)
-    const horarioBaseMin = (cronogramaEdicaoAtual.horarioInicioMinutos != null)
-      ? cronogramaEdicaoAtual.horarioInicioMinutos
-      : dia.horarioInicioMinutos;
+    // horarioBaseMin já calculado acima
     let cursorMin = 0;
     const itensHtml = [];
 
