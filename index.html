@@ -2067,20 +2067,18 @@
     if(!dia.vagasInscricao) return null;
     const ocupadas = contarVagasOcupadas(dia.id);
     const cronSalvo = getCronogramaDoDia(dia.id);
-    // Se tem horário de término salvo, calcular vagas pelo tempo real disponível
     if(cronSalvo && cronSalvo.horarioTerminoMinutos != null){
       const inicio = cronSalvo.horarioInicioMinutos ?? dia.horarioInicioMinutos;
       const durAb = cronSalvo.duracaoAbertura ?? 10;
       const durEnc = cronSalvo.duracaoEncerramento ?? 10;
-      // Tempo total - abertura - encerramento
-      const tempoDisponivel = cronSalvo.horarioTerminoMinutos - inicio - durAb - durEnc;
-      // Descontar tempo dos coros fixos (institucionais) já no bloco
-      const tempoFixos = (cronSalvo.coros || [])
-        .filter(c => c.fixo || c.anfitriao)
+      // Tempo total = término - início
+      const tempoTotal = cronSalvo.horarioTerminoMinutos - inicio;
+      // Tempo já ocupado = abertura + encerramento + todos os coros no bloco
+      const tempoOcupado = durAb + durEnc + (cronSalvo.coros || [])
         .reduce((acc, c) => acc + (c.duracaoMinutos || 15), 0);
-      const tempoParaAmadores = Math.max(0, tempoDisponivel - tempoFixos);
-      const maxAmadores = Math.floor(tempoParaAmadores / 15);
-      return Math.max(maxAmadores - ocupadas, 0);
+      // Tempo restante livre
+      const tempoLivre = Math.max(0, tempoTotal - tempoOcupado);
+      return Math.floor(tempoLivre / 15);
     }
     // Fallback: usar maxAmadores fixo do PROGRAMACAO_DATA
     const ocupadasPorFixos = dia.vagasOcupadasPorFixos || 0;
@@ -2405,17 +2403,22 @@
       // Calcular total de vagas real usando mesma lógica de vagasRestantes
       const cronSalvoVagas = getCronogramaDoDia(dia.id);
       let totalVagas = dia.maxAmadores;
+      let ocupadasVagas = totalVagas - restantes;
       if(cronSalvoVagas && cronSalvoVagas.horarioTerminoMinutos != null){
         const ini = cronSalvoVagas.horarioInicioMinutos ?? dia.horarioInicioMinutos;
         const durAb = cronSalvoVagas.duracaoAbertura ?? 10;
         const durEnc = cronSalvoVagas.duracaoEncerramento ?? 10;
-        const tempoDisp = cronSalvoVagas.horarioTerminoMinutos - ini - durAb - durEnc;
-        const tempoFixosV = (cronSalvoVagas.coros || [])
-          .filter(c => c.fixo || c.anfitriao)
+        const tempoTotal = cronSalvoVagas.horarioTerminoMinutos - ini;
+        const tempoOcupado = durAb + durEnc + (cronSalvoVagas.coros || [])
           .reduce((acc, c) => acc + (c.duracaoMinutos || 15), 0);
-        totalVagas = Math.max(0, Math.floor(Math.max(0, tempoDisp - tempoFixosV) / 15));
+        const tempoLivre = Math.max(0, tempoTotal - tempoOcupado);
+        // Total = coros amadores no bloco + vagas livres
+        const amadoresNoBloco = (cronSalvoVagas.coros || [])
+          .filter(c => !c.fixo && !c.anfitriao && !c.livre && c.inscricaoId).length;
+        totalVagas = amadoresNoBloco + Math.floor(tempoLivre / 15);
+        ocupadasVagas = amadoresNoBloco;
       }
-      const ocupadas = totalVagas - restantes;
+      const ocupadas = ocupadasVagas;
       const corBg = restantes === 0 ? 'bg-red-50 border-red-300 text-red-700' : 'bg-green-50 border-green-300 text-green-700';
       vagasBlock = `
         <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border ${corBg}">
