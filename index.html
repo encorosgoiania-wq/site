@@ -2063,26 +2063,29 @@
     return lista.filter(i => i.modalidade === 'Presencial' && i.diaApresentacao === diaId && !i.isInstitucional).length;
   }
 
-  function vagasRestantes(dia){
-    if(!dia.vagasInscricao) return null;
-    const ocupadas = contarVagasOcupadas(dia.id);
-    const cronSalvo = getCronogramaDoDia(dia.id);
+  // Função central de cálculo de vagas — usada em TODOS os dias e contextos.
+  // Fórmula: vagas = (término - início - abertura - encerramento - Σcoros) ÷ 15
+  // Se não há horário de término salvo, usa maxAmadores do PROGRAMACAO_DATA como fallback.
+  function calcularVagasLivres(diaId, diaData){
+    const cronSalvo = getCronogramaDoDia(diaId);
     if(cronSalvo && cronSalvo.horarioTerminoMinutos != null){
-      const inicio = cronSalvo.horarioInicioMinutos ?? dia.horarioInicioMinutos;
-      const durAb = cronSalvo.duracaoAbertura ?? 10;
-      const durEnc = cronSalvo.duracaoEncerramento ?? 10;
-      // Tempo total = término - início
-      const tempoTotal = cronSalvo.horarioTerminoMinutos - inicio;
-      // Tempo já ocupado = abertura + encerramento + todos os coros no bloco
-      const tempoOcupado = durAb + durEnc + (cronSalvo.coros || [])
-        .reduce((acc, c) => acc + (c.duracaoMinutos || 15), 0);
-      // Tempo restante livre
-      const tempoLivre = Math.max(0, tempoTotal - tempoOcupado);
+      const inicio = cronSalvo.horarioInicioMinutos ?? (diaData ? diaData.horarioInicioMinutos : 0);
+      const durAb  = cronSalvo.duracaoAbertura  ?? CRONOGRAMA_DURACAO_PADRAO_ABERTURA;
+      const durEnc = cronSalvo.duracaoEncerramento ?? CRONOGRAMA_DURACAO_PADRAO_ENCERRAMENTO;
+      const somaCoros = (cronSalvo.coros || []).reduce((acc, c) => acc + (c.duracaoMinutos || 15), 0);
+      const tempoLivre = Math.max(0, cronSalvo.horarioTerminoMinutos - inicio - durAb - durEnc - somaCoros);
       return Math.floor(tempoLivre / 15);
     }
-    // Fallback: usar maxAmadores fixo do PROGRAMACAO_DATA
-    const ocupadasPorFixos = dia.vagasOcupadasPorFixos || 0;
-    return Math.max(dia.maxAmadores - ocupadas - ocupadasPorFixos, 0);
+    // Fallback quando não há horário de término definido
+    if(!diaData || !diaData.vagasInscricao) return 0;
+    const ocupadas = contarVagasOcupadas(diaId);
+    const ocupadasPorFixos = diaData.vagasOcupadasPorFixos || 0;
+    return Math.max(diaData.maxAmadores - ocupadas - ocupadasPorFixos, 0);
+  }
+
+  function vagasRestantes(dia){
+    if(!dia.vagasInscricao) return null;
+    return calcularVagasLivres(dia.id, dia);
   }
 
   // ======================================================================
@@ -2351,7 +2354,7 @@
     painelMacroEl.innerHTML = PROGRAMACAO_DATA.map((dia, idx)=>{
       let vagasHtml = '';
       if(dia.vagasInscricao){
-        const restantes = vagasRestantes(dia);
+        const restantes = vagasRestantes(dia); // usa calcularVagasLivres internamente
         const corVagas = restantes === 0 ? 'text-red-600' : 'text-green-700';
         vagasHtml = `<p class="text-[11px] font-semibold mt-2 ${corVagas}">${restantes} vaga(s)</p>`;
       } else if(dia.id === 'segunda'){
@@ -2401,24 +2404,13 @@
     if(dia.vagasInscricao){
       const restantes = vagasRestantes(dia);
       // Calcular total de vagas real usando mesma lógica de vagasRestantes
+      // Total de amadores no bloco + vagas livres
       const cronSalvoVagas = getCronogramaDoDia(dia.id);
-      let totalVagas = dia.maxAmadores;
-      let ocupadasVagas = totalVagas - restantes;
-      if(cronSalvoVagas && cronSalvoVagas.horarioTerminoMinutos != null){
-        const ini = cronSalvoVagas.horarioInicioMinutos ?? dia.horarioInicioMinutos;
-        const durAb = cronSalvoVagas.duracaoAbertura ?? 10;
-        const durEnc = cronSalvoVagas.duracaoEncerramento ?? 10;
-        const tempoTotal = cronSalvoVagas.horarioTerminoMinutos - ini;
-        const tempoOcupado = durAb + durEnc + (cronSalvoVagas.coros || [])
-          .reduce((acc, c) => acc + (c.duracaoMinutos || 15), 0);
-        const tempoLivre = Math.max(0, tempoTotal - tempoOcupado);
-        // Total = coros amadores no bloco + vagas livres
-        const amadoresNoBloco = (cronSalvoVagas.coros || [])
-          .filter(c => !c.fixo && !c.anfitriao && !c.livre && c.inscricaoId).length;
-        totalVagas = amadoresNoBloco + Math.floor(tempoLivre / 15);
-        ocupadasVagas = amadoresNoBloco;
-      }
-      const ocupadas = ocupadasVagas;
+      const amadoresNoBloco = cronSalvoVagas
+        ? (cronSalvoVagas.coros || []).filter(c => !c.fixo && !c.anfitriao && !c.livre && c.inscricaoId).length
+        : contarVagasOcupadas(dia.id);
+      const totalVagas = amadoresNoBloco + restantes;
+      const ocupadas = amadoresNoBloco;
       const corBg = restantes === 0 ? 'bg-red-50 border-red-300 text-red-700' : 'bg-green-50 border-green-300 text-green-700';
       vagasBlock = `
         <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border ${corBg}">
@@ -2433,13 +2425,9 @@
         const iniSeg = cronSegunda.horarioInicioMinutos ?? dia.horarioInicioMinutos;
         const durAbSeg = cronSegunda.duracaoAbertura ?? 15;
         const durEncSeg = cronSegunda.duracaoEncerramento ?? 15;
-        const tempoFixosSeg = (cronSegunda.coros || [])
-          .filter(c => c.fixo || c.anfitriao)
-          .reduce((acc, c) => acc + (c.duracaoMinutos || 10), 0);
-        const tempoDispSeg = cronSegunda.horarioTerminoMinutos - iniSeg - durAbSeg - durEncSeg - tempoFixosSeg;
-        const maxVirtuais = Math.max(0, Math.floor(tempoDispSeg / 10));
-        const ocupadasVirtuais = getInscricoesData().filter(i => i.modalidade === 'Virtual').length;
-        const restantesVirtuais = Math.max(0, maxVirtuais - ocupadasVirtuais);
+        const somaCoros = (cronSegunda.coros || []).reduce((acc, c) => acc + (c.duracaoMinutos || 10), 0);
+        const tempoLivreSeg = Math.max(0, cronSegunda.horarioTerminoMinutos - iniSeg - durAbSeg - durEncSeg - somaCoros);
+        const restantesVirtuais = Math.floor(tempoLivreSeg / 10);
         const corBgSeg = restantesVirtuais === 0 ? 'bg-red-50 border-red-300 text-red-700' : 'bg-blue-50 border-blue-300 text-blue-700';
         vagasBlock = `<div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border ${corBgSeg}">🎥 Modalidade exclusivamente Virtual${restantesVirtuais > 0 ? ` — ${restantesVirtuais} vaga(s)` : ' — Vagas esgotadas'}</div>`;
       } else {
@@ -5479,9 +5467,16 @@
       renderAdminTable();
       if(typeof renderAdminBlog === 'function') renderAdminBlog();
       if(typeof renderAdminFichas === 'function') renderAdminFichas();
+      // Re-renderizar cronograma admin se aba ativa e sem edição em andamento
+      const subCron = document.getElementById('adminSubviewCronograma');
+      if(subCron && !subCron.classList.contains('hidden') && !cronogramaEditandoAtivo){
+        renderCronogramaAdmin();
+      }
     }
+    // Sempre re-renderizar programação quando dados mudam (cronograma ou inscrições)
+    // independente da view ativa, para que ao navegar os dados já estejam corretos
+    renderPainelMacro();
     if(viewAtiva === 'programacao'){
-      renderPainelMacro();
       renderCarrosselDia();
     }
     if(viewAtiva === 'blog'){
