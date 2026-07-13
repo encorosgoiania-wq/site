@@ -1757,6 +1757,17 @@
     });
   }
 
+  // Escuta mudanças em tempo real no cronograma
+  function fsEscutarCronograma(callback){
+    return onSnapshot(collection(db, COL_CRONOGRAMA), (snap) => {
+      const dados = {};
+      snap.docs.forEach(d => { dados[d.id] = d.data(); });
+      callback(dados);
+    }, (erro) => {
+      console.error('Erro ao escutar cronograma em tempo real:', erro);
+    });
+  }
+
   // Expõe as funções no escopo global (window), para que o script principal
   // (não-módulo, mais abaixo) consiga chamá-las normalmente.
   window.firebaseDataLayer = {
@@ -1768,6 +1779,7 @@
     deleteTodasInscricoes: fsDeleteTodasInscricoes,
     getCronogramaData: fsGetCronogramaData,
     salvarCronogramaDoDia: fsSalvarCronogramaDoDia,
+    escutarCronograma: fsEscutarCronograma,
     escutarInscricoes: fsEscutarInscricoes,
     enviarEmail: fsEnviarEmail,
     getPostsBlog: fsGetPostsBlog,
@@ -1963,9 +1975,16 @@
       if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
     });
 
+    // Carrega cronograma uma vez e depois escuta mudanças em tempo real
     cacheCronograma = await fdl.getCronogramaData();
     firebasePronto = true;
     if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
+
+    // Após carregamento inicial, escuta mudanças em tempo real
+    fdl.escutarCronograma((dados) => {
+      cacheCronograma = dados;
+      if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
+    });
   }
 
   // getPostsBlog() lê do cache local (síncrono), sincronizado com o
@@ -5015,9 +5034,18 @@
     // Horário de início real: editado ou padrão do dia
     const horarioBaseMin = cronogramaEdicaoAtual.horarioInicioMinutos ?? dia.horarioInicioMinutos;
     // Limite = diferença entre término e início (simples e direto)
+    // Horário de término: do objeto OU do input se disponível
+    let _terminoMin = cronogramaEdicaoAtual.horarioTerminoMinutos;
+    if(_terminoMin == null){
+      const _inp = document.getElementById('cronogramaHorarioTermino');
+      if(_inp && _inp.value){
+        const [_h,_m] = _inp.value.split(':').map(Number);
+        if(!isNaN(_h) && !isNaN(_m)){ _terminoMin = _h*60+_m; cronogramaEdicaoAtual.horarioTerminoMinutos = _terminoMin; }
+      }
+    }
     let limiteMaximoBloco;
-    if(cronogramaEdicaoAtual.horarioTerminoMinutos != null){
-      limiteMaximoBloco = cronogramaEdicaoAtual.horarioTerminoMinutos - horarioBaseMin;
+    if(_terminoMin != null){
+      limiteMaximoBloco = _terminoMin - horarioBaseMin;
     } else {
       const limCoros = calcularTempoUtilCoros(dia);
       limiteMaximoBloco = cronogramaEdicaoAtual.duracaoAbertura + limCoros + cronogramaEdicaoAtual.duracaoEncerramento;
