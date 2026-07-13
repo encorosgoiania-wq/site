@@ -5012,10 +5012,9 @@
   function renderOrdemBloco(){
     const dia = PROGRAMACAO_DATA.find(d => d.id === cronogramaDiaAtual);
     const tempoCoros = calcularTempoCorosBloco();
-    const tempoTotalBloco = cronogramaEdicaoAtual.duracaoAbertura + tempoCoros + cronogramaEdicaoAtual.duracaoEncerramento;
     // Horário de início real: editado ou padrão do dia
     const horarioBaseMin = cronogramaEdicaoAtual.horarioInicioMinutos ?? dia.horarioInicioMinutos;
-    // Horário de término real: editado ou calculado pelo limite original
+    // Limite = diferença entre término e início (simples e direto)
     let limiteMaximoBloco;
     if(cronogramaEdicaoAtual.horarioTerminoMinutos != null){
       limiteMaximoBloco = cronogramaEdicaoAtual.horarioTerminoMinutos - horarioBaseMin;
@@ -5023,6 +5022,8 @@
       const limCoros = calcularTempoUtilCoros(dia);
       limiteMaximoBloco = cronogramaEdicaoAtual.duracaoAbertura + limCoros + cronogramaEdicaoAtual.duracaoEncerramento;
     }
+    // tempoTotalBloco = soma de TUDO: abertura + coros + encerramento
+    const tempoTotalBloco = cronogramaEdicaoAtual.duracaoAbertura + tempoCoros + cronogramaEdicaoAtual.duracaoEncerramento;
     const limiteCoros = limiteMaximoBloco - cronogramaEdicaoAtual.duracaoAbertura - cronogramaEdicaoAtual.duracaoEncerramento;
     const estourou = tempoCoros > limiteCoros;
 
@@ -5138,10 +5139,7 @@
           <span class="text-sm font-semibold flex-1 truncate" style="color:var(--azul-petroleo)">${escapeHtml(c.nomeCoro)}</span>
           ${badgeFixo}
           ${c.livre ? '' : botoesComunicacao}
-          ${c.livre ? '' : `<button type="button" data-idx="${idx}" title="Mover para outro dia"
-            class="btnMoverDia shrink-0 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-full px-2 py-1 hover:bg-indigo-100 transition whitespace-nowrap">
-            📅 Mover dia
-          </button>`}
+
           ${duracaoControl}
           ${removerBtn}
         </div>
