@@ -4934,9 +4934,14 @@
           <p class="text-sm font-semibold text-gray-800 truncate">${escapeHtml(i.nomeCoro)}</p>
           <p class="text-xs text-gray-500 truncate">${escapeHtml(i.nomeRegente)} · ${i.duracaoTotalRepertorio || '—'} min sugeridos</p>
         </div>
-        <button type="button" data-inscricao-id="${i.id}" class="btnAdicionarBloco shrink-0 text-xs font-semibold text-gold border border-gold/40 rounded-full px-3 py-1.5 hover:bg-amber-50 transition">
-          + Adicionar
-        </button>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" data-inscricao-id="${i.id}" class="btnMoverDiaLateral text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-300 rounded-full px-2 py-1 hover:bg-gray-100 transition whitespace-nowrap" title="Mover para outro dia">
+            📅 Mover
+          </button>
+          <button type="button" data-inscricao-id="${i.id}" class="btnAdicionarBloco text-xs font-semibold text-gold border border-gold/40 rounded-full px-3 py-1.5 hover:bg-amber-50 transition">
+            + Adicionar
+          </button>
+        </div>
       </div>
     `).join('');
 
@@ -4964,6 +4969,128 @@
 
         renderCorosDisponiveis();
         renderOrdemBloco();
+      });
+    });
+
+    // listeners: mover coro da lateral para outro dia
+    cronogramaCorosDisponiveis.querySelectorAll('.btnMoverDiaLateral').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        const inscricaoId = this.dataset.inscricaoId;
+        const inscricao = inscricoes.find(i => i.id === inscricaoId);
+        if(!inscricao) return;
+
+        // Reusar o modal de mover dia — construir contexto equivalente
+        let modalMover = document.getElementById('modalMoverDia');
+        if(!modalMover){
+          modalMover = document.createElement('div');
+          modalMover.id = 'modalMoverDia';
+          modalMover.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50';
+          document.body.appendChild(modalMover);
+        }
+        const diasOpcoes = PROGRAMACAO_DATA
+          .filter(d => d.vagasInscricao && d.id !== cronogramaDiaAtual)
+          .map(d => {
+            const vRestantes = calcularVagasLivres(d.id, d);
+            return `<option value="${d.id}">${d.diaSemana} (${d.data}) — ${vRestantes > 0 ? vRestantes + " vaga(s)" : "bloco cheio (vai para lista)"}</option>`;
+          }).join('');
+
+        if(!diasOpcoes){
+          alert('Não há outros dias disponíveis para mover este coro.');
+          return;
+        }
+
+        modalMover.innerHTML = `
+          <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4">
+            <h3 class="font-semibold text-base" style="color:var(--azul-petroleo)">📅 Mover coro para outro dia</h3>
+            <p class="text-sm text-gray-600">Coro: <strong>${escapeHtml(inscricao.nomeCoro)}</strong></p>
+            <select id="modalMoverDiaSelect" class="input-field bg-white">${diasOpcoes}</select>
+            <div class="flex gap-3">
+              <button id="modalMoverDiaConfirmar" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition" style="background:var(--azul-petroleo)">Mover</button>
+              <button id="modalMoverDiaCancelar" class="flex-1 py-2.5 rounded-xl text-sm font-bold border border-gray-300 text-gray-600 hover:bg-gray-50 transition">Cancelar</button>
+            </div>
+          </div>
+        `;
+        modalMover.classList.remove('hidden');
+
+        document.getElementById('modalMoverDiaCancelar').onclick = () => modalMover.classList.add('hidden');
+        document.getElementById('modalMoverDiaConfirmar').onclick = async () => {
+          const novoDia = document.getElementById('modalMoverDiaSelect').value;
+          if(!novoDia){ alert('Selecione um dia de destino.'); return; }
+
+          const btnConfirmar = document.getElementById('modalMoverDiaConfirmar');
+          btnConfirmar.disabled = true;
+          btnConfirmar.textContent = 'Movendo...';
+
+          try{
+            cronogramaEditandoAtivo = true;
+            const todosCronogramas = JSON.parse(JSON.stringify(getCronogramaData()));
+
+            // Preparar destino
+            if(!todosCronogramas[novoDia]) todosCronogramas[novoDia] = gerarCronogramaSeed(novoDia);
+            if(!todosCronogramas[novoDia].coros) todosCronogramas[novoDia].coros = [];
+
+            // Verificar se cabe no bloco destino
+            const cronDestino = todosCronogramas[novoDia];
+            const diaDestinoData = PROGRAMACAO_DATA.find(d => d.id === novoDia);
+            let temVagaNoBloco = false;
+            if(cronDestino.horarioTerminoMinutos != null){
+              const inicioD = cronDestino.horarioInicioMinutos ?? (diaDestinoData ? diaDestinoData.horarioInicioMinutos : 0);
+              const durAbD  = cronDestino.duracaoAbertura  ?? CRONOGRAMA_DURACAO_PADRAO_ABERTURA;
+              const durEncD = cronDestino.duracaoEncerramento ?? CRONOGRAMA_DURACAO_PADRAO_ENCERRAMENTO;
+              const somaD   = cronDestino.coros.reduce((acc, c) => acc + (c.duracaoMinutos || 15), 0);
+              const livreD  = Math.max(0, cronDestino.horarioTerminoMinutos - inicioD - durAbD - durEncD - somaD);
+              temVagaNoBloco = livreD >= 15;
+            } else if(diaDestinoData && diaDestinoData.vagasInscricao){
+              const ocupD = cronDestino.coros.filter(c => !c.isInstitucional).length;
+              temVagaNoBloco = ocupD < (diaDestinoData.maxAmadores || 0);
+            }
+
+            // WRITE FIRST: salvar no destino
+            if(temVagaNoBloco){
+              todosCronogramas[novoDia].coros.push({
+                inscricaoId: inscricao.id,
+                nomeCoro: inscricao.nomeCoro,
+                duracaoMinutos: 15,
+                fixo: false
+              });
+            }
+            await window.firebaseDataLayer.salvarCronogramaDoDia(novoDia, todosCronogramas[novoDia]);
+
+            // Atualizar diaApresentacao na inscrição
+            await window.firebaseDataLayer.updateInscricao(inscricao.id, { diaApresentacao: novoDia });
+
+            cacheCronograma = todosCronogramas;
+            modalMover.classList.add('hidden');
+
+            const novoDiaData = PROGRAMACAO_DATA.find(d => d.id === novoDia);
+            const destLabel = novoDiaData ? novoDiaData.diaSemana + ', ' + novoDiaData.data : novoDia;
+            const blocoInfo = temVagaNoBloco ? 'alocado no bloco' : 'na lista do dia (sem vaga no bloco ainda)';
+
+            if(inscricao.telefoneRegente){
+              const tel = inscricao.telefoneRegente.replace(/\D/g,'');
+              const msg = encodeURIComponent(
+              'Olá, ' + inscricao.nomeRegente + '! 😊\n\n' +
+              'As vagas para o dia escolhido pelo *' + escapeHtml(inscricao.nomeCoro) + '* no VII ENCoros 2026 foram preenchidas e precisamos reagendar sua apresentação.\n\n' +
+              'A única data disponível para vocês é *' + destLabel + '*.\n\n' +
+              'Por favor, confirme se conseguem participar nessa data respondendo esta mensagem com *SIM* ou *NÃO*.\n\n' +
+              'Agradecemos a compreensão e contamos com a presença de vocês! 🎶\n' +
+              'Organização VII ENCoros 2026'
+              );
+              if(confirm('✅ Coro movido para ' + destLabel + ' (' + blocoInfo + ')!\n\nDeseja avisar o regente pelo WhatsApp?')){
+                window.open('https://wa.me/55' + tel + '?text=' + msg, '_blank');
+              }
+            } else {
+              alert('✅ Coro movido para ' + destLabel + ' (' + blocoInfo + ')!');
+            }
+
+          } catch(err){
+            console.error('Erro ao mover coro:', err);
+            alert('❌ Erro ao mover. Nenhum dado foi perdido.\n' + err.message);
+          } finally {
+            cronogramaEditandoAtivo = false;
+            renderCronogramaAdmin();
+          }
+        };
       });
     });
   }
@@ -5091,6 +5218,13 @@
              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
            </button>`;
 
+      const moverBtn = (c.fixo || c.livre)
+        ? ''
+        : `<button type="button" data-idx="${idx}" class="btnMoverDia shrink-0 flex items-center gap-1 text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-300 rounded-full px-2 py-1 hover:bg-gray-100 transition whitespace-nowrap" title="Mover para outro dia">
+             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg>
+             Mover
+           </button>`;
+
       // Itens fixos (institucionais) mantêm o select com opções padrão (15/20/30),
       // já que essas durações são definidas oficialmente. Coros amadores e itens
       // livres usam um campo numérico livre, sem travar em valores pré-definidos.
@@ -5164,6 +5298,7 @@
           ${c.livre ? '' : botoesComunicacao}
 
           ${duracaoControl}
+          ${moverBtn}
           ${removerBtn}
         </div>
       `);
@@ -5326,11 +5461,11 @@
             if(inscricao && inscricao.telefoneRegente){
               const tel = inscricao.telefoneRegente.replace(/\D/g,'');
               const msg = encodeURIComponent(
-                'Olá, ' + inscricao.nomeRegente + '! 📅\n\n' +
-                'Informamos que houve uma alteração na programação do VII ENCoros 2026.\n\n' +
-                '🔄 *Mudança de data para ' + escapeHtml(inscricao.nomeCoro) + '*\n' +
-                '• Nova data: ' + destLabel + '\n\n' +
-                'Qualquer dúvida, estamos à disposição!\n' +
+                'Olá, ' + inscricao.nomeRegente + '! 😊\n\n' +
+                'As vagas para o dia escolhido pelo *' + escapeHtml(inscricao.nomeCoro) + '* no VII ENCoros 2026 foram preenchidas e precisamos reagendar sua apresentação.\n\n' +
+                'A única data disponível para vocês é *' + destLabel + '*.\n\n' +
+                'Por favor, confirme se conseguem participar nessa data respondendo esta mensagem com *SIM* ou *NÃO*.\n\n' +
+                'Agradecemos a compreensão e contamos com a presença de vocês! 🎶\n' +
                 'Organização VII ENCoros 2026'
               );
               if(confirm('✅ Coro movido para ' + destLabel + ' (' + blocoInfo + ')!\n\nDeseja avisar o regente pelo WhatsApp?')){
