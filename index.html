@@ -1947,6 +1947,7 @@
   let cachePostsBlog = [];
   let firebasePronto = false;
   let onCacheAtualizadoCallback = null; // setado depois, pela UI (re-renderiza a tela atual)
+  let cronogramaEditandoAtivo = false; // bloqueia onSnapshot durante saves ativos
 
   function aoFirebaseEstarPronto(){
     return new Promise(resolve=>{
@@ -1980,8 +1981,11 @@
     firebasePronto = true;
     if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
 
-    // Após carregamento inicial, escuta mudanças em tempo real
+    // Após carregamento inicial, escuta mudanças em tempo real.
+    // Se uma edição está em andamento (cronogramaEditandoAtivo), ignora o
+    // snapshot para não sobrescrever o cache no meio da operação.
     fdl.escutarCronograma((dados) => {
+      if(cronogramaEditandoAtivo) return;
       cacheCronograma = dados;
       if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
     });
@@ -3623,7 +3627,7 @@
                 <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin:24px 0;font-size:14px;color:#374151">
                   <p style="margin:0 0 6px"><strong>Coro:</strong> ${escapeHtml(inscricao.nomeCoro)}</p>
                   <p style="margin:0 0 6px"><strong>Regente:</strong> ${escapeHtml(inscricao.nomeRegente)}</p>
-                  <p style="margin:0"><strong>Repertório:</strong> ${obras.length} obra(s) — ${duracaoTotal} min no total</p>
+                  <p style="margin:0"><strong>Repertório:</strong> ${isVirtualSubmit ? (camposAtualizados.obrasRepertorio.length + ' vídeo(s) enviado(s)') : (camposAtualizados.obrasRepertorio.length + ' obra(s) — ' + camposAtualizados.duracaoTotalRepertorio + ' min no total')}</p>
                 </div>
                 <p style="color:#4b5563;font-size:14px;line-height:1.6;margin:0 0 24px">
                   A Comissão Artística analisará o material enviado e, se necessário, entrará em contato.
@@ -5254,52 +5258,95 @@
         document.getElementById('modalMoverDiaCancelar').onclick = () => modalMover.classList.add('hidden');
         document.getElementById('modalMoverDiaConfirmar').onclick = async () => {
           const novoDia = document.getElementById('modalMoverDiaSelect').value;
-          modalMover.classList.add('hidden');
+          if(!novoDia){ alert('Selecione um dia de destino.'); return; }
 
-          // Remover do dia atual
-          cronogramaEdicaoAtual.coros.splice(idx, 1);
-          cronogramaEditandoAtivo = true;
+          const btnConfirmar = document.getElementById('modalMoverDiaConfirmar');
+          btnConfirmar.disabled = true;
+          btnConfirmar.textContent = 'Movendo...';
 
-          // Salvar dia atual
-          // Clonar cache para evitar mutação acidental
-          const todosCronogramas = JSON.parse(JSON.stringify(getCronogramaData()));
+          try{
+            cronogramaEditandoAtivo = true;
 
-          // Salvar dia atual sem o coro removido
-          todosCronogramas[cronogramaDiaAtual] = JSON.parse(JSON.stringify(cronogramaEdicaoAtual));
+            // ── PASSO 1: clonar estado atual sem mutar nada ainda ────────────
+            const todosCronogramas = JSON.parse(JSON.stringify(getCronogramaData()));
 
-          // Adicionar ao novo dia
-          if(!todosCronogramas[novoDia]){
-            todosCronogramas[novoDia] = gerarCronogramaSeed(novoDia);
-          }
-          if(!todosCronogramas[novoDia].coros) todosCronogramas[novoDia].coros = [];
-          todosCronogramas[novoDia].coros.push(JSON.parse(JSON.stringify(coro)));
+            // ── PASSO 2: preparar cronograma do dia DESTINO ──────────────────
+            if(!todosCronogramas[novoDia]){
+              todosCronogramas[novoDia] = gerarCronogramaSeed(novoDia);
+            }
+            if(!todosCronogramas[novoDia].coros) todosCronogramas[novoDia].coros = [];
 
-          // Salvar tudo de uma vez
-          await salvarCronogramaData(todosCronogramas);
+            // Verificar se cabe no bloco destino
+            const cronDestino = todosCronogramas[novoDia];
+            const diaDestinoData = PROGRAMACAO_DATA.find(d => d.id === novoDia);
+            let temVagaNoBloco = false;
+            if(cronDestino.horarioTerminoMinutos != null){
+              const inicioD = cronDestino.horarioInicioMinutos ?? (diaDestinoData ? diaDestinoData.horarioInicioMinutos : 0);
+              const durAbD  = cronDestino.duracaoAbertura  ?? CRONOGRAMA_DURACAO_PADRAO_ABERTURA;
+              const durEncD = cronDestino.duracaoEncerramento ?? CRONOGRAMA_DURACAO_PADRAO_ENCERRAMENTO;
+              const somaD   = cronDestino.coros.reduce((acc, c) => acc + (c.duracaoMinutos || 15), 0);
+              const livreD  = Math.max(0, cronDestino.horarioTerminoMinutos - inicioD - durAbD - durEncD - somaD);
+              temVagaNoBloco = livreD >= (coro.duracaoMinutos || 15);
+            } else if(diaDestinoData && diaDestinoData.vagasInscricao){
+              const ocupD = cronDestino.coros.filter(c => !c.isInstitucional).length;
+              temVagaNoBloco = ocupD < (diaDestinoData.maxAmadores || 0);
+            }
 
-          // Atualizar inscrição se tiver (mudar diaApresentacao)
-          if(inscricao && inscricao.id){
-            const fdl = window.firebaseDataLayer;
-            await fdl.atualizarInscricao(inscricao.id, { diaApresentacao: novoDia });
-          }
+            // ── PASSO 3: SALVAR NO DESTINO PRIMEIRO (write before delete) ────
+            const coroParaMover = JSON.parse(JSON.stringify(coro));
+            if(temVagaNoBloco){
+              todosCronogramas[novoDia].coros.push(coroParaMover);
+            }
+            await window.firebaseDataLayer.salvarCronogramaDoDia(novoDia, todosCronogramas[novoDia]);
 
-          // Gerar mensagem WhatsApp se tiver telefone
-          if(inscricao && inscricao.telefoneRegente){
+            // ── PASSO 4: só agora remove da origem ───────────────────────────
+            const corosOrigem = JSON.parse(JSON.stringify(cronogramaEdicaoAtual.coros || []));
+            corosOrigem.splice(idx, 1);
+            todosCronogramas[cronogramaDiaAtual] = {
+              ...todosCronogramas[cronogramaDiaAtual],
+              coros: corosOrigem
+            };
+            await window.firebaseDataLayer.salvarCronogramaDoDia(cronogramaDiaAtual, todosCronogramas[cronogramaDiaAtual]);
+
+            // ── PASSO 5: atualizar cache local e estado de edição ────────────
+            cacheCronograma = todosCronogramas;
+            cronogramaEdicaoAtual = todosCronogramas[cronogramaDiaAtual];
+
+            // ── PASSO 6: atualizar diaApresentacao na inscrição ──────────────
+            if(inscricao && inscricao.id){
+              await window.firebaseDataLayer.updateInscricao(inscricao.id, { diaApresentacao: novoDia });
+            }
+
+            modalMover.classList.add('hidden');
+
+            // ── PASSO 7: WhatsApp opcional ───────────────────────────────────
             const novoDiaData = PROGRAMACAO_DATA.find(d => d.id === novoDia);
-            const tel = inscricao.telefoneRegente.replace(/\D/g,'');
-            const msg = encodeURIComponent(
-              'Olá, ' + inscricao.nomeRegente + '! 📅\n\n' +
-              'Informamos que houve uma alteração na programação do VII ENCoros 2026.\n\n' +
-              '🔄 *Mudança de data para ' + escapeHtml(inscricao.nomeCoro) + '*\n' +
-              '• Nova data: ' + (novoDiaData ? novoDiaData.diaSemana + ', ' + novoDiaData.data : novoDia) + '\n\n' +
-              'Qualquer dúvida, estamos à disposição!\n' +
-              'Organização VII ENCoros 2026'
-            );
-            window.open('https://wa.me/55' + tel + '?text=' + msg, '_blank');
-          }
+            const destLabel = novoDiaData ? novoDiaData.diaSemana + ', ' + novoDiaData.data : novoDia;
+            const blocoInfo = temVagaNoBloco ? 'alocado no bloco' : 'na lista do dia (sem vaga no bloco ainda)';
+            if(inscricao && inscricao.telefoneRegente){
+              const tel = inscricao.telefoneRegente.replace(/\D/g,'');
+              const msg = encodeURIComponent(
+                'Olá, ' + inscricao.nomeRegente + '! 📅\n\n' +
+                'Informamos que houve uma alteração na programação do VII ENCoros 2026.\n\n' +
+                '🔄 *Mudança de data para ' + escapeHtml(inscricao.nomeCoro) + '*\n' +
+                '• Nova data: ' + destLabel + '\n\n' +
+                'Qualquer dúvida, estamos à disposição!\n' +
+                'Organização VII ENCoros 2026'
+              );
+              if(confirm('✅ Coro movido para ' + destLabel + ' (' + blocoInfo + ')!\n\nDeseja avisar o regente pelo WhatsApp?')){
+                window.open('https://wa.me/55' + tel + '?text=' + msg, '_blank');
+              }
+            } else {
+              alert('✅ Coro movido para ' + destLabel + ' (' + blocoInfo + ')!');
+            }
 
-          cronogramaEditandoAtivo = false;
-          renderCronogramaAdmin();
+          } catch(err){
+            console.error('Erro ao mover coro:', err);
+            alert('❌ Erro ao mover coro. Verifique sua conexão e tente novamente.\n\nNENHUM dado foi perdido — a operação foi abortada.\n\nDetalhes: ' + err.message);
+          } finally {
+            cronogramaEditandoAtivo = false;
+            renderCronogramaAdmin();
+          }
         };
       });
     });
