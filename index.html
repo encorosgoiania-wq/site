@@ -4923,7 +4923,6 @@
     const idsNoBloco = new Set(cronogramaEdicaoAtual.coros.filter(c => c.inscricaoId).map(c => c.inscricaoId));
 
     const disponiveis = inscricoes.filter(i =>
-      i.modalidade === 'Presencial' &&
       i.diaApresentacao === cronogramaDiaAtual &&
       i.status !== 'Rejeitado' &&
       !i.isInstitucional &&
