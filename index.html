@@ -776,6 +776,13 @@
           </p>
         </div>
 
+        <!-- Mensagem de inscrições encerradas (Etapa 1) -->
+        <div id="msgInscricaoEncerrada" class="hidden card-soft p-6 mb-8 border-2 border-red-300 bg-red-50 text-center">
+          <p class="text-2xl mb-2">🔒</p>
+          <h2 class="font-bold text-red-800 text-lg mb-1">Inscrições encerradas</h2>
+          <p class="text-red-700 text-sm">O prazo para inscrições preliminares foi encerrado. Entre em contato: encorosgoiania@gmail.com</p>
+        </div>
+
         <form id="formInscricaoPreliminar" class="space-y-12" novalidate>
           <input type="hidden" name="fluxoInscricao" id="fluxoInscricaoInput" value="novo">
 
@@ -1004,6 +1011,13 @@
           <div class="card-soft p-5 sm:p-6 mb-10 border-2 border-red-300 bg-red-50">
             <h2 class="text-sm font-bold text-red-800 mb-1">Prazo final: <span data-config-etapa2-prazo>07 de agosto de 2026</span> — impreterivelmente</h2>
             <p class="text-sm text-red-700 leading-relaxed">Sua inscrição preliminar já foi aprovada. Complete os dados abaixo até o prazo para garantir sua participação no VII ENCoros 2026.</p>
+          </div>
+
+          <!-- Mensagem de prazo encerrado (Etapa 2) -->
+          <div id="msgEtapa2Encerrada" class="hidden card-soft p-6 mb-8 border-2 border-red-300 bg-red-50 text-center">
+            <p class="text-2xl mb-2">🔒</p>
+            <h2 class="font-bold text-red-800 text-lg mb-1">Prazo encerrado</h2>
+            <p class="text-red-700 text-sm">O prazo para envio do repertório foi encerrado. Entre em contato: encorosgoiania@gmail.com</p>
           </div>
 
           <form id="formConfirmacao" class="space-y-12" novalidate>
@@ -2952,6 +2966,30 @@
 
   // ---------- ELEMENTOS: MODO PRELIMINAR (Etapa 1) ----------
   const inscricaoModoPreliminar = document.getElementById('inscricaoModoPreliminar');
+
+  // Aplica bloqueio de inscrições conforme config do evento
+  function aplicarBloqueioInscricoes(){
+    // Etapa 1
+    const msgEncerradaE1 = document.getElementById('msgInscricaoEncerrada');
+    const formE1 = document.getElementById('formInscricaoPreliminar');
+    if(!configEvento.etapa1Aberta){
+      if(msgEncerradaE1) msgEncerradaE1.classList.remove('hidden');
+      if(formE1) formE1.classList.add('hidden');
+    } else {
+      if(msgEncerradaE1) msgEncerradaE1.classList.add('hidden');
+      if(formE1) formE1.classList.remove('hidden');
+    }
+    // Etapa 2
+    const msgEncerradaE2 = document.getElementById('msgEtapa2Encerrada');
+    const formE2 = document.getElementById('formConfirmacao');
+    if(!configEvento.etapa2Aberta){
+      if(msgEncerradaE2) msgEncerradaE2.classList.remove('hidden');
+      if(formE2) formE2.classList.add('hidden');
+    } else {
+      if(msgEncerradaE2) msgEncerradaE2.classList.add('hidden');
+      if(formE2) formE2.classList.remove('hidden');
+    }
+  }
   const formPreliminar = document.getElementById('formInscricaoPreliminar');
 
   // Autocomplete do campo "Nome do Coro" — a partir do 3º caractere,
@@ -3824,8 +3862,6 @@
       }
     });
   }
-  iniciarPainelConfig();
-
   adminLoginForm.addEventListener('submit', function(e){
     e.preventDefault();
     const user = document.getElementById('adminUser').value.trim();
@@ -5853,6 +5889,10 @@
         if(cfg) {
           configEvento = { ...configEvento, ...cfg };
           aplicarDatasNaTela();
+          aplicarBloqueioInscricoes();
+          iniciarPainelConfig();
+        } else {
+          iniciarPainelConfig();
         }
       } catch(e) { /* usa defaults se falhar */ }
       await garantirSeedInstitucionais();
