@@ -450,11 +450,11 @@
           <div class="mt-4 grid sm:grid-cols-2 gap-3">
             <div class="bg-amber-50 border border-amber-300 rounded-lg px-4 py-3">
               <span class="text-xs font-bold uppercase tracking-wide text-amber-800">Prazo de inscrição</span>
-              <p class="text-amber-900 font-semibold text-lg mt-0.5">até 31 de julho de 2026</p>
+              <p class="text-amber-900 font-semibold text-lg mt-0.5">até <span data-config-etapa1-prazo>31 de julho de 2026</span></p>
             </div>
             <div class="bg-red-50 border border-red-300 rounded-lg px-4 py-3">
               <span class="text-xs font-bold uppercase tracking-wide text-red-800">Envio do repertório</span>
-              <p class="text-red-900 font-semibold text-lg mt-0.5">até 07 de agosto de 2026 — impreterivelmente</p>
+              <p class="text-red-900 font-semibold text-lg mt-0.5">até <span data-config-etapa2-prazo>07 de agosto de 2026</span> — impreterivelmente</p>
             </div>
           </div>
         </article>
@@ -743,11 +743,11 @@
           <div class="grid sm:grid-cols-2 gap-3 mt-4">
             <div class="bg-amber-50 border border-amber-300 rounded-lg px-3 py-2.5">
               <span class="text-[11px] font-bold uppercase tracking-wide text-amber-800">Inscrição preliminar até</span>
-              <p class="text-amber-900 font-bold">31 de julho de 2026</p>
+              <p class="text-amber-900 font-bold"><span data-config-etapa1-prazo>31 de julho de 2026</span></p>
             </div>
             <div class="bg-red-50 border border-red-300 rounded-lg px-3 py-2.5">
               <span class="text-[11px] font-bold uppercase tracking-wide text-red-800">Repertório (após aprovação) até</span>
-              <p class="text-red-900 font-bold">07 de agosto de 2026</p>
+              <p class="text-red-900 font-bold"><span data-config-etapa2-prazo>07 de agosto de 2026</span></p>
             </div>
           </div>
         </div>
@@ -1002,7 +1002,7 @@
         <div class="max-w-3xl mx-auto px-6 py-16">
 
           <div class="card-soft p-5 sm:p-6 mb-10 border-2 border-red-300 bg-red-50">
-            <h2 class="text-sm font-bold text-red-800 mb-1">Prazo final: 07 de agosto de 2026 — impreterivelmente</h2>
+            <h2 class="text-sm font-bold text-red-800 mb-1">Prazo final: <span data-config-etapa2-prazo>07 de agosto de 2026</span> — impreterivelmente</h2>
             <p class="text-sm text-red-700 leading-relaxed">Sua inscrição preliminar já foi aprovada. Complete os dados abaixo até o prazo para garantir sua participação no VII ENCoros 2026.</p>
           </div>
 
@@ -1238,6 +1238,34 @@
 
       <!-- ===== SUB-ABA: INSCRIÇÕES ===== -->
       <div id="adminSubviewInscricoes">
+
+        <!-- CONFIGURAÇÃO DE DATAS -->
+        <div class="card-soft p-5 sm:p-6 mb-8 border-2" style="border-color:var(--azul-petroleo)">
+          <h2 class="text-sm font-bold mb-1" style="color:var(--azul-petroleo)">⚙️ Datas de inscrição</h2>
+          <p class="text-xs text-gray-500 mb-4">Altere as datas exibidas no site e controle se as inscrições estão abertas. As mudanças são salvas em tempo real.</p>
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="text-xs font-bold text-gray-700 block mb-1">Prazo Etapa 1 (inscrição preliminar)</label>
+              <input type="text" id="configEtapa1Prazo" class="input-field text-sm" placeholder="ex: 31 de julho de 2026">
+              <div class="flex items-center gap-2 mt-2">
+                <input type="checkbox" id="configEtapa1Aberta" class="w-4 h-4 accent-amber-600">
+                <label for="configEtapa1Aberta" class="text-xs text-gray-700">Inscrições Etapa 1 abertas</label>
+              </div>
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-700 block mb-1">Prazo Etapa 2 (repertório)</label>
+              <input type="text" id="configEtapa2Prazo" class="input-field text-sm" placeholder="ex: 07 de agosto de 2026">
+              <div class="flex items-center gap-2 mt-2">
+                <input type="checkbox" id="configEtapa2Aberta" class="w-4 h-4 accent-amber-600">
+                <label for="configEtapa2Aberta" class="text-xs text-gray-700">Inscrições Etapa 2 abertas</label>
+              </div>
+            </div>
+          </div>
+          <button type="button" id="btnSalvarConfig" class="btn-gold px-6 py-2.5 rounded-full text-sm font-bold">
+            💾 Salvar configurações
+          </button>
+          <span id="configSalvoMsg" class="hidden text-xs text-green-700 ml-3">✓ Salvo!</span>
+        </div>
 
         <!-- LINK PÚBLICO DE DIVULGAÇÃO -->
         <div class="card-soft p-5 sm:p-6 mb-8 border-2" style="border-color:var(--dourado)">
@@ -1642,6 +1670,7 @@
 
   const COL_INSCRICOES = 'encoros2026_inscricoes';
   const COL_CRONOGRAMA = 'encoros2026_cronograma';
+  const COL_CONFIG = 'encoros2026_config';
 
   // ---------- INSCRIÇÕES ----------
 
@@ -1768,6 +1797,18 @@
     });
   }
 
+  // ---------- CONFIG DO EVENTO ----------
+  async function fsGetConfig(){
+    try {
+      const snap = await getDoc(doc(db, COL_CONFIG, 'datas'));
+      if(snap.exists()) return snap.data();
+    } catch(e) {}
+    return null;
+  }
+  async function fsSalvarConfig(dados){
+    await setDoc(doc(db, COL_CONFIG, 'datas'), dados, { merge: true });
+  }
+
   // Expõe as funções no escopo global (window), para que o script principal
   // (não-módulo, mais abaixo) consiga chamá-las normalmente.
   window.firebaseDataLayer = {
@@ -1787,6 +1828,8 @@
     updatePostBlog: fsUpdatePostBlog,
     deletePostBlog: fsDeletePostBlog,
     escutarPostsBlog: fsEscutarPostsBlog,
+    getConfig: fsGetConfig,
+    salvarConfig: fsSalvarConfig,
     pronto: true
   };
 
@@ -1948,6 +1991,13 @@
   let firebasePronto = false;
   let onCacheAtualizadoCallback = null; // setado depois, pela UI (re-renderiza a tela atual)
   let cronogramaEditandoAtivo = false; // bloqueia onSnapshot durante saves ativos
+  // Config do evento (datas de Etapa 1 e Etapa 2) — carregada do Firestore no init
+  let configEvento = {
+    etapa1Prazo: '31 de julho de 2026',
+    etapa2Prazo: '07 de agosto de 2026',
+    etapa1Aberta: true,
+    etapa2Aberta: true
+  };
 
   function aoFirebaseEstarPronto(){
     return new Promise(resolve=>{
@@ -2809,7 +2859,7 @@
         ? '\n📍 Como chegar: ' + cronogramaEdicaoAtual.linkMapa
         : '',
       LINK_ETAPA2: linkEtapa2,
-      PRAZO_REPERTORIO: '07 de agosto de 2026',
+      PRAZO_REPERTORIO: configEvento.etapa2Prazo,
       DIAS_RESTANTES: diasRestantes !== null ? String(diasRestantes) : '?',
       DATA_EVENTO_CURTA: dia ? dia.data : ''
     };
@@ -3734,6 +3784,47 @@
       });
     });
   }
+
+  // ---------- PAINEL CONFIG DATAS ----------
+  function iniciarPainelConfig(){
+    const inputE1 = document.getElementById('configEtapa1Prazo');
+    const inputE2 = document.getElementById('configEtapa2Prazo');
+    const checkE1 = document.getElementById('configEtapa1Aberta');
+    const checkE2 = document.getElementById('configEtapa2Aberta');
+    const btnSalvar = document.getElementById('btnSalvarConfig');
+    const msgSalvo = document.getElementById('configSalvoMsg');
+    if(!inputE1 || !btnSalvar) return;
+
+    // Popula campos com valores atuais
+    inputE1.value = configEvento.etapa1Prazo;
+    inputE2.value = configEvento.etapa2Prazo;
+    checkE1.checked = configEvento.etapa1Aberta !== false;
+    checkE2.checked = configEvento.etapa2Aberta !== false;
+
+    btnSalvar.addEventListener('click', async function(){
+      const novaConfig = {
+        etapa1Prazo: inputE1.value.trim() || configEvento.etapa1Prazo,
+        etapa2Prazo: inputE2.value.trim() || configEvento.etapa2Prazo,
+        etapa1Aberta: checkE1.checked,
+        etapa2Aberta: checkE2.checked
+      };
+      btnSalvar.disabled = true;
+      btnSalvar.textContent = 'Salvando...';
+      try {
+        await window.firebaseDataLayer.salvarConfig(novaConfig);
+        configEvento = novaConfig;
+        aplicarDatasNaTela();
+        msgSalvo.classList.remove('hidden');
+        setTimeout(() => msgSalvo.classList.add('hidden'), 3000);
+      } catch(e) {
+        alert('Erro ao salvar: ' + e.message);
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = '💾 Salvar configurações';
+      }
+    });
+  }
+  iniciarPainelConfig();
 
   adminLoginForm.addEventListener('submit', function(e){
     e.preventDefault();
@@ -5658,6 +5749,17 @@
     });
   }
 
+  // ---------- CONFIG DO EVENTO — DATAS ----------
+  function aplicarDatasNaTela(){
+    // Atualiza todos os elementos com data-config para refletir os valores atuais
+    document.querySelectorAll('[data-config-etapa1-prazo]').forEach(el => {
+      el.textContent = configEvento.etapa1Prazo;
+    });
+    document.querySelectorAll('[data-config-etapa2-prazo]').forEach(el => {
+      el.textContent = configEvento.etapa2Prazo;
+    });
+  }
+
   // ---------- INICIALIZAÇÃO ----------
   atualizarBotao();
 
@@ -5745,6 +5847,14 @@
   async function iniciarApp(){
     try{
       await inicializarSincronizacaoFirebase();
+      // Carrega configurações do evento (datas de inscrição)
+      try {
+        const cfg = await window.firebaseDataLayer.getConfig();
+        if(cfg) {
+          configEvento = { ...configEvento, ...cfg };
+          aplicarDatasNaTela();
+        }
+      } catch(e) { /* usa defaults se falhar */ }
       await garantirSeedInstitucionais();
       await garantirSeedCronograma();
       await enviarEmailsPendentesEtapa2();
