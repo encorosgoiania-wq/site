@@ -5491,10 +5491,17 @@
       });
     });
 
-    // listeners: remover do bloco (apenas coros não-fixos)
+    // listeners: remover do bloco (incluindo fixos)
     cronogramaOrdemLista.querySelectorAll('.btnRemoverDoBloco').forEach(btn=>{
       btn.addEventListener('click', function(){
         const idx = Number(this.dataset.idx);
+        const coro = cronogramaEdicaoAtual.coros[idx];
+        if(coro && coro.fixo){
+          if(!cronogramaEdicaoAtual.corosFixosRemovidos) cronogramaEdicaoAtual.corosFixosRemovidos = [];
+          if(!cronogramaEdicaoAtual.corosFixosRemovidos.includes(coro.nomeCoro)){
+            cronogramaEdicaoAtual.corosFixosRemovidos.push(coro.nomeCoro);
+          }
+        }
         cronogramaEdicaoAtual.coros.splice(idx, 1);
         renderOrdemBloco();
         renderCorosDisponiveis();
@@ -5632,6 +5639,7 @@
         horarioInicioMinutos: cronogramaEdicaoAtual.horarioInicioMinutos ?? null,
         horarioTerminoMinutos: cronogramaEdicaoAtual.horarioTerminoMinutos ?? null,
         coros: cronogramaEdicaoAtual.coros,
+        corosFixosRemovidos: cronogramaEdicaoAtual.corosFixosRemovidos || [],
         atualizadoEm: new Date().toISOString()
       };
       salvarCronogramaData(todosCronogramas);
