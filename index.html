@@ -2353,6 +2353,10 @@
       checkAdminSession();
     }
 
+    if(viewName === 'inscricao'){
+      aplicarBloqueioInscricoes();
+    }
+
     if(viewName === 'programacao'){
       renderPainelMacro();
       renderCarrosselDia();
@@ -3852,6 +3856,7 @@
         await window.firebaseDataLayer.salvarConfig(novaConfig);
         configEvento = novaConfig;
         aplicarDatasNaTela();
+        aplicarBloqueioInscricoes();
         msgSalvo.classList.remove('hidden');
         setTimeout(() => msgSalvo.classList.add('hidden'), 3000);
       } catch(e) {
