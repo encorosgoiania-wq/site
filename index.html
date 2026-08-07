@@ -5457,6 +5457,16 @@
               await window.firebaseDataLayer.updateInscricao(inscricao.id, { diaApresentacao: novoDia });
             }
 
+            // ── PASSO 6b: se for fixo institucional, garante que aparece no bloco destino ──
+            if(coro.fixo && !temVagaNoBloco){
+              const jaNoDestino = todosCronogramas[novoDia].coros.some(c => c.nomeCoro === coro.nomeCoro);
+              if(!jaNoDestino){
+                todosCronogramas[novoDia].coros.push(coroParaMover);
+                await window.firebaseDataLayer.salvarCronogramaDoDia(novoDia, todosCronogramas[novoDia]);
+                cacheCronograma = todosCronogramas;
+              }
+            }
+
             modalMover.classList.add('hidden');
 
             // ── PASSO 7: WhatsApp opcional ───────────────────────────────────
