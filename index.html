@@ -2119,13 +2119,19 @@
   // (otimista), para a tela refletir a mudança imediatamente sem esperar
   // round-trip do servidor.
   async function salvarCronogramaData(dataCompleta){
+    cronogramaEditandoAtivo = true; // bloqueia onSnapshot durante o save
     cacheCronograma = dataCompleta;
     const fdl = window.firebaseDataLayer;
-    // Salva cada dia presente no objeto como um documento separado
     const promessas = Object.keys(dataCompleta).map(diaId =>
       fdl.salvarCronogramaDoDia(diaId, dataCompleta[diaId])
     );
-    await Promise.all(promessas);
+    try {
+      await Promise.all(promessas);
+    } finally {
+      // Libera onSnapshot 3s após o save — tempo suficiente para o eco do
+      // Firestore chegar e ser ignorado, sem bloquear updates legítimos.
+      setTimeout(() => { cronogramaEditandoAtivo = false; }, 3000);
+    }
   }
 
   // Retorna o cronograma salvo de um dia específico, ou null se não houver
@@ -2208,24 +2214,25 @@
     let alterou = false;
 
     PROGRAMACAO_DATA.forEach(dia => {
-      if((dia.corosFixos || []).length === 0) return; // só dias com institucionais
+      if((dia.corosFixos || []).length === 0) return;
 
       if(!todosCronogramas[dia.id]){
-        // Nenhum cronograma salvo ainda para este dia: cria do zero
+        // Dia sem nenhum cronograma salvo: cria seed do zero
         todosCronogramas[dia.id] = gerarCronogramaSeed(dia.id);
         alterou = true;
         return;
       }
 
-      // Já existe cronograma salvo (possivelmente customizado pelo admin com
-      // coros amadores adicionados manualmente). Não mexemos na ordem nem nos
-      // coros amadores — só sincronizamos os campos dos itens FIXOS (duração e
-      // a flag "anfitriao") com o que está definido em PROGRAMACAO_DATA.corosFixos,
-      // para que ajustes feitos aqui no código (como marcar um coro como
-      // anfitrião) sempre se reflitam, mesmo em cronogramas já salvos antes.
       const cronoExistente = todosCronogramas[dia.id];
+      const temAmadores = (cronoExistente.coros || []).some(c => !c.fixo && !c.livre);
+
+      // SE já tem coros amadores no cronograma, não tocamos em NADA.
+      // O admin montou esse cronograma manualmente — é intocável.
+      if(temAmadores) return;
+
+      // Só sincroniza duração/anfitrião dos fixos quando não há amadores
       cronoExistente.coros.forEach(item => {
-        if(!item.fixo) return; // não mexe em coros amadores
+        if(!item.fixo) return;
         const definicaoAtual = dia.corosFixos.find(c => c.nomeCoro === item.nomeCoro);
         if(!definicaoAtual) return;
         if(item.anfitriao !== !!definicaoAtual.anfitriao){
@@ -5562,7 +5569,6 @@
         const h = parseInt(parts[0]), m = parseInt(parts[1]);
         if(isNaN(h) || isNaN(m)) return;
         cronogramaEdicaoAtual[prop] = h * 60 + m;
-        cronogramaEditandoAtivo = true;
         renderOrdemBloco();
       });
     });
