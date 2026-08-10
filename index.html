@@ -1047,7 +1047,7 @@
 
               <div class="bg-amber-50 border border-amber-300 text-amber-800 text-sm rounded-lg px-4 py-3 mb-5 flex gap-2">
                 <span class="font-bold">⚠ Atenção:</span>
-                <span>A soma da duração de todas as obras deve estar dentro do limite de 15 minutos, incluindo entrada e saída de palco.</span>
+                <span id="avisoTempoRepertorio">A soma da duração de todas as obras deve estar dentro do limite de 15 minutos, incluindo entrada e saída de palco.</span>
               </div>
 
               <div id="repertorioLista" class="space-y-4"></div>
@@ -3665,14 +3665,27 @@
     } else {
       secaoPresencial.classList.remove('hidden');
       secaoVirtual.classList.add('hidden');
+
+      // Ajusta limite de tempo conforme coro institucional
+      const seedInst = inscricao.isInstitucional
+        ? COROS_INSTITUCIONAIS_SEED.find(s => s.nomeCoro === inscricao.nomeCoro)
+        : null;
+      const limiteTempo = seedInst ? seedInst.duracaoMinutos : 15;
+
+      // Atualiza aviso de tempo no formulário
+      const avisoTempoRepertorio = document.getElementById('avisoTempoRepertorio');
+      if(avisoTempoRepertorio){
+        avisoTempoRepertorio.textContent = 'A soma da duração de todas as obras deve estar dentro do limite de ' + limiteTempo + ' minutos, incluindo entrada e saída de palco.';
+      }
+
       // Pré-popula repertório ECAD
       repertorioLista.innerHTML = '';
       if(inscricao.obrasRepertorio && inscricao.obrasRepertorio.length > 0){
-        inscricao.obrasRepertorio.forEach(o => criarLinhaObra(o));
+        inscricao.obrasRepertorio.forEach(o => criarLinhaObra(o, limiteTempo));
       } else {
-        criarLinhaObra();
+        criarLinhaObra(null, limiteTempo);
       }
-      atualizarDuracaoTotalRepertorio();
+      atualizarDuracaoTotalRepertorio(limiteTempo);
     }
 
     return true;
@@ -3681,7 +3694,8 @@
   // ---------- REPERTÓRIO TÉCNICO (CAMPOS ECAD) — usado na Etapa 2 ----------
   let obraCounter = 0;
 
-  function criarLinhaObra(valoresIniciais){
+  function criarLinhaObra(valoresIniciais, limiteTempo){
+    const maxDuracao = limiteTempo || 15;
     obraCounter++;
     const id = 'obra' + obraCounter;
     const div = document.createElement('div');
@@ -3706,7 +3720,7 @@
         </div>
         <div>
           <label class="label-field text-xs">Duração (minutos) *</label>
-          <input required type="number" min="1" max="15" step="1" class="input-field obra-duracao" placeholder="Ex: 4">
+          <input required type="number" min="1" max="${maxDuracao}" step="1" class="input-field obra-duracao" placeholder="Ex: 4">
         </div>
       </div>
     `;
@@ -3728,15 +3742,18 @@
     return div;
   }
 
-  function atualizarDuracaoTotalRepertorio(){
+  let limiteTempoRepertorioAtual = 15; // atualizado ao carregar etapa 2
+
+  function atualizarDuracaoTotalRepertorio(novoLimite){
+    if(novoLimite !== undefined) limiteTempoRepertorioAtual = novoLimite;
     let total = 0;
     repertorioLista.querySelectorAll('.obra-duracao').forEach(inp => {
       const v = parseFloat(inp.value);
       if(!isNaN(v)) total += v;
     });
     duracaoTotalRepertorioEl.textContent = total + ' min';
-    duracaoTotalRepertorioEl.className = total > 15 ? 'font-bold text-red-600' : 'font-bold';
-    if(total <= 15) duracaoTotalRepertorioEl.style.color = 'var(--azul-petroleo)';
+    duracaoTotalRepertorioEl.className = total > limiteTempoRepertorioAtual ? 'font-bold text-red-600' : 'font-bold';
+    if(total <= limiteTempoRepertorioAtual) duracaoTotalRepertorioEl.style.color = 'var(--azul-petroleo)';
     else duracaoTotalRepertorioEl.style.removeProperty('color');
   }
 
@@ -3835,8 +3852,13 @@
           return;
         }
         const duracaoTotal = obras.reduce((acc, o) => acc + o.duracaoMinutos, 0);
-        if(duracaoTotal > 15){
-          mostrarMensagem(confirmacaoMsg, 'A duração total (' + duracaoTotal + ' min) ultrapassa o limite de 15 minutos.', 'erro');
+        const inscricaoAtualParaLimite = getInscricoes().find(i => i.id === inscricaoEmConfirmacaoId);
+        const seedInst = inscricaoAtualParaLimite?.isInstitucional
+          ? COROS_INSTITUCIONAIS_SEED.find(s => s.nomeCoro === inscricaoAtualParaLimite.nomeCoro)
+          : null;
+        const limiteTempo = seedInst ? seedInst.duracaoMinutos : 15;
+        if(duracaoTotal > limiteTempo){
+          mostrarMensagem(confirmacaoMsg, 'A duração total (' + duracaoTotal + ' min) ultrapassa o limite de ' + limiteTempo + ' minutos para este coro.', 'erro');
           return;
         }
         camposAtualizados.obrasRepertorio = obras;
