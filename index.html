@@ -595,7 +595,7 @@
       <div class="mb-16">
         <div class="flex items-center justify-between mb-6 gap-4">
           <h2 class="font-serif-display text-2xl" style="color:var(--azul-petroleo)">Visão Geral da Semana</h2>
-          <button type="button" id="btnBaixarPDF" onclick="gerarPDFProgramacao()"
+          <button type="button" id="btnBaixarPDF"
             class="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border-2 transition hover:opacity-90"
             style="border-color:var(--azul-petroleo);color:var(--azul-petroleo);background:transparent"
             title="Baixar programação em PDF">
@@ -2448,37 +2448,53 @@
       const horarioInicio = cron.horarioInicio || '';
       const horarioTermino = cron.horarioTermino || '';
 
+      const horarioTexto = horarioInicio && horarioTermino
+        ? `${horarioInicio} às ${horarioTermino}`
+        : (horarioInicio || dia.horario || '');
+
+      const isVirtual = dia.id === 'segunda';
+
+      // Badge de dia com cor alternada
+      const badgeColor = isVirtual ? '#1e3a5f' : '#0F2027';
+
       const corosHtml = coros.length > 0
         ? coros.map((c, i) => {
             const h = c.horario || '';
-            return `<tr>
-              <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;color:#555;width:60px">${h}</td>
-              <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;font-weight:600;color:#0F2027">${c.nomeCoro || c.nome || ''}</td>
-              <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:12px;color:#888;width:60px;text-align:right">${c.duracaoMinutos ? c.duracaoMinutos + 'min' : ''}</td>
+            const isFixo = c.fixo || c.anfitriao || false;
+            const bgRow = i % 2 === 0 ? '#ffffff' : '#f8f7f4';
+            return `<tr style="background:${bgRow}">
+              <td style="padding:9px 14px;font-size:12px;color:#888;width:72px;border-bottom:1px solid #ede8de;font-family:monospace">${h}</td>
+              <td style="padding:9px 14px;font-size:13px;font-weight:700;color:#0F2027;border-bottom:1px solid #ede8de">
+                ${c.nomeCoro || c.nome || ''}
+                ${isFixo ? '<span style="font-size:10px;font-weight:600;color:#C5A059;margin-left:6px;letter-spacing:0.05em">ANFITRIÃO</span>' : ''}
+              </td>
+              <td style="padding:9px 14px;font-size:12px;color:#aaa;width:56px;text-align:right;border-bottom:1px solid #ede8de">${c.duracaoMinutos ? c.duracaoMinutos + 'min' : ''}</td>
             </tr>`;
           }).join('')
-        : `<tr><td colspan="3" style="padding:8px 10px;font-size:12px;color:#aaa;font-style:italic">Programação a definir</td></tr>`;
+        : `<tr><td colspan="3" style="padding:14px;font-size:12px;color:#bbb;font-style:italic;text-align:center">Programação a confirmar</td></tr>`;
 
-      const horarioTexto = horarioInicio && horarioTermino ? `${horarioInicio} – ${horarioTermino}` : (horarioInicio || dia.horario || '');
-      const localTexto = local || '';
-      const mapLink = linkMapa ? `<a href="${linkMapa}" style="color:#C5A059;font-size:11px">📍 Ver no mapa</a>` : '';
+      const localHtml = local
+        ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:#f0ece2;border-bottom:1px solid #e0d8c8">
+            <span style="font-size:13px">📍</span>
+            <span style="font-size:12px;color:#555;font-family:sans-serif">${local}</span>
+            ${linkMapa ? `<a href="${linkMapa}" style="font-size:11px;color:#C5A059;font-weight:600;text-decoration:none;margin-left:auto">Ver no mapa →</a>` : ''}
+           </div>`
+        : '';
 
       return `
-        <div style="margin-bottom:28px;break-inside:avoid">
-          <div style="background:#0F2027;color:#fff;border-radius:8px 8px 0 0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div style="margin-bottom:24px;break-inside:avoid;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.08)">
+          <div style="background:${badgeColor};padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
             <div>
-              <div style="font-size:10px;letter-spacing:0.15em;color:#D4AF37;text-transform:uppercase;font-weight:700">${dia.diaSemana}</div>
-              <div style="font-size:18px;font-weight:700;margin-top:2px">${dia.data} de 2026</div>
+              <div style="font-size:10px;letter-spacing:0.18em;color:#D4AF37;text-transform:uppercase;font-weight:700;font-family:sans-serif">${dia.diaSemana}</div>
+              <div style="font-size:20px;font-weight:700;color:#fff;margin-top:3px;font-family:Georgia,serif">${dia.data} de 2026</div>
             </div>
             <div style="text-align:right">
-              <div style="font-size:12px;color:#D4AF37;font-weight:600">${dia.titulo}</div>
-              <div style="font-size:11px;color:#ccc;margin-top:2px">${horarioTexto}</div>
+              <div style="font-size:12px;color:#D4AF37;font-weight:700;font-family:sans-serif;letter-spacing:0.03em">${dia.titulo}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:4px;font-family:sans-serif">${horarioTexto}</div>
             </div>
           </div>
-          <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;overflow:hidden">
-            ${localTexto ? `<div style="padding:6px 12px;background:#f9f6ef;font-size:11px;color:#666;border-bottom:1px solid #eee">${localTexto} ${mapLink}</div>` : ''}
-            <table style="width:100%;border-collapse:collapse">${corosHtml}</table>
-          </div>
+          ${localHtml}
+          <table style="width:100%;border-collapse:collapse">${corosHtml}</table>
         </div>`;
     }).join('');
 
@@ -2486,43 +2502,62 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Programação — VII ENCoros 2026</title>
+<title>Programação Oficial — VII ENCoros 2026</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Georgia, 'Times New Roman', serif; color: #222; background: #fff; padding: 32px; max-width: 800px; margin: 0 auto; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color:#1a1a1a; background:#fafaf8; }
+  .page { max-width:760px; margin:0 auto; padding:40px 32px; }
+  .topo { background:#0F2027; padding:28px 32px; max-width:760px; margin:0 auto 0; }
+  .topo-inner { display:flex; justify-content:space-between; align-items:flex-end; }
+  .evento-label { font-size:10px; letter-spacing:0.25em; color:#D4AF37; text-transform:uppercase; font-weight:700; font-family:sans-serif; }
+  .evento-titulo { font-size:30px; font-weight:700; color:#fff; margin-top:4px; }
+  .evento-sub { font-size:12px; color:rgba(255,255,255,0.5); margin-top:6px; font-family:sans-serif; }
+  .topo-right { text-align:right; font-family:sans-serif; }
+  .topo-right div { font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px; }
+  .divisor { height:4px; background:linear-gradient(90deg,#D4AF37,#C5A059); max-width:760px; margin:0 auto; }
+  .secao-titulo { font-size:11px; letter-spacing:0.2em; color:#C5A059; text-transform:uppercase; font-weight:700; font-family:sans-serif; margin:28px 0 14px; }
+  .footer { margin-top:36px; padding-top:16px; border-top:1px solid #e0d8c8; text-align:center; font-size:11px; color:#aaa; font-family:sans-serif; line-height:1.8; }
+  .btn-imprimir { display:flex; align-items:center; gap:8px; margin:0 auto 28px; padding:12px 32px; background:#0F2027; color:#D4AF37; border:none; border-radius:999px; font-size:14px; font-weight:700; cursor:pointer; font-family:sans-serif; letter-spacing:0.03em; }
   @media print {
-    body { padding: 0; }
-    .no-print { display: none; }
+    body { background:#fff; }
+    .topo { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .divisor { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .btn-imprimir { display:none; }
+    .page { padding:24px 20px; }
+    div[style*="box-shadow"] { box-shadow:none !important; border:1px solid #ddd; }
   }
-  h1 { font-size: 28px; color: #0F2027; }
-  .subtitulo { font-size: 13px; color: #888; margin-top: 4px; font-family: sans-serif; }
-  .header { border-bottom: 3px solid #D4AF37; padding-bottom: 16px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-end; }
-  .logo-text { font-size: 11px; color: #D4AF37; letter-spacing: 0.2em; text-transform: uppercase; font-family: sans-serif; font-weight: 700; }
-  .footer { margin-top: 32px; border-top: 1px solid #ddd; padding-top: 12px; font-size: 11px; color: #aaa; font-family: sans-serif; text-align: center; }
-  .btn-print { display: block; margin: 0 auto 24px; padding: 10px 28px; background: #0F2027; color: #D4AF37; border: none; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: sans-serif; }
 </style>
 </head>
 <body>
-  <button class="btn-print no-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-  <div class="header">
-    <div>
-      <div class="logo-text">VII ENCoros 2026</div>
-      <h1>Programação Oficial</h1>
-      <p class="subtitulo">03 a 07 de setembro de 2026 · Goiânia, Goiás · Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
-    </div>
-    <div style="text-align:right;font-family:sans-serif">
-      <div style="font-size:11px;color:#888">encorosgoiania@gmail.com</div>
-      <div style="font-size:11px;color:#888">encorosgoiania-wq.github.io/site</div>
+  <div class="topo">
+    <div class="topo-inner">
+      <div>
+        <div class="evento-label">VII Encontro Nacional de Coros</div>
+        <div class="evento-titulo">ENCoros 2026</div>
+        <div class="evento-sub">Goiânia, Goiás · 03 a 07 de setembro de 2026</div>
+      </div>
+      <div class="topo-right">
+        <div>encorosgoiania@gmail.com</div>
+        <div>(62) 99154-6757</div>
+        <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3)">Gerado em ${new Date().toLocaleString('pt-BR')}</div>
+      </div>
     </div>
   </div>
-  ${diasHtml}
-  <div class="footer">
-    VII Encontro Nacional de Coros de Goiânia · Participação gratuita · Goiânia, GO
+  <div class="divisor"></div>
+  <div class="page">
+    <button class="btn-imprimir" onclick="window.print()">🖨️ &nbsp;Imprimir / Salvar como PDF</button>
+    <div class="secao-titulo">Programação Oficial</div>
+    ${diasHtml}
+    <div class="footer">
+      VII ENCoros 2026 · Participação gratuita · Escola do Futuro em Artes Basileu França · Goiânia, GO<br>
+      encorosgoiania@gmail.com · (62) 99154-6757
+    </div>
   </div>
 </body>
 </html>`;
 
     const win = window.open('', '_blank');
+    if(!win){ alert('Permita pop-ups para este site e tente novamente.'); return; }
     win.document.write(html);
     win.document.close();
     win.focus();
@@ -2864,6 +2899,9 @@
   function fecharModalSugerirPost(){
     modalSugerirPost.classList.add('hidden');
   }
+
+  const btnBaixarPDF = document.getElementById('btnBaixarPDF');
+  if(btnBaixarPDF) btnBaixarPDF.addEventListener('click', gerarPDFProgramacao);
 
   if(btnAbrirSugerirPost) btnAbrirSugerirPost.addEventListener('click', abrirModalSugerirPost);
   if(btnFecharModalSugerirPost) btnFecharModalSugerirPost.addEventListener('click', fecharModalSugerirPost);
