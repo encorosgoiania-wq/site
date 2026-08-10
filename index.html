@@ -240,7 +240,7 @@
           VII ENCoros <span class="block sm:inline text-gradient-gold">— Encontro Nacional</span><br class="hidden sm:block">
           de Coros de Goiânia
         </h1>
-        <p class="mt-6 text-lg sm:text-xl text-gray-300 font-light">De 04 a 07 de setembro de 2026 · Goiânia, Goiás</p>
+        <p class="mt-6 text-lg sm:text-xl text-gray-300 font-light">De 03 a 07 de setembro de 2026 · Goiânia, Goiás</p>
 
         <div class="staff-divider w-40 mx-auto my-10 opacity-70"></div>
 
@@ -389,7 +389,7 @@
             <span class="font-serif-display text-2xl text-gold">Art. 1º</span>
           </div>
           <p class="text-gray-700 leading-relaxed">
-            O VII Encontro Nacional de Coros de Goiânia – ENCoros é um evento independente e interinstitucional, a ser realizado de 04 a 07 de setembro de 2026, na cidade de Goiânia, Goiás.
+            O VII Encontro Nacional de Coros de Goiânia – ENCoros é um evento independente e interinstitucional, a ser realizado de 03 a 07 de setembro de 2026, na cidade de Goiânia, Goiás.
           </p>
           <div class="mt-4 pl-5 border-l-2 border-gray-200 space-y-3">
             <p class="text-gray-700 leading-relaxed text-[0.97rem]">
@@ -593,7 +593,18 @@
 
       <!-- PAINEL MACRO: GRADE 5 COLUNAS -->
       <div class="mb-16">
-        <h2 class="font-serif-display text-2xl mb-6 text-center" style="color:var(--azul-petroleo)">Visão Geral da Semana</h2>
+        <div class="flex items-center justify-between mb-6 gap-4">
+          <h2 class="font-serif-display text-2xl" style="color:var(--azul-petroleo)">Visão Geral da Semana</h2>
+          <button type="button" id="btnBaixarPDF" onclick="gerarPDFProgramacao()"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border-2 transition hover:opacity-90"
+            style="border-color:var(--azul-petroleo);color:var(--azul-petroleo);background:transparent"
+            title="Baixar programação em PDF">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 16l-4-4m4 4l4-4m-4 4V4M4 20h16"/>
+            </svg>
+            Baixar PDF
+          </button>
+        </div>
         <div id="painelMacro" class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
           <!-- preenchido via JS a partir de PROGRAMACAO_DATA -->
         </div>
@@ -1633,7 +1644,7 @@
     </div>
     <div>
       <h4 class="text-gold font-semibold mb-2 text-xs tracking-widest uppercase">Contato</h4>
-      <p class="text-gray-400">04 a 07 de setembro de 2026</p>
+      <p class="text-gray-400">03 a 07 de setembro de 2026</p>
       <p class="text-gray-400">Goiânia, Goiás</p>
     </div>
   </div>
@@ -1891,7 +1902,7 @@
     {
       id: 'quinta',
       diaSemana: 'Quinta-feira',
-      data: '04 de Setembro',
+      data: '03 de Setembro',
       horario: 'Início às 20h',
       horarioInicioMinutos: 20 * 60, // 20:00
       titulo: 'Concerto de Abertura',
@@ -2423,6 +2434,99 @@
     editionsDropdownMenuMobile.classList.toggle('hidden');
     editionsChevronMobile.classList.toggle('rotate-180');
   });
+
+  // ---------- GERAR PDF DA PROGRAMAÇÃO ----------
+  function gerarPDFProgramacao() {
+    const dias = PROGRAMACAO_DATA;
+    const cronCache = cacheCronograma || {};
+
+    const diasHtml = dias.map(dia => {
+      const cron = cronCache[dia.id] || {};
+      const coros = cron.coros || [];
+      const local = cron.local || '';
+      const linkMapa = cron.linkMapa || '';
+      const horarioInicio = cron.horarioInicio || '';
+      const horarioTermino = cron.horarioTermino || '';
+
+      const corosHtml = coros.length > 0
+        ? coros.map((c, i) => {
+            const h = c.horario || '';
+            return `<tr>
+              <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;color:#555;width:60px">${h}</td>
+              <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;font-weight:600;color:#0F2027">${c.nomeCoro || c.nome || ''}</td>
+              <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:12px;color:#888;width:60px;text-align:right">${c.duracaoMinutos ? c.duracaoMinutos + 'min' : ''}</td>
+            </tr>`;
+          }).join('')
+        : `<tr><td colspan="3" style="padding:8px 10px;font-size:12px;color:#aaa;font-style:italic">Programação a definir</td></tr>`;
+
+      const horarioTexto = horarioInicio && horarioTermino ? `${horarioInicio} – ${horarioTermino}` : (horarioInicio || dia.horario || '');
+      const localTexto = local || '';
+      const mapLink = linkMapa ? `<a href="${linkMapa}" style="color:#C5A059;font-size:11px">📍 Ver no mapa</a>` : '';
+
+      return `
+        <div style="margin-bottom:28px;break-inside:avoid">
+          <div style="background:#0F2027;color:#fff;border-radius:8px 8px 0 0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:10px;letter-spacing:0.15em;color:#D4AF37;text-transform:uppercase;font-weight:700">${dia.diaSemana}</div>
+              <div style="font-size:18px;font-weight:700;margin-top:2px">${dia.data} de 2026</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:12px;color:#D4AF37;font-weight:600">${dia.titulo}</div>
+              <div style="font-size:11px;color:#ccc;margin-top:2px">${horarioTexto}</div>
+            </div>
+          </div>
+          <div style="border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;overflow:hidden">
+            ${localTexto ? `<div style="padding:6px 12px;background:#f9f6ef;font-size:11px;color:#666;border-bottom:1px solid #eee">${localTexto} ${mapLink}</div>` : ''}
+            <table style="width:100%;border-collapse:collapse">${corosHtml}</table>
+          </div>
+        </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Programação — VII ENCoros 2026</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #222; background: #fff; padding: 32px; max-width: 800px; margin: 0 auto; }
+  @media print {
+    body { padding: 0; }
+    .no-print { display: none; }
+  }
+  h1 { font-size: 28px; color: #0F2027; }
+  .subtitulo { font-size: 13px; color: #888; margin-top: 4px; font-family: sans-serif; }
+  .header { border-bottom: 3px solid #D4AF37; padding-bottom: 16px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .logo-text { font-size: 11px; color: #D4AF37; letter-spacing: 0.2em; text-transform: uppercase; font-family: sans-serif; font-weight: 700; }
+  .footer { margin-top: 32px; border-top: 1px solid #ddd; padding-top: 12px; font-size: 11px; color: #aaa; font-family: sans-serif; text-align: center; }
+  .btn-print { display: block; margin: 0 auto 24px; padding: 10px 28px; background: #0F2027; color: #D4AF37; border: none; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: sans-serif; }
+</style>
+</head>
+<body>
+  <button class="btn-print no-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+  <div class="header">
+    <div>
+      <div class="logo-text">VII ENCoros 2026</div>
+      <h1>Programação Oficial</h1>
+      <p class="subtitulo">03 a 07 de setembro de 2026 · Goiânia, Goiás · Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+    </div>
+    <div style="text-align:right;font-family:sans-serif">
+      <div style="font-size:11px;color:#888">encorosgoiania@gmail.com</div>
+      <div style="font-size:11px;color:#888">encorosgoiania-wq.github.io/site</div>
+    </div>
+  </div>
+  ${diasHtml}
+  <div class="footer">
+    VII Encontro Nacional de Coros de Goiânia · Participação gratuita · Goiânia, GO
+  </div>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+  }
 
   // ---------- PROGRAMAÇÃO: PAINEL MACRO ----------
   const painelMacroEl = document.getElementById('painelMacro');
@@ -3401,7 +3505,7 @@
                 </p>
               </div>
               <div style="background:#0F2027; padding:16px 24px; text-align:center;">
-                <p style="color:#9ca3af; font-size:11px; margin:0;">VII ENCoros 2026 · 04 a 07 de setembro de 2026 · Goiânia, Goiás</p>
+                <p style="color:#9ca3af; font-size:11px; margin:0;">VII ENCoros 2026 · 03 a 07 de setembro de 2026 · Goiânia, Goiás</p>
               </div>
             </div>
           `;
@@ -3740,7 +3844,7 @@
                 </p>
               </div>
               <div style="background:#0F2027;padding:16px 40px;text-align:center">
-                <p style="color:#9ca3af;font-size:12px;margin:0">VII ENCoros 2026 · Goiânia, GO · 04 a 07 de setembro de 2026</p>
+                <p style="color:#9ca3af;font-size:12px;margin:0">VII ENCoros 2026 · Goiânia, GO · 03 a 07 de setembro de 2026</p>
               </div>
             </div>`;
           try{
@@ -4491,7 +4595,7 @@
           <button onclick="window.print()" style="background:#D4AF37;color:#0F2027;font-weight:bold;border:none;padding:10px 24px;border-radius:999px;cursor:pointer;font-size:13px">🖨️ Imprimir / Salvar como PDF</button>
         </div>
         <h1>Relatório ECAD — VII ENCoros 2026</h1>
-        <p class="subtitulo">04 a 07 de setembro de 2026 · Goiânia, Goiás · Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+        <p class="subtitulo">03 a 07 de setembro de 2026 · Goiânia, Goiás · Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
         <div class="resumo">
           <strong>Resumo:</strong> ${lista.length} coro(s) com repertório informado · ${totalObras} obra(s) no total
         </div>
@@ -5868,7 +5972,7 @@
             </p>
           </div>
           <div style="background:#0F2027;padding:16px 40px;text-align:center">
-            <p style="color:#9ca3af;font-size:12px;margin:0">VII ENCoros 2026 · Goiânia, GO · 04 a 07 de setembro de 2026</p>
+            <p style="color:#9ca3af;font-size:12px;margin:0">VII ENCoros 2026 · Goiânia, GO · 03 a 07 de setembro de 2026</p>
           </div>
         </div>`;
       try{
