@@ -1347,8 +1347,8 @@
             <button id="btnRelatorioECAD" class="px-4 py-2 rounded-lg border border-gold/50 text-sm font-semibold hover:bg-amber-50 transition" style="color:var(--azul-petroleo)">
               📋 Relatório ECAD
             </button>
-            <button id="btnGerarRelatorioPDF" class="px-4 py-2 rounded-lg border text-sm font-semibold transition" style="border-color:var(--azul-petroleo);color:#fff;background:var(--azul-petroleo)">
-              📄 Relatório PDF
+            <button id="btnGerarRelatorioHTML" class="px-4 py-2 rounded-lg border text-sm font-semibold transition" style="border-color:var(--azul-petroleo);color:#fff;background:var(--azul-petroleo)">
+              📄 Relatório Completo
             </button>
             <button id="btnExportar" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
               ⬇ Exportar JSON
@@ -4718,9 +4718,9 @@
   }
 
   // ── RELATÓRIO PDF COMPLETO ────────────────────────────────────────────
-  const btnGerarRelatorioPDF = document.getElementById('btnGerarRelatorioPDF');
-  if(btnGerarRelatorioPDF){
-    btnGerarRelatorioPDF.addEventListener('click', function(){
+  const btnGerarRelatorioHTML = document.getElementById('btnGerarRelatorioHTML');
+  if(btnGerarRelatorioHTML){
+    btnGerarRelatorioHTML.addEventListener('click', function(){
       const lista = getInscricoes();
       if(!lista || lista.length === 0){ alert('Nenhuma inscrição encontrada.'); return; }
 
@@ -4765,7 +4765,7 @@
                       <td style="padding:5px 10px;font-size:12px;color:#888">${o.arranjador||'—'}</td>
                       <td style="padding:5px 10px;font-size:12px;color:#888;text-align:right">${o.duracaoMinutos||'—'}</td>
                     </tr>`).join('')}
-                  ${c.duracaoTotalRepertorio ? `<tr style="background:#f0ece2"><td colspan="3" style="padding:5px 10px;font-size:11px;color:#888;font-weight:600">Total</td><td style="padding:5px 10px;font-size:12px;font-weight:700;color:#0F2027;text-align:right">${c.duracaoTotalRepertorio} min</td></tr>` : ''}
+                  ${c.duracaoTotalRepertorio ? `<tr style="background:#f0ece2"><td colspan="3" style="padding:5px 10px;font-size:11px;color:#888;font-weight:600">Total</td><td style="padding:5px 10px;font-size:12px;font-weight:700;color:#0F2027;text-align:right">${parseFloat(c.duracaoTotalRepertorio).toFixed(2).replace(/\.?0+$/,"")} min</td></tr>` : ''}
                 </table>`
               : '<p style="font-size:12px;color:#bbb;font-style:italic;margin:6px 0 0">Repertório não informado</p>';
 
@@ -4779,7 +4779,7 @@
 
             const linkVideo = c.linkVideo || '';
             const linkDrive = c.linkDrive || '';
-            const linkInsta = (c.redesSociaisCoro && c.redesSociaisCoro.instagram) ? c.redesSociaisCoro.instagram : '';
+            const linkInsta = c.instagram || (c.redesSociaisCoro && c.redesSociaisCoro.instagram) || '';
             const linkConf = `${location.origin}${location.pathname}?confirmar=${c.id}`;
 
             return `
@@ -4801,7 +4801,7 @@
                   <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Modalidade</span><br><strong>${c.modalidade||'—'}</strong></div>
                   <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Vídeo apresentação</span><br>${linkHtml(linkVideo,'Ver vídeo')}</div>
                   <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Fotos (Drive)</span><br>${linkHtml(linkDrive,'Ver fotos')}</div>
-                  ${linkInsta ? `<div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Instagram</span><br>${linkHtml(linkInsta,'@instagram')}</div>` : ''}
+                  ${linkInsta ? `<div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Instagram</span><br>${linkHtml(linkInsta.startsWith('http') ? linkInsta : 'https://instagram.com/' + linkInsta.replace('@',''), linkInsta)}</div>` : ''}
                   <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Link Etapa 2</span><br>${linkHtml(linkConf,'Link do regente')}</div>
                   ${c.historicoDescritivo ? `<div style="grid-column:1/-1"><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Histórico</span><br>${c.historicoDescritivo}</div>` : ''}
                 </div>
@@ -4896,11 +4896,17 @@
 </body>
 </html>`;
 
-      const win = window.open('', '_blank');
-      if(!win){ alert('Permita pop-ups para este site e tente novamente.'); return; }
-      win.document.write(html);
-      win.document.close();
-      win.focus();
+      // Baixar como arquivo HTML (links clicáveis preservados)
+      const dataStr = new Date().toISOString().slice(0,10);
+      const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'encoros2026_relatorio_' + dataStr + '.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     });
   }
 
