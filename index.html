@@ -4571,6 +4571,19 @@
         this.textContent = 'Excluindo...';
         try{
           await window.firebaseDataLayer.deleteInscricao(id);
+
+          // Remove o coro do cronograma de todos os dias automaticamente
+          const todosC = getCronogramaData();
+          for(const diaId of Object.keys(todosC)){
+            const dadosDia = todosC[diaId];
+            if(!dadosDia || !dadosDia.coros) continue;
+            const antes = dadosDia.coros.length;
+            dadosDia.coros = dadosDia.coros.filter(c => c.inscricaoId !== id && c.id !== id);
+            if(dadosDia.coros.length !== antes){
+              await window.firebaseDataLayer.salvarCronogramaDoDia(diaId, dadosDia);
+            }
+          }
+
           renderAdminTable();
         }catch(err){
           console.error('Erro ao excluir:', err);
