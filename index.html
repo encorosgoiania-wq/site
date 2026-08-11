@@ -1610,11 +1610,11 @@
             <div class="grid sm:grid-cols-2 gap-4">
               <div>
                 <label class="label-field">Link de Vídeo (YouTube)</label>
-                <div id="editLinkVideoDisplay" class="text-sm text-gray-500 py-2">—</div>
+                <input type="url" id="editLinkVideo" class="input-field" placeholder="https://youtube.com/...">
               </div>
               <div>
                 <label class="label-field">Link de Fotos (Drive)</label>
-                <div id="editLinkDriveDisplay" class="text-sm text-gray-500 py-2">—</div>
+                <input type="url" id="editLinkDrive" class="input-field" placeholder="https://drive.google.com/...">
               </div>
             </div>
           </div>
@@ -1622,7 +1622,16 @@
           <!-- REDES SOCIAIS -->
           <div>
             <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Redes Sociais</p>
-            <div id="editRedesDisplay" class="text-sm text-gray-500">—</div>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="label-field">Instagram do Coro</label>
+                <input type="text" id="editInstagramCoro" class="input-field" placeholder="@nomedocoro">
+              </div>
+              <div>
+                <label class="label-field">Instagram do Regente</label>
+                <input type="text" id="editInstagramRegente" class="input-field" placeholder="@nomeregente">
+              </div>
+            </div>
           </div>
 
           <!-- HISTÓRICO E CURRÍCULO -->
@@ -4220,26 +4229,13 @@
     }
 
     // Links de materiais
-    const linkVideo = item.linkVideo;
-    const linkDrive = item.linkDrive;
-    document.getElementById('editLinkVideoDisplay').innerHTML = linkVideo
-      ? `<a href="${escapeHtml(linkVideo)}" target="_blank" rel="noopener" class="text-gold underline break-all">${escapeHtml(linkVideo)}</a>`
-      : '<span class="text-gray-400">—</span>';
-    document.getElementById('editLinkDriveDisplay').innerHTML = linkDrive
-      ? `<a href="${escapeHtml(linkDrive)}" target="_blank" rel="noopener" class="text-gold underline break-all">${escapeHtml(linkDrive)}</a>`
-      : '<span class="text-gray-400">—</span>';
+    document.getElementById('editLinkVideo').value = item.linkVideo || '';
+    document.getElementById('editLinkDrive').value = item.linkDrive || '';
 
     // Redes sociais
     const redesCoro = item.redesSociaisCoro || {};
-    const redesRegente = item.redesSociaisRegente || {};
-    const redesLinhas = [];
-    ['instagram','facebook','youtube','tiktok','outra'].forEach(rede => {
-      if(redesCoro[rede]) redesLinhas.push(`<span class="text-gray-500 text-xs">Coro ${rede}:</span> <span class="text-gray-800">${escapeHtml(redesCoro[rede])}</span>`);
-      if(redesRegente[rede]) redesLinhas.push(`<span class="text-gray-500 text-xs">Regente ${rede}:</span> <span class="text-gray-800">${escapeHtml(redesRegente[rede])}</span>`);
-    });
-    document.getElementById('editRedesDisplay').innerHTML = redesLinhas.length > 0
-      ? redesLinhas.map(l => `<div class="mb-1">${l}</div>`).join('')
-      : '<span class="text-gray-400">—</span>';
+    document.getElementById('editInstagramCoro').value = redesCoro.instagram || '';
+    document.getElementById('editInstagramRegente').value = (item.redesSociaisRegente || {}).instagram || '';
 
     // Histórico / Currículo
     const historico = item.curriculoRegente || item.historicoDescritivo || item.historicoCoro || '';
@@ -4281,7 +4277,15 @@
       diaApresentacao: document.getElementById('editDiaApresentacao').value,
       status: document.getElementById('editStatus').value,
       curriculoRegente: document.getElementById('editHistoricoDisplay').value.trim(),
-      historicoDescritivo: document.getElementById('editHistoricoDisplay').value.trim()
+      historicoDescritivo: document.getElementById('editHistoricoDisplay').value.trim(),
+      linkVideo: document.getElementById('editLinkVideo').value.trim(),
+      linkDrive: document.getElementById('editLinkDrive').value.trim(),
+      redesSociaisCoro: {
+        instagram: document.getElementById('editInstagramCoro').value.trim()
+      },
+      redesSociaisRegente: {
+        instagram: document.getElementById('editInstagramRegente').value.trim()
+      }
     };
 
     if(!camposAtualizados.nomeCoro || !camposAtualizados.nomeRegente){
