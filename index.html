@@ -1628,7 +1628,7 @@
           <!-- HISTÓRICO E CURRÍCULO -->
           <div>
             <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Histórico / Currículo</p>
-            <div id="editHistoricoDisplay" class="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 leading-relaxed">—</div>
+            <textarea id="editHistoricoDisplay" rows="6" class="input-field text-sm leading-relaxed" placeholder="Histórico do coro e currículo do regente..."></textarea>
           </div>
 
           <!-- EQUIPAMENTO -->
@@ -3747,7 +3747,7 @@
         </div>
         <div>
           <label class="label-field text-xs">Duração (minutos) *</label>
-          <input required type="number" min="1" max="${maxDuracao}" step="1" class="input-field obra-duracao" placeholder="Ex: 4">
+          <input type="number" min="1" max="${maxDuracao}" step="1" class="input-field obra-duracao" placeholder="Ex: 4">
         </div>
       </div>
     `;
@@ -4242,8 +4242,8 @@
       : '<span class="text-gray-400">—</span>';
 
     // Histórico / Currículo
-    const historico = item.historicoCoro || item.curriculo || '';
-    document.getElementById('editHistoricoDisplay').textContent = historico || '—';
+    const historico = item.curriculoRegente || item.historicoDescritivo || item.historicoCoro || '';
+    document.getElementById('editHistoricoDisplay').value = historico || '';
 
     // Equipamento
     const equipEl = document.getElementById('editEquipamentoDisplay');
@@ -4279,7 +4279,9 @@
       cidadeEstado: document.getElementById('editCidadeEstado').value.trim(),
       modalidade: document.getElementById('editModalidade').value,
       diaApresentacao: document.getElementById('editDiaApresentacao').value,
-      status: document.getElementById('editStatus').value
+      status: document.getElementById('editStatus').value,
+      curriculoRegente: document.getElementById('editHistoricoDisplay').value.trim(),
+      historicoDescritivo: document.getElementById('editHistoricoDisplay').value.trim()
     };
 
     if(!camposAtualizados.nomeCoro || !camposAtualizados.nomeRegente){
