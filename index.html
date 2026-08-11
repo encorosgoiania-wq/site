@@ -3152,7 +3152,10 @@
     // Etapa 2
     const msgEncerradaE2 = document.getElementById('msgEtapa2Encerrada');
     const formE2 = document.getElementById('formConfirmacao');
-    if(!configEvento.etapa2Aberta){
+    // Coros institucionais sempre podem acessar a Etapa 2, mesmo fora do prazo
+    const inscricaoAtualE2 = getInscricoes().find(i => i.id === inscricaoEmConfirmacaoId);
+    const isInstE2 = inscricaoAtualE2?.isInstitucional || false;
+    if(!configEvento.etapa2Aberta && !isInstE2){
       if(msgEncerradaE2) msgEncerradaE2.classList.remove('hidden');
       if(formE2) formE2.classList.add('hidden');
     } else {
@@ -3692,7 +3695,7 @@
 
       // Ajusta limite de tempo conforme coro institucional
       const seedInst = inscricao.isInstitucional
-        ? COROS_INSTITUCIONAIS_SEED.find(s => s.nomeCoro === inscricao.nomeCoro)
+        ? COROS_INSTITUCIONAIS_SEED.find(s => s.id === inscricao.id)
         : null;
       const limiteTempo = seedInst ? seedInst.duracaoMinutos : 15;
 
@@ -3878,7 +3881,7 @@
         const duracaoTotal = obras.reduce((acc, o) => acc + o.duracaoMinutos, 0);
         const inscricaoAtualParaLimite = getInscricoes().find(i => i.id === inscricaoEmConfirmacaoId);
         const seedInst = inscricaoAtualParaLimite?.isInstitucional
-          ? COROS_INSTITUCIONAIS_SEED.find(s => s.nomeCoro === inscricaoAtualParaLimite.nomeCoro)
+          ? COROS_INSTITUCIONAIS_SEED.find(s => s.id === inscricaoAtualParaLimite.id)
           : null;
         const limiteTempo = seedInst ? seedInst.duracaoMinutos : 15;
         if(duracaoTotal > limiteTempo){
