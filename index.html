@@ -1033,11 +1033,46 @@
 
           <form id="formConfirmacao" class="space-y-12" novalidate>
 
-            <!-- NOME DO CORO — visível só para coros institucionais (pré-cadastrados com sigla) -->
+            <!-- DADOS COMPLETOS — visível só para coros institucionais -->
             <div id="wrapperNomeCoroEdicao" class="hidden card-soft p-6 sm:p-8 border-2" style="border-color:var(--dourado)">
-              <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Nome do Coro</h2>
-              <p class="text-sm text-gray-500 mb-4">Confirme ou corrija o nome do seu coro como deve aparecer nos materiais de divulgação do evento.</p>
-              <input type="text" id="inputNomeCoroEdicao" name="nomeCoroEdicao" class="input-field" placeholder="Nome completo do coro">
+              <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Dados do Coro</h2>
+              <p class="text-sm text-gray-500 mb-6">Preencha ou corrija os dados do seu coro. Essas informações aparecerão nos materiais de divulgação do evento.</p>
+              <div class="space-y-4">
+                <div>
+                  <label class="label-field">Nome completo do Coro *</label>
+                  <input type="text" id="inputNomeCoroEdicao" name="nomeCoroEdicao" class="input-field" placeholder="Nome completo do coro">
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="label-field">Nome do Regente *</label>
+                    <input type="text" id="inputNomeRegenteEdicao" name="nomeRegenteEdicao" class="input-field" placeholder="Nome completo do regente">
+                  </div>
+                  <div>
+                    <label class="label-field">E-mail do Regente</label>
+                    <input type="email" id="inputEmailRegenteEdicao" name="emailRegenteEdicao" class="input-field" placeholder="email@exemplo.com">
+                  </div>
+                  <div>
+                    <label class="label-field">Telefone / WhatsApp</label>
+                    <input type="tel" id="inputTelefoneEdicao" name="telefoneEdicao" class="input-field" placeholder="(62) 99999-9999">
+                  </div>
+                  <div>
+                    <label class="label-field">Cidade / Estado</label>
+                    <input type="text" id="inputCidadeEdicao" name="cidadeEdicao" class="input-field" placeholder="Goiânia / GO">
+                  </div>
+                </div>
+                <div>
+                  <label class="label-field">Link de Vídeo de Apresentação (YouTube)</label>
+                  <input type="url" id="inputLinkVideoEdicao" name="linkVideoEdicao" class="input-field" placeholder="https://youtube.com/...">
+                </div>
+                <div>
+                  <label class="label-field">Instagram do Coro</label>
+                  <input type="text" id="inputInstagramEdicao" name="instagramEdicao" class="input-field" placeholder="@nomedocoro">
+                </div>
+                <div>
+                  <label class="label-field">Histórico do Coro e Currículo do Regente</label>
+                  <textarea id="inputHistoricoEdicao" name="historicoEdicao" rows="6" class="input-field" placeholder="Conte a história do coro, formação do regente, conquistas..."></textarea>
+                </div>
+              </div>
             </div>
 
             <!-- REPERTÓRIO TÉCNICO (ECAD) — Presencial -->
@@ -1590,6 +1625,13 @@
                   <option value="Pendente">Pendente</option>
                   <option value="Aprovado">Aprovado</option>
                   <option value="Rejeitado">Rejeitado</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-field">Etapa 2</label>
+                <select id="editEtapa" class="input-field bg-white">
+                  <option value="preliminar">Falta Etapa 2</option>
+                  <option value="completo">✓ Completo</option>
                 </select>
               </div>
             </div>
@@ -3674,7 +3716,21 @@
     const inputNomeCoroEdicao = document.getElementById('inputNomeCoroEdicao');
     if(inscricao.isInstitucional){
       wrapperNomeCoroEdicao.classList.remove('hidden');
-      inputNomeCoroEdicao.value = inscricao.nomeCoro;
+      inputNomeCoroEdicao.value = inscricao.nomeCoro || '';
+      const inputNomeRegente = document.getElementById('inputNomeRegenteEdicao');
+      const inputEmail = document.getElementById('inputEmailRegenteEdicao');
+      const inputTelefone = document.getElementById('inputTelefoneEdicao');
+      const inputCidade = document.getElementById('inputCidadeEdicao');
+      const inputLinkVideo = document.getElementById('inputLinkVideoEdicao');
+      const inputInsta = document.getElementById('inputInstagramEdicao');
+      const inputHistorico = document.getElementById('inputHistoricoEdicao');
+      if(inputNomeRegente) inputNomeRegente.value = inscricao.nomeRegente === 'Organização VII ENCoros' ? '' : (inscricao.nomeRegente || '');
+      if(inputEmail) inputEmail.value = inscricao.emailRegente || '';
+      if(inputTelefone) inputTelefone.value = inscricao.telefoneRegente || '';
+      if(inputCidade) inputCidade.value = inscricao.cidadeEstado || '';
+      if(inputLinkVideo) inputLinkVideo.value = inscricao.linkVideo || '';
+      if(inputInsta) inputInsta.value = (inscricao.redesSociaisCoro && inscricao.redesSociaisCoro.instagram) || '';
+      if(inputHistorico) inputHistorico.value = inscricao.curriculoRegente || inscricao.historicoDescritivo || inscricao.historicoCoro || '';
     } else {
       wrapperNomeCoroEdicao.classList.add('hidden');
     }
@@ -3843,6 +3899,24 @@
         linkDrive: fd.get('linkDrive')?.trim(),
         etapa: 'completo'
       };
+
+      // Campos extras dos institucionais
+      if(inscricaoAtual?.isInstitucional){
+        const nomeRegenteInst = fd.get('nomeRegenteEdicao')?.trim();
+        const emailInst = fd.get('emailRegenteEdicao')?.trim();
+        const telInst = fd.get('telefoneEdicao')?.trim();
+        const cidadeInst = fd.get('cidadeEdicao')?.trim();
+        const videoInst = fd.get('linkVideoEdicao')?.trim();
+        const instaInst = fd.get('instagramEdicao')?.trim();
+        const historicoInst = fd.get('historicoEdicao')?.trim();
+        if(nomeRegenteInst) camposAtualizados.nomeRegente = nomeRegenteInst;
+        if(emailInst) camposAtualizados.emailRegente = emailInst;
+        if(telInst) camposAtualizados.telefoneRegente = telInst;
+        if(cidadeInst) camposAtualizados.cidadeEstado = cidadeInst;
+        if(videoInst) camposAtualizados.linkVideo = videoInst;
+        if(instaInst) camposAtualizados.redesSociaisCoro = { instagram: instaInst };
+        if(historicoInst){ camposAtualizados.curriculoRegente = historicoInst; camposAtualizados.historicoDescritivo = historicoInst; }
+      }
 
       if(isVirtualSubmit){
         // Coleta os até 3 vídeos da Mostra Virtual
@@ -4175,6 +4249,7 @@
     document.getElementById('editModalidade').value = item.modalidade || 'Presencial';
     document.getElementById('editDiaApresentacao').value = item.diaApresentacao || '';
     document.getElementById('editStatus').value = item.status || 'Pendente';
+    document.getElementById('editEtapa').value = item.etapa || 'preliminar';
 
     // Repertório ECAD (somente leitura)
     const repContainer = document.getElementById('editRepertorioContainer');
@@ -4238,7 +4313,7 @@
     document.getElementById('editInstagramRegente').value = (item.redesSociaisRegente || {}).instagram || '';
 
     // Histórico / Currículo
-    const historico = item.curriculoRegente || item.historicoDescritivo || item.historicoCoro || '';
+    const historico = item.curriculoRegente || item.historicoDescritivo || item.historicoCoro || item.curriculo || '';
     document.getElementById('editHistoricoDisplay').value = historico || '';
 
     // Equipamento
@@ -4276,6 +4351,7 @@
       modalidade: document.getElementById('editModalidade').value,
       diaApresentacao: document.getElementById('editDiaApresentacao').value,
       status: document.getElementById('editStatus').value,
+      etapa: document.getElementById('editEtapa').value,
       curriculoRegente: document.getElementById('editHistoricoDisplay').value.trim(),
       historicoDescritivo: document.getElementById('editHistoricoDisplay').value.trim(),
       linkVideo: document.getElementById('editLinkVideo').value.trim(),
@@ -4300,6 +4376,10 @@
 
     try{
       await window.firebaseDataLayer.updateInscricao(id, camposAtualizados);
+      // Atualiza cache local imediatamente para renderAdminTable usar dados novos
+      const lista = getInscricoes();
+      const idx = lista.findIndex(i => i.id === id);
+      if(idx !== -1) Object.assign(lista[idx], camposAtualizados);
       fecharModalEdicao();
       renderAdminTable();
     }catch(err){
