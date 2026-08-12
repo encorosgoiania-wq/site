@@ -2177,28 +2177,33 @@
     const fdl = window.firebaseDataLayer;
     try{
       for(const seed of COROS_INSTITUCIONAIS_SEED){
-        await fdl.setInscricaoComId(seed.id, {
-          dataEnvio: new Date().toISOString(),
-          fluxoInscricao: 'convidado',
-          etapa: 'preliminar',
-          nomeRegente: 'Organização VII ENCoros',
-          emailRegente: '',
-          telefoneRegente: '',
-          curriculoRegente: '',
-          nomeCoro: seed.nomeCoro,
-          cidadeEstado: '',
-          modalidade: 'Presencial',
-          diaApresentacao: seed.diaApresentacao,
-          historicoCoro: '',
-          linkVideo: '',
-          obrasRepertorio: [],
-          duracaoTotalRepertorio: null,
-          levaEquipamento: false,
-          linkDrive: '',
-          status: 'Aprovado',
-          cronogramaDuracao: null,
-          isInstitucional: true
-        });
+        // Só cria o documento se ele ainda NÃO existe no cache
+        // Nunca sobrescreve dados que o maestro já preencheu
+        const jaExiste = cacheInscricoes.some(i => i.id === seed.id);
+        if(!jaExiste){
+          await fdl.setInscricaoComId(seed.id, {
+            dataEnvio: new Date().toISOString(),
+            fluxoInscricao: 'convidado',
+            etapa: 'preliminar',
+            nomeRegente: 'Organização VII ENCoros',
+            emailRegente: '',
+            telefoneRegente: '',
+            curriculoRegente: '',
+            nomeCoro: seed.nomeCoro,
+            cidadeEstado: '',
+            modalidade: 'Presencial',
+            diaApresentacao: seed.diaApresentacao,
+            historicoCoro: '',
+            linkVideo: '',
+            obrasRepertorio: [],
+            duracaoTotalRepertorio: null,
+            levaEquipamento: false,
+            linkDrive: '',
+            status: 'Aprovado',
+            cronogramaDuracao: null,
+            isInstitucional: true
+          });
+        }
       }
     }catch(e){
       console.error('Erro ao garantir seed dos coros institucionais na nuvem', e);
@@ -3800,11 +3805,11 @@
       <div class="grid sm:grid-cols-2 gap-3 pr-6">
         <div class="sm:col-span-2">
           <label class="label-field text-xs">Nome da Obra *</label>
-          <input required type="text" class="input-field obra-nome" placeholder="Ex: Ave Maria">
+          <input type="text" class="input-field obra-nome" placeholder="Ex: Ave Maria">
         </div>
         <div>
           <label class="label-field text-xs">Compositor *</label>
-          <input required type="text" class="input-field obra-compositor" placeholder="Nome do compositor">
+          <input type="text" class="input-field obra-compositor" placeholder="Nome do compositor">
         </div>
         <div>
           <label class="label-field text-xs">Arranjador</label>
@@ -3838,15 +3843,43 @@
 
   function atualizarDuracaoTotalRepertorio(novoLimite){
     if(novoLimite !== undefined) limiteTempoRepertorioAtual = novoLimite;
+    const limite = limiteTempoRepertorioAtual;
     let total = 0;
     repertorioLista.querySelectorAll('.obra-duracao').forEach(inp => {
       const v = parseFloat(inp.value);
       if(!isNaN(v)) total += v;
     });
-    duracaoTotalRepertorioEl.textContent = total + ' min';
-    duracaoTotalRepertorioEl.className = total > limiteTempoRepertorioAtual ? 'font-bold text-red-600' : 'font-bold';
-    if(total <= limiteTempoRepertorioAtual) duracaoTotalRepertorioEl.style.color = 'var(--azul-petroleo)';
-    else duracaoTotalRepertorioEl.style.removeProperty('color');
+    const restante = Math.max(0, limite - total);
+    const estourou = total > limite;
+    duracaoTotalRepertorioEl.textContent = total + ' min de ' + limite + ' min';
+    if(estourou){
+      duracaoTotalRepertorioEl.className = 'font-bold text-red-600';
+      duracaoTotalRepertorioEl.style.removeProperty('color');
+    } else {
+      duracaoTotalRepertorioEl.className = 'font-bold';
+      duracaoTotalRepertorioEl.style.color = 'var(--azul-petroleo)';
+    }
+    // Bloqueia botão + quando não sobra tempo
+    if(btnAddObra){
+      const bloqueado = restante <= 0;
+      btnAddObra.disabled = bloqueado;
+      if(bloqueado){
+        btnAddObra.textContent = 'Tempo esgotado — remova uma obra para adicionar outra';
+        btnAddObra.style.opacity = '0.4';
+        btnAddObra.style.cursor = 'not-allowed';
+      } else {
+        btnAddObra.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg> + Adicionar Música (' + restante + ' min restantes)';
+        btnAddObra.style.opacity = '1';
+        btnAddObra.style.cursor = 'pointer';
+      }
+    }
+    // Ajusta max de cada campo de duração
+    repertorioLista.querySelectorAll('.repertorio-linha').forEach(linha => {
+      const inp = linha.querySelector('.obra-duracao');
+      if(!inp) return;
+      const valorAtual = parseFloat(inp.value) || 0;
+      inp.max = Math.min(valorAtual + restante, limite);
+    });
   }
 
   function coletarObrasRepertorio(){
@@ -3863,7 +3896,10 @@
   }
 
   if(btnAddObra){
-    btnAddObra.addEventListener('click', () => criarLinhaObra());
+    btnAddObra.addEventListener('click', () => {
+      criarLinhaObra(null, limiteTempoRepertorioAtual);
+      atualizarDuracaoTotalRepertorio();
+    });
   }
 
   // ---------- CHECKBOX DE EQUIPAMENTO ----------
