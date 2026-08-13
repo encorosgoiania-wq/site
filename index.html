@@ -1385,6 +1385,9 @@
             <button id="btnGerarRelatorioHTML" class="px-4 py-2 rounded-lg border text-sm font-semibold transition" style="border-color:var(--azul-petroleo);color:#fff;background:var(--azul-petroleo)">
               📄 Relatório Completo
             </button>
+            <button id="btnGerarListaTrofeus" class="px-4 py-2 rounded-lg border text-sm font-semibold transition" style="border-color:var(--dourado);color:var(--azul-petroleo);background:#fffbe6">
+              🏆 Lista Troféus/Certificados
+            </button>
             <button id="btnExportar" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
               ⬇ Exportar JSON
             </button>
@@ -5041,6 +5044,101 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = 'encoros2026_relatorio_' + dataStr + '.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // ── LISTA TROFÉUS E CERTIFICADOS ─────────────────────────────────────
+  const btnGerarListaTrofeus = document.getElementById('btnGerarListaTrofeus');
+  if(btnGerarListaTrofeus){
+    btnGerarListaTrofeus.addEventListener('click', function(){
+      const lista = getInscricoes();
+      if(!lista || lista.length === 0){ alert('Nenhuma inscrição encontrada.'); return; }
+
+      const diasOrdem = ['quinta','sexta','sabado','domingo','segunda'];
+      const diasLabel = {
+        quinta:  'Quinta-feira, 03 de Setembro',
+        sexta:   'Sexta-feira, 04 de Setembro',
+        sabado:  'Sábado, 05 de Setembro',
+        domingo: 'Domingo, 06 de Setembro',
+        segunda: 'Segunda-feira, 07 de Setembro (Virtual)'
+      };
+
+      let corpoHtml = '';
+      let totalGeral = 0;
+
+      diasOrdem.forEach(diaId => {
+        const coros = lista
+          .filter(i => i.diaApresentacao === diaId && i.status === 'Aprovado')
+          .sort((a,b) => {
+            if(a.isInstitucional && !b.isInstitucional) return 1;
+            if(!a.isInstitucional && b.isInstitucional) return -1;
+            return (a.nomeCoro||'').localeCompare(b.nomeCoro||'');
+          });
+        if(coros.length === 0) return;
+        totalGeral += coros.length;
+
+        const linhas = coros.map((c, i) => `
+          <tr>
+            <td style="padding:10px 12px;border-bottom:1px solid #eee;color:#888;width:32px;text-align:center;font-size:13px">${i+1}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:13px;font-weight:700;color:#0F2027;text-transform:uppercase">${c.nomeCoro||'—'}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:13px;color:#333;text-transform:uppercase">${c.nomeRegente||'—'}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:13px;color:#555;text-transform:uppercase">${c.cidadeEstado||'—'}</td>
+          </tr>`).join('');
+
+        corpoHtml += `
+          <div style="margin-bottom:40px;break-inside:avoid">
+            <h2 style="font-size:17px;font-weight:700;color:#0F2027;margin:0 0 4px">${diasLabel[diaId]} (${coros.length} coro${coros.length>1?'s':''})</h2>
+            <div style="height:3px;background:linear-gradient(90deg,#D4AF37,#C5A059);margin-bottom:16px;border-radius:2px"></div>
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="border-bottom:2px solid #D4AF37">
+                  <th style="padding:8px 12px;text-align:center;font-size:12px;color:#C5A059;font-weight:700;width:32px">#</th>
+                  <th style="padding:8px 12px;text-align:left;font-size:12px;color:#C5A059;font-weight:700">Nome do Coro</th>
+                  <th style="padding:8px 12px;text-align:left;font-size:12px;color:#C5A059;font-weight:700">Regente / Maestro</th>
+                  <th style="padding:8px 12px;text-align:left;font-size:12px;color:#C5A059;font-weight:700">Cidade / Estado</th>
+                </tr>
+              </thead>
+              <tbody>${linhas}</tbody>
+            </table>
+          </div>`;
+      });
+
+      const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Lista Troféus e Certificados — VII ENCoros 2026</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system,'Segoe UI',sans-serif; color:#1a1a1a; background:#fff; padding:40px; max-width:900px; margin:0 auto; }
+  h1 { font-size:26px; font-weight:700; color:#0F2027; }
+  .sub { font-size:13px; color:#C5A059; margin-top:4px; margin-bottom:32px; }
+  .btn-print { display:block; margin:0 auto 32px; padding:12px 32px; background:#0F2027; color:#D4AF37; border:none; border-radius:999px; font-size:14px; font-weight:700; cursor:pointer; }
+  .resumo { font-size:12px; color:#888; margin-bottom:32px; }
+  @media print {
+    .btn-print { display:none; }
+    body { padding:20px; }
+  }
+</style>
+</head>
+<body>
+  <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+  <h1>VII ENCoros 2026 — Lista para Troféus e Certificados</h1>
+  <p class="sub">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+  <p class="resumo">Total: ${totalGeral} coro(s) aprovado(s)</p>
+  ${corpoHtml}
+</body>
+</html>`;
+
+      const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lista_trofeus_encoros2026.html';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
