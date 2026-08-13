@@ -2090,6 +2090,7 @@
   // ======================================================================
   let cacheInscricoes = [];
   let cacheCronograma = {};
+  let inscricoesEditandoAtivo = false;
   let cachePostsBlog = [];
   let firebasePronto = false;
   let onCacheAtualizadoCallback = null; // setado depois, pela UI (re-renderiza a tela atual)
@@ -2120,6 +2121,7 @@
     const fdl = window.firebaseDataLayer;
 
     fdl.escutarInscricoes((lista) => {
+      if(inscricoesEditandoAtivo) return; // ignora snapshot durante edição ativa
       cacheInscricoes = lista;
       if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
     });
@@ -4414,14 +4416,18 @@
     btnSalvar.textContent = 'Salvando...';
 
     try{
+      // Bloqueia o onSnapshot por 5 segundos para não sobrescrever o cache durante o save
+      inscricoesEditandoAtivo = true;
       await window.firebaseDataLayer.updateInscricao(id, camposAtualizados);
-      // Atualiza cache local imediatamente para renderAdminTable usar dados novos
+      // Atualiza cache local imediatamente
       const lista = getInscricoes();
       const idx = lista.findIndex(i => i.id === id);
       if(idx !== -1) Object.assign(lista[idx], camposAtualizados);
       fecharModalEdicao();
       renderAdminTable();
+      setTimeout(() => { inscricoesEditandoAtivo = false; }, 5000);
     }catch(err){
+      inscricoesEditandoAtivo = false;
       console.error('Erro ao salvar edição:', err);
       editModalMsg.textContent = 'Não foi possível salvar agora. Verifique sua conexão e tente novamente.';
       editModalMsg.className = 'text-sm rounded-lg px-4 py-3 bg-red-50 text-red-700 border border-red-300';
