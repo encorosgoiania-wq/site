@@ -6544,15 +6544,6 @@
           iniciarPainelConfig();
         }
       } catch(e) { /* usa defaults se falhar */ }
-      // Garante que o cache de inscrições está carregado antes de rodar o seed
-      // para que jaExiste funcione corretamente e não sobrescreva dados existentes
-      if(cacheInscricoes.length === 0){
-        const inscricoesCarregadas = await window.firebaseDataLayer.getInscricoes();
-        if(inscricoesCarregadas && inscricoesCarregadas.length > 0){
-          cacheInscricoes = inscricoesCarregadas;
-        }
-      }
-      await garantirSeedInstitucionais();
       await garantirSeedCronograma();
       await enviarEmailsPendentesEtapa2();
     }catch(err){
