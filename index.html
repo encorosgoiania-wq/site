@@ -5071,8 +5071,14 @@
       let totalGeral = 0;
 
       diasOrdem.forEach(diaId => {
+        // Filtra só coros que estão no cronograma do dia
+        const cronDia = (cacheCronograma && cacheCronograma[diaId] && cacheCronograma[diaId].coros) || [];
+        const idsNoCronograma = cronDia
+          .filter(c => !c.livre) // exclui itens livres (Abertura, Encerramento etc)
+          .map(c => c.inscricaoId || c.id);
+
         const coros = lista
-          .filter(i => i.diaApresentacao === diaId && i.status === 'Aprovado')
+          .filter(i => idsNoCronograma.includes(i.id) && i.status === 'Aprovado')
           .sort((a,b) => {
             if(a.isInstitucional && !b.isInstitucional) return 1;
             if(!a.isInstitucional && b.isInstitucional) return -1;
