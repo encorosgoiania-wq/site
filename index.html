@@ -5228,8 +5228,6 @@
   // Coleção Firestore: encoros2026_ensaios
   // ══════════════════════════════════════════════════════════════════
   const COL_ENSAIOS = 'encoros2026_ensaios';
-  // db é o objeto Firestore já inicializado no topo do módulo
-  const db_ensaios = db;
 
   async function carregarEnsaios(){
     const lista = document.getElementById('ensaiosLista');
@@ -5237,7 +5235,7 @@
     if(!lista) return;
     lista.innerHTML = '<p class="text-sm text-gray-400">Carregando...</p>';
     try{
-      const snap = await getDocs(query(collection(db_ensaios, COL_ENSAIOS), orderBy('data'), orderBy('inicio')));
+      const snap = await getDocs(query(collection(db, COL_ENSAIOS), orderBy('data'), orderBy('inicio')));
       lista.innerHTML = '';
       if(snap.empty){ empty.classList.remove('hidden'); return; }
       empty.classList.add('hidden');
@@ -5264,7 +5262,7 @@
       lista.querySelectorAll('.btnExcluirEnsaio').forEach(btn => {
         btn.addEventListener('click', async function(){
           if(!confirm('Excluir este horário?')) return;
-          await deleteDoc(doc(db_ensaios, COL_ENSAIOS, this.dataset.id));
+          await deleteDoc(doc(db, COL_ENSAIOS, this.dataset.id));
           carregarEnsaios();
         });
       });
@@ -5293,7 +5291,7 @@
       if(!data || !local || !inicio || !termino){ msg.textContent = 'Preencha data, local, início e término.'; msg.style.color='#dc2626'; return; }
       msg.textContent = 'Salvando...'; msg.style.color = '#888';
       try{
-        await addDoc(collection(db_ensaios, COL_ENSAIOS), { data, local, inicio, termino, obs, status: 'disponivel', criadoEm: new Date().toISOString() });
+        await addDoc(collection(db, COL_ENSAIOS), { data, local, inicio, termino, obs, status: 'disponivel', criadoEm: new Date().toISOString() });
         msg.textContent = '✓ Horário adicionado!'; msg.style.color = '#16a34a';
         document.getElementById('ensaioData').value = '';
         document.getElementById('ensaioLocal').value = '';
@@ -5306,10 +5304,7 @@
     });
   }
 
-  // Carregar ensaios quando aba é selecionada
-  if(adminTabEnsaios){
-    adminTabEnsaios.addEventListener('click', carregarEnsaios);
-  }
+
 
   // ── PÁGINA PÚBLICA DO MAESTRO (acesso via ?ensaio=ID) ──────────────
   const urlEnsaioId = new URLSearchParams(location.search).get('ensaio');
@@ -5333,7 +5328,7 @@
 
       const cont = document.getElementById('ensaioPublicoConteudo');
       try{
-        const snap = await getDoc(doc(db_ensaios, COL_ENSAIOS, urlEnsaioId));
+        const snap = await getDoc(doc(db, COL_ENSAIOS, urlEnsaioId));
         if(!snap.exists()){ cont.innerHTML = '<p style="color:#dc2626;text-align:center">Horário não encontrado.</p>'; return; }
         const e = snap.data();
         if(e.status !== 'disponivel'){
@@ -5367,8 +5362,8 @@
           this.disabled = true; this.textContent = 'Confirmando...';
           try{
             // Transação atômica — garante que só um maestro agenda
-            await runTransaction(db_ensaios, async (transaction) => {
-              const ref = doc(db_ensaios, COL_ENSAIOS, urlEnsaioId);
+            await runTransaction(db, async (transaction) => {
+              const ref = doc(db, COL_ENSAIOS, urlEnsaioId);
               const atual = await transaction.get(ref);
               if(!atual.exists() || atual.data().status !== 'disponivel'){
                 throw new Error('Este horário já foi agendado por outro maestro.');
@@ -5774,6 +5769,7 @@
   const adminSubviewFichas = document.getElementById('adminSubviewFichas');
   const adminSubviewEnsaios = document.getElementById('adminSubviewEnsaios');
   const adminTabEnsaios = document.getElementById('adminTabEnsaios');
+  if(adminTabEnsaios) adminTabEnsaios.addEventListener('click', carregarEnsaios);
 
   const ADMIN_ABAS = {
     inscricoes: { botao: adminTabInscricoes, painel: adminSubviewInscricoes },
