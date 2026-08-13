@@ -1315,6 +1315,9 @@
         <button type="button" id="adminTabFichas" class="admin-subtab px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 transition">
           Fichas Completas
         </button>
+        <button type="button" id="adminTabEnsaios" class="admin-subtab px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 transition">
+          Ensaios
+        </button>
       </div>
 
       <!-- ===== SUB-ABA: INSCRIÇÕES ===== -->
@@ -1568,6 +1571,49 @@
         </div>
       </div>
 
+      <!-- ===== SUB-ABA: ENSAIOS ===== -->
+      <div id="adminSubviewEnsaios" class="hidden">
+        <div class="mb-6">
+          <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Agendamento de Ensaios</h2>
+          <p class="text-sm text-gray-500">Cadastre horários disponíveis. Os maestros agendam pelo link único.</p>
+        </div>
+
+        <!-- Formulário cadastro -->
+        <div class="card-soft p-5 mb-6">
+          <h3 class="font-semibold text-sm mb-4" style="color:var(--azul-petroleo)">Adicionar Horário Disponível</h3>
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="label-field">Data *</label>
+              <input type="date" id="ensaioData" class="input-field">
+            </div>
+            <div>
+              <label class="label-field">Local *</label>
+              <input type="text" id="ensaioLocal" class="input-field" placeholder="Ex: Sala 3 - Basileu França">
+            </div>
+            <div>
+              <label class="label-field">Horário de Início *</label>
+              <input type="time" id="ensaioInicio" class="input-field">
+            </div>
+            <div>
+              <label class="label-field">Horário de Término *</label>
+              <input type="time" id="ensaioTermino" class="input-field">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="label-field">Observação (opcional)</label>
+              <input type="text" id="ensaioObs" class="input-field" placeholder="Ex: Ensaio geral com todos os coros">
+            </div>
+          </div>
+          <button id="btnAdicionarEnsaio" class="btn-gold px-6 py-2.5 rounded-full text-sm font-bold">+ Adicionar Horário</button>
+          <span id="ensaioMsg" class="ml-4 text-sm"></span>
+        </div>
+
+        <!-- Lista de horários -->
+        <div id="ensaiosLista" class="space-y-3"></div>
+        <div id="ensaiosEmpty" class="hidden text-center py-12 text-gray-400">
+          <p>Nenhum horário cadastrado ainda.</p>
+        </div>
+      </div>
+
     </div>
     </div><!-- /adminPanelContent -->
 
@@ -1746,7 +1792,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import {
     getFirestore, collection, doc, getDocs, getDoc, setDoc, addDoc,
-    updateDoc, deleteDoc, query, onSnapshot
+    updateDoc, deleteDoc, query, orderBy, onSnapshot, runTransaction
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1915,6 +1961,7 @@
   // Expõe as funções no escopo global (window), para que o script principal
   // (não-módulo, mais abaixo) consiga chamá-las normalmente.
   window.firebaseDataLayer = {
+    _db: db,
     getInscricoes: fsGetInscricoes,
     addInscricao: fsAddInscricao,
     updateInscricao: fsUpdateInscricao,
@@ -2121,7 +2168,17 @@
     const fdl = window.firebaseDataLayer;
 
     fdl.escutarInscricoes((lista) => {
-      if(inscricoesEditandoAtivo) return; // ignora snapshot durante edição ativa
+      // Merge inteligente: se edição ativa, preserva dados locais sobre o snapshot
+      if(inscricoesEditandoAtivo){
+        lista.forEach(item => {
+          const local = cacheInscricoes.find(i => i.id === item.id);
+          if(local && local._editadoLocalmente){
+            // Substitui dados do snapshot pelos dados locais editados
+            Object.assign(item, local);
+            item._editadoLocalmente = true; // preserva a marca
+          }
+        });
+      }
       cacheInscricoes = lista;
       if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
     });
@@ -4416,16 +4473,24 @@
     btnSalvar.textContent = 'Salvando...';
 
     try{
-      // Bloqueia o onSnapshot por 5 segundos para não sobrescrever o cache durante o save
       inscricoesEditandoAtivo = true;
-      await window.firebaseDataLayer.updateInscricao(id, camposAtualizados);
-      // Atualiza cache local imediatamente
+      // Atualiza cache local ANTES do Firestore para evitar race condition
       const lista = getInscricoes();
       const idx = lista.findIndex(i => i.id === id);
-      if(idx !== -1) Object.assign(lista[idx], camposAtualizados);
+      if(idx !== -1){
+        Object.assign(lista[idx], camposAtualizados);
+        lista[idx]._editadoLocalmente = true;
+      }
+      await window.firebaseDataLayer.updateInscricao(id, camposAtualizados);
       fecharModalEdicao();
       renderAdminTable();
-      setTimeout(() => { inscricoesEditandoAtivo = false; }, 5000);
+      // Libera o lock após 8 segundos — tempo suficiente para o onSnapshot confirmar
+      setTimeout(() => {
+        inscricoesEditandoAtivo = false;
+        const l = getInscricoes();
+        const i = l.findIndex(x => x.id === id);
+        if(i !== -1) delete l[i]._editadoLocalmente;
+      }, 8000);
     }catch(err){
       inscricoesEditandoAtivo = false;
       console.error('Erro ao salvar edição:', err);
@@ -5158,6 +5223,173 @@
     });
   }
 
+  // ══════════════════════════════════════════════════════════════════
+  // MÓDULO DE ENSAIOS
+  // Coleção Firestore: encoros2026_ensaios
+  // ══════════════════════════════════════════════════════════════════
+  const COL_ENSAIOS = 'encoros2026_ensaios';
+  // db é o objeto Firestore já inicializado no topo do módulo
+  const db_ensaios = db;
+
+  async function carregarEnsaios(){
+    const lista = document.getElementById('ensaiosLista');
+    const empty = document.getElementById('ensaiosEmpty');
+    if(!lista) return;
+    lista.innerHTML = '<p class="text-sm text-gray-400">Carregando...</p>';
+    try{
+      const snap = await getDocs(query(collection(db_ensaios, COL_ENSAIOS), orderBy('data'), orderBy('inicio')));
+      lista.innerHTML = '';
+      if(snap.empty){ empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+      snap.docs.forEach(d => {
+        const e = d.data();
+        const disponivel = e.status === 'disponivel';
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between gap-4 border rounded-xl px-5 py-4 ' + (disponivel ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200 opacity-60');
+        div.innerHTML = `
+          <div>
+            <div class="font-semibold text-sm" style="color:var(--azul-petroleo)">${e.data} &nbsp;·&nbsp; ${e.inicio} – ${e.termino}</div>
+            <div class="text-xs text-gray-500 mt-0.5">${e.local}${e.obs ? ' — ' + e.obs : ''}</div>
+            ${!disponivel ? '<div class="text-xs font-semibold text-green-700 mt-1">✓ Agendado por: ' + (e.maestroNome||'—') + '</div>' : ''}
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="text-xs font-bold px-3 py-1 rounded-full ${disponivel ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">${disponivel ? 'Disponível' : 'Agendado'}</span>
+            <button data-id="${d.id}" class="btnExcluirEnsaio text-xs text-red-500 border border-red-200 rounded-full px-3 py-1 hover:bg-red-50 transition">Excluir</button>
+            <button data-id="${d.id}" class="btnCopiarLinkEnsaio text-xs font-semibold border rounded-full px-3 py-1 hover:bg-amber-50 transition" style="border-color:var(--dourado);color:var(--azul-petroleo)">🔗 Link Maestro</button>
+          </div>`;
+        lista.appendChild(div);
+      });
+
+      // Listeners
+      lista.querySelectorAll('.btnExcluirEnsaio').forEach(btn => {
+        btn.addEventListener('click', async function(){
+          if(!confirm('Excluir este horário?')) return;
+          await deleteDoc(doc(db_ensaios, COL_ENSAIOS, this.dataset.id));
+          carregarEnsaios();
+        });
+      });
+
+      lista.querySelectorAll('.btnCopiarLinkEnsaio').forEach(btn => {
+        btn.addEventListener('click', function(){
+          const link = location.origin + location.pathname + '?ensaio=' + this.dataset.id;
+          navigator.clipboard.writeText(link).then(() => alert('Link copiado!\n\n' + link));
+        });
+      });
+    }catch(e){
+      lista.innerHTML = '<p class="text-sm text-red-500">Erro ao carregar: ' + e.message + '</p>';
+    }
+  }
+
+  // Adicionar horário
+  const btnAdicionarEnsaio = document.getElementById('btnAdicionarEnsaio');
+  if(btnAdicionarEnsaio){
+    btnAdicionarEnsaio.addEventListener('click', async function(){
+      const data = document.getElementById('ensaioData').value;
+      const local = document.getElementById('ensaioLocal').value.trim();
+      const inicio = document.getElementById('ensaioInicio').value;
+      const termino = document.getElementById('ensaioTermino').value;
+      const obs = document.getElementById('ensaioObs').value.trim();
+      const msg = document.getElementById('ensaioMsg');
+      if(!data || !local || !inicio || !termino){ msg.textContent = 'Preencha data, local, início e término.'; msg.style.color='#dc2626'; return; }
+      msg.textContent = 'Salvando...'; msg.style.color = '#888';
+      try{
+        await addDoc(collection(db_ensaios, COL_ENSAIOS), { data, local, inicio, termino, obs, status: 'disponivel', criadoEm: new Date().toISOString() });
+        msg.textContent = '✓ Horário adicionado!'; msg.style.color = '#16a34a';
+        document.getElementById('ensaioData').value = '';
+        document.getElementById('ensaioLocal').value = '';
+        document.getElementById('ensaioInicio').value = '';
+        document.getElementById('ensaioTermino').value = '';
+        document.getElementById('ensaioObs').value = '';
+        carregarEnsaios();
+        setTimeout(() => msg.textContent = '', 3000);
+      }catch(e){ msg.textContent = 'Erro: ' + e.message; msg.style.color='#dc2626'; }
+    });
+  }
+
+  // Carregar ensaios quando aba é selecionada
+  if(adminTabEnsaios){
+    adminTabEnsaios.addEventListener('click', carregarEnsaios);
+  }
+
+  // ── PÁGINA PÚBLICA DO MAESTRO (acesso via ?ensaio=ID) ──────────────
+  const urlEnsaioId = new URLSearchParams(location.search).get('ensaio');
+  if(urlEnsaioId){
+    // Oculta tudo e mostra apenas a tela de agendamento
+    document.querySelector('nav') && document.querySelector('nav').remove();
+    document.getElementById('hero') && document.getElementById('hero').classList.add('hidden');
+    const secaoEnsaio = document.createElement('div');
+    secaoEnsaio.id = 'secaoAgendarEnsaio';
+    secaoEnsaio.style = 'max-width:540px;margin:60px auto;padding:24px;font-family:sans-serif';
+    secaoEnsaio.innerHTML = `
+      <div style="text-align:center;margin-bottom:24px">
+        <img src="logoencorosTransparente.png" style="height:60px;margin-bottom:12px" onerror="this.style.display='none'">
+        <h1 style="font-size:22px;font-weight:700;color:#0F2027">Agendar Ensaio</h1>
+        <p style="font-size:13px;color:#888;margin-top:4px">VII ENCoros 2026 — Goiânia</p>
+      </div>
+      <div id="ensaioPublicoConteudo">Carregando horário...</div>`;
+    document.body.prepend(secaoEnsaio);
+
+    (async () => {
+
+      const cont = document.getElementById('ensaioPublicoConteudo');
+      try{
+        const snap = await getDoc(doc(db_ensaios, COL_ENSAIOS, urlEnsaioId));
+        if(!snap.exists()){ cont.innerHTML = '<p style="color:#dc2626;text-align:center">Horário não encontrado.</p>'; return; }
+        const e = snap.data();
+        if(e.status !== 'disponivel'){
+          cont.innerHTML = `<div style="text-align:center;padding:24px;background:#f0fdf4;border-radius:12px;border:1px solid #86efac">
+            <p style="font-size:18px;font-weight:700;color:#16a34a">✓ Este horário já foi agendado</p>
+            <p style="font-size:13px;color:#555;margin-top:8px">Por: ${e.maestroNome||'—'}</p>
+          </div>`; return;
+        }
+        cont.innerHTML = `
+          <div style="background:#f9f7f3;border:1px solid #e0d8c8;border-radius:12px;padding:20px;margin-bottom:20px">
+            <div style="font-size:16px;font-weight:700;color:#0F2027">${e.data} · ${e.inicio} – ${e.termino}</div>
+            <div style="font-size:13px;color:#666;margin-top:4px">${e.local}</div>
+            ${e.obs ? '<div style="font-size:12px;color:#888;margin-top:4px">' + e.obs + '</div>' : ''}
+          </div>
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:13px;font-weight:600;color:#0F2027;margin-bottom:6px">Seu nome *</label>
+            <input id="ensaioMaestroNome" type="text" placeholder="Nome completo do regente" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px">
+          </div>
+          <div style="margin-bottom:20px">
+            <label style="display:block;font-size:13px;font-weight:600;color:#0F2027;margin-bottom:6px">Nome do Coro *</label>
+            <input id="ensaioMaestroCoro" type="text" placeholder="Nome do coro" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px">
+          </div>
+          <button id="btnConfirmarEnsaio" style="width:100%;padding:14px;background:#0F2027;color:#D4AF37;border:none;border-radius:999px;font-size:15px;font-weight:700;cursor:pointer">Confirmar Agendamento</button>
+          <p id="ensaioPublicoMsg" style="text-align:center;margin-top:12px;font-size:13px"></p>`;
+
+        document.getElementById('btnConfirmarEnsaio').addEventListener('click', async function(){
+          const nome = document.getElementById('ensaioMaestroNome').value.trim();
+          const coro = document.getElementById('ensaioMaestroCoro').value.trim();
+          const msgEl = document.getElementById('ensaioPublicoMsg');
+          if(!nome || !coro){ msgEl.textContent = 'Preencha seu nome e o nome do coro.'; msgEl.style.color='#dc2626'; return; }
+          this.disabled = true; this.textContent = 'Confirmando...';
+          try{
+            // Transação atômica — garante que só um maestro agenda
+            await runTransaction(db_ensaios, async (transaction) => {
+              const ref = doc(db_ensaios, COL_ENSAIOS, urlEnsaioId);
+              const atual = await transaction.get(ref);
+              if(!atual.exists() || atual.data().status !== 'disponivel'){
+                throw new Error('Este horário já foi agendado por outro maestro.');
+              }
+              transaction.update(ref, { status: 'agendado', maestroNome: nome, maestroCoro: coro, agendadoEm: new Date().toISOString() });
+            });
+            cont.innerHTML = `<div style="text-align:center;padding:32px;background:#f0fdf4;border:1px solid #86efac;border-radius:12px">
+              <p style="font-size:22px;font-weight:700;color:#16a34a">✓ Agendado com sucesso!</p>
+              <p style="font-size:14px;color:#555;margin-top:8px">${e.data} · ${e.inicio} – ${e.termino}</p>
+              <p style="font-size:13px;color:#888;margin-top:4px">${e.local}</p>
+              <p style="font-size:13px;color:#0F2027;font-weight:600;margin-top:16px">${nome} — ${coro}</p>
+            </div>`;
+          }catch(err){
+            msgEl.textContent = err.message; msgEl.style.color='#dc2626';
+            this.disabled = false; this.textContent = 'Confirmar Agendamento';
+          }
+        });
+      }catch(err){ cont.innerHTML = '<p style="color:#dc2626">Erro: ' + err.message + '</p>'; }
+    })();
+  }
+
   btnExportar.addEventListener('click', function(){
     const lista = getInscricoes();
     const blob = new Blob([JSON.stringify(lista, null, 2)], {type:'application/json'});
@@ -5540,12 +5772,15 @@
   const adminSubviewCronograma = document.getElementById('adminSubviewCronograma');
   const adminSubviewBlog = document.getElementById('adminSubviewBlog');
   const adminSubviewFichas = document.getElementById('adminSubviewFichas');
+  const adminSubviewEnsaios = document.getElementById('adminSubviewEnsaios');
+  const adminTabEnsaios = document.getElementById('adminTabEnsaios');
 
   const ADMIN_ABAS = {
     inscricoes: { botao: adminTabInscricoes, painel: adminSubviewInscricoes },
     cronograma: { botao: adminTabCronograma, painel: adminSubviewCronograma },
     blog: { botao: adminTabBlog, painel: adminSubviewBlog },
-    fichas: { botao: adminTabFichas, painel: adminSubviewFichas }
+    fichas: { botao: adminTabFichas, painel: adminSubviewFichas },
+    ensaios: { botao: adminTabEnsaios, painel: adminSubviewEnsaios }
   };
 
   function setAdminSubview(tab){
