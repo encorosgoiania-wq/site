@@ -2854,7 +2854,8 @@
 
         // Busca o repertório completo na inscrição original, se houver
         const inscricaoOriginal = c.inscricaoId ? todasInscricoes.find(i => i.id === c.inscricaoId) : null;
-        const obras = inscricaoOriginal?.obrasRepertorio || [];
+        // Busca obras: (1) inscrição original via inscricaoId, (2) obras embutidas no item livre
+        const obras = (inscricaoOriginal?.obrasRepertorio) || c.obrasRepertorio || [];
 
         const fixoBadge = c.anfitriao
           ? '<span class="text-[10px] font-bold uppercase tracking-wide text-gold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0">Coro Anfitrião</span>'
@@ -2864,7 +2865,7 @@
           ? `<div class="mt-2 pl-[3.75rem] space-y-1">
                ${obras.map(o => `
                  <p class="text-xs text-gray-500">
-                   <span class="text-gray-700">${escapeHtml(o.nomeObra || '')}</span>
+                   <span class="text-gray-700">${escapeHtml(o.nomeObra || o.titulo || '')}</span>
                    ${o.compositor ? ' — ' + escapeHtml(o.compositor) : ''}
                    ${o.arranjador ? ' <span class="text-gray-400">(arr. ' + escapeHtml(o.arranjador) + ')</span>' : ''}
                  </p>
