@@ -2869,7 +2869,7 @@
         ];
         const obras = (inscricaoOriginal?.obrasRepertorio)
           || c.obrasRepertorio
-          || (c.livre && c.nomeCoro === 'Concerto de Abertura - Coros Institucionais' ? repertorioAbertura : []);
+          || (c.livre && (c.nomeCoro || '').toLowerCase().includes('coros institucionais') ? repertorioAbertura : []);
 
         const fixoBadge = c.anfitriao
           ? '<span class="text-[10px] font-bold uppercase tracking-wide text-gold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0">Coro Anfitrião</span>'
