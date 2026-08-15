@@ -2179,6 +2179,25 @@
           }
         });
       }
+      // Merge com dados hardcoded dos institucionais: garante que repertório,
+      // histórico e dados dos coros fixos nunca sumam mesmo se o Firestore estiver vazio
+      COROS_INSTITUCIONAIS_SEED.forEach(seed => {
+        const idx = lista.findIndex(i => i.id === seed.id);
+        if(idx >= 0){
+          // Mescla: dados do Firestore têm prioridade, mas preenche campos vazios com hardcoded
+          const item = lista[idx];
+          if(!item.obrasRepertorio || item.obrasRepertorio.length === 0) item.obrasRepertorio = seed.obrasRepertorio;
+          if(!item.historicoCoro) item.historicoCoro = seed.historicoCoro || '';
+          if(!item.nomeRegente || item.nomeRegente === 'Organização VII ENCoros') item.nomeRegente = seed.nomeRegente;
+          if(!item.telefoneRegente) item.telefoneRegente = seed.telefoneRegente || '';
+          if(!item.cidadeEstado) item.cidadeEstado = seed.cidadeEstado || '';
+          if(!item.linkDrive) item.linkDrive = seed.linkDrive || '';
+          if(seed.pianoAcompanhador && !item.pianoAcompanhador) item.pianoAcompanhador = seed.pianoAcompanhador;
+        } else {
+          // Coro fixo não está no Firestore ainda — injeta direto
+          lista.push({ ...seed, isInstitucional: true, etapa: 'preliminar', status: 'Aprovado', fluxoInscricao: 'convidado' });
+        }
+      });
       cacheInscricoes = lista;
       if(onCacheAtualizadoCallback) onCacheAtualizadoCallback();
     });
@@ -2228,11 +2247,83 @@
   // completa). IDs fixos e previsíveis evitam duplicação.
   // ======================================================================
   const COROS_INSTITUCIONAIS_SEED = [
-    { id: '900000001', nomeCoro: 'CSUFG', diaApresentacao: 'sabado', duracaoMinutos: 20 },
-    { id: '900000002', nomeCoro: 'CSJGOIÁS', diaApresentacao: 'sabado', duracaoMinutos: 20 },
-    { id: '900000003', nomeCoro: 'CJGOIÂNIA', diaApresentacao: 'sexta', duracaoMinutos: 20 },
-    { id: '900000004', nomeCoro: 'Onix Brasil Vocal Internacional', diaApresentacao: 'sabado', duracaoMinutos: 15 },
-    { id: '900000005', nomeCoro: 'CSGOIÂNIA', diaApresentacao: 'domingo', duracaoMinutos: 30 }
+    {
+      id: '900000001',
+      nomeCoro: 'Coral Sinfônico da UFG (CSUFG)',
+      nomeRegente: 'Organização VII ENCoros',
+      diaApresentacao: 'sabado',
+      duracaoMinutos: 20,
+      isInstitucional: true,
+      cidadeEstado: 'Goiânia - GO',
+      historicoCoro: '',
+      obrasRepertorio: []
+    },
+    {
+      id: '900000002',
+      nomeCoro: 'Coro Jovem de Goiás - Basileu (CSJGOIÁS)',
+      nomeRegente: 'Organização VII ENCoros',
+      diaApresentacao: 'sabado',
+      duracaoMinutos: 20,
+      isInstitucional: true,
+      cidadeEstado: 'Goiânia - GO',
+      historicoCoro: '',
+      obrasRepertorio: []
+    },
+    {
+      id: '900000003',
+      nomeCoro: 'Coro Juvenil de Goiânia',
+      nomeRegente: 'Eliseu Ferreira',
+      pianoAcompanhador: 'Paulo César Marques Pinto',
+      telefoneRegente: '(62) 98553-6170',
+      diaApresentacao: 'sexta',
+      duracaoMinutos: 20,
+      isInstitucional: true,
+      cidadeEstado: 'Goiânia - GO',
+      linkDrive: 'https://drive.google.com/drive/folders/1yC-a6fP4v8iw9L_4NAtp-ZVUxdnDa4Zz?usp=drive_link',
+      historicoCoro: 'O Coro Juvenil de Goiânia integra a Rede Municipal de Núcleos Musicais, projeto da Secretaria Municipal de Cultura e da Prefeitura de Goiânia, operacionalizado pela Orquestra Sinfônica de Goiânia. Reúne jovens cantores em formação sob a regência do maestro Eliseu Ferreira. O grupo desenvolve oficinas de técnica vocal, solfejo, dicção e práticas de conjunto. Desde sua criação, participou de encontros de corais em Goiás, Anápolis e Goiânia, além de apresentações com a Orquestra Sinfônica de Goiânia. Teve destaque nacional no especial de fim de ano da TV Senado em 2019 e se apresentou sob regência de maestros como Benoit Fromanger, Neil Thomson, Emílio de César e Eliseu Ferreira.',
+      obrasRepertorio: [
+        { nomeObra: 'Jubilate Deo', compositor: 'L. Halmós', duracao: "2'20\"" },
+        { nomeObra: 'Ave Maria', compositor: 'A. Bruckner', duracao: "3'37\"" },
+        { nomeObra: 'Christus Factus Est', compositor: 'A. Bruckner', duracao: "5'16\"" },
+        { nomeObra: 'Salmo 150', compositor: 'L. Lewandowski', duracao: "3'10\"" },
+        { nomeObra: 'Da Missa Kênia - Glória', compositor: 'P. Basler', duracao: "2'10\"" }
+      ]
+    },
+    {
+      id: '900000004',
+      nomeCoro: 'Onix Brasil Vocal Internacional',
+      nomeRegente: 'Paulo Sergio Motta',
+      emailRegente: 'paulosergio_nunesmotta@yahoo.com.br',
+      telefoneRegente: '(62) 99148-9893',
+      diaApresentacao: 'sabado',
+      duracaoMinutos: 15,
+      isInstitucional: true,
+      cidadeEstado: 'Goiânia - GO',
+      obrasRepertorio: [
+        { nomeObra: 'No Ordinary Love', compositor: 'Helen Folasade Adu (Sade) e Stuart Colin Matthewman', duracao: "7'" },
+        { nomeObra: 'Anos Dourados', compositor: 'Antônio Carlos Jobim e Francisco Buarque de Hollanda', duracao: "4'" },
+        { nomeObra: 'Consagração', compositor: 'Anderson e Marcelo Mattos', arranjador: 'Cristiane Carvalho e Wagner Derek', duracao: "3'" }
+      ]
+    },
+    {
+      id: '900000005',
+      nomeCoro: 'Coro Sinfônico de Goiânia',
+      nomeRegente: 'Ângelo Dias',
+      pianoAcompanhador: 'Fábio Leite',
+      telefoneRegente: '(62) 99688-1275',
+      diaApresentacao: 'domingo',
+      duracaoMinutos: 30,
+      isInstitucional: true,
+      cidadeEstado: 'Goiânia - GO',
+      linkDrive: 'https://drive.google.com/drive/folders/1jSbsWpGM7r_zmYpPDfxInoYuG0jtkLkS?usp=sharing',
+      historicoCoro: 'Fundado em outubro de 1999, o Coro Sinfônico de Goiânia é o resultado da fusão do Coral Municipal e da Camerata Vocal de Goiânia. Ligado à Orquestra Sinfônica de Goiânia, é composto por cantores profissionais com repertório do Renascimento ao contemporâneo, incluindo obras a cappella, ópera e grandes obras corais-sinfônicas. Já cantou sob regência de Isaac Karabtchevsky, Joshua Haberman, Abel Rocha, Neil Thomson, Benoît Fromanger e Fábio Zanon. Em 2019 realizou turnê com concertos em São Paulo e no Festival de Inverno de Campos do Jordão. Atualmente sob regência de Angelo Dias.',
+      obrasRepertorio: [
+        { nomeObra: 'Réquiem für Mignon', compositor: 'Robert Schumann', duracao: "11'" },
+        { nomeObra: 'Nunc dimittis', compositor: 'Gustav Holst', duracao: "3'" },
+        { nomeObra: 'Già il sole dal Gange', compositor: 'Alessandro Scarlatti', arranjador: 'Angelo Dias', duracao: "2'20\"" },
+        { nomeObra: 'Cateretê', compositor: 'Francisco Mignone', duracao: "3'" }
+      ]
+    }
   ];
 
   async function garantirSeedInstitucionais(){
@@ -2275,7 +2366,23 @@
   // getInscricoesData() agora lê do CACHE local (síncrono, instantâneo),
   // que é mantido sincronizado com o Firestore em tempo real.
   function getInscricoesData(){
-    return cacheInscricoes;
+    // Garante que coros institucionais sempre têm dados hardcoded mesmo se o Firestore não carregou
+    const lista = [...cacheInscricoes];
+    COROS_INSTITUCIONAIS_SEED.forEach(seed => {
+      const idx = lista.findIndex(i => i.id === seed.id);
+      if(idx >= 0){
+        if(!lista[idx].obrasRepertorio || lista[idx].obrasRepertorio.length === 0) lista[idx].obrasRepertorio = seed.obrasRepertorio;
+        if(!lista[idx].historicoCoro) lista[idx].historicoCoro = seed.historicoCoro || '';
+        if(!lista[idx].nomeRegente || lista[idx].nomeRegente === 'Organização VII ENCoros') lista[idx].nomeRegente = seed.nomeRegente;
+        if(!lista[idx].telefoneRegente) lista[idx].telefoneRegente = seed.telefoneRegente || '';
+        if(!lista[idx].cidadeEstado) lista[idx].cidadeEstado = seed.cidadeEstado || '';
+        if(!lista[idx].linkDrive) lista[idx].linkDrive = seed.linkDrive || '';
+        if(seed.pianoAcompanhador && !lista[idx].pianoAcompanhador) lista[idx].pianoAcompanhador = seed.pianoAcompanhador;
+      } else {
+        lista.push({ ...seed, isInstitucional: true, etapa: 'preliminar', status: 'Aprovado', fluxoInscricao: 'convidado' });
+      }
+    });
+    return lista;
   }
 
   // Conta quantas inscrições Presenciais já ocupam vagas de coro amador em cada dia
