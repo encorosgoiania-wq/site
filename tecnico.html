@@ -1246,17 +1246,20 @@ async function carregarRelatorio(){
     // Montar lista de coros na ordem do cronograma
     todosOsCoros = [];
     DIAS_ORDEM.forEach(diaId => {
-      const dia = cronPorDia[diaId];
-      if(!dia || !dia.coros) return;
-      dia.coros.forEach(item => {
-        const id = item.inscricaoId;
-        if(!id) return;
-        const coro = FIXOS[id] || inscricoes[id];
-        if(!coro) return;
-        // evitar duplicatas
-        if(todosOsCoros.find(c => c.id === id)) return;
-        todosOsCoros.push({ ...coro, diaApresentacao: diaId, _ordemCron: todosOsCoros.length });
-      });
+      try {
+        const dia = cronPorDia[diaId];
+        if(!dia || !dia.coros) return;
+        dia.coros.forEach(item => {
+          try {
+            const id = item.inscricaoId;
+            if(!id) return;
+            const coro = FIXOS[id] || inscricoes[id];
+            if(!coro) return;
+            if(todosOsCoros.find(c => c.id === id)) return;
+            todosOsCoros.push({ ...coro, diaApresentacao: diaId, _ordemCron: todosOsCoros.length });
+          } catch(e){}
+        });
+      } catch(e){}
     });
 
     // respostas técnicas
