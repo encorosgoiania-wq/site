@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Necessidades Técnicas — VII ENCoros 2026</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+  :root {
+    --petroleo: #0F2027;
+    --petroleo2: #16323B;
+    --ouro: #D4AF37;
+    --ouro2: #C5A059;
+    --fundo: #f8f7f2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--fundo); color: #1a1a1a; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--petroleo);
+    color: #fff;
+    padding: 28px 24px 20px;
+    text-align: center;
+    border-bottom: 3px solid var(--ouro);
+  }
+  .header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: .5px; }
+  .header p { font-size: .85rem; opacity: .75; margin-top: 4px; }
+
+  /* ── CONTAINER ── */
+  .container { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+
+  /* ── AVISO ── */
+  .aviso {
+    background: #fffbe6;
+    border-left: 4px solid var(--ouro);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: .875rem;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    color: #5a4a00;
+  }
+  .aviso strong { display: block; margin-bottom: 4px; font-size: .95rem; }
+
+  /* ── PRAZO ── */
+  .prazo-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 24px;
+    font-size: .85rem;
+    color: #555;
+  }
+  .prazo-bar .prazo-valor { font-weight: 700; color: var(--petroleo); }
+  .prazo-bar .prazo-encerrado { color: #c0392b; font-weight: 700; }
+
+  /* ── CARD ── */
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.08);
+    padding: 28px 28px 24px;
+    margin-bottom: 24px;
+  }
+  .card h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--petroleo);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  /* ── CAMPOS ── */
+  .campo { margin-bottom: 20px; }
+  .campo label {
+    display: block;
+    font-size: .875rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+  }
+  .campo label .obrig { color: #c0392b; }
+  .campo select,
+  .campo input[type=text],
+  .campo input[type=number],
+  .campo textarea {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: .9rem;
+    color: #1a1a1a;
+    background: #fafafa;
+    transition: border .2s;
+  }
+  .campo select:focus,
+  .campo input:focus,
+  .campo textarea:focus {
+    outline: none;
+    border-color: var(--ouro2);
+    background: #fff;
+  }
+  .campo textarea { resize: vertical; min-height: 70px; }
+
+  /* ── RADIO GROUP ── */
+  .radio-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+    cursor: pointer;
+    background: #f3f3f3;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: .875rem;
+    transition: background .15s, border .15s;
+  }
+  .radio-group input[type=radio] { accent-color: var(--petroleo); }
+  .radio-group label:has(input:checked) {
+    background: #e8f0f4;
+    border-color: var(--petroleo2);
+    color: var(--petroleo);
+    font-weight: 600;
+  }
+
+  /* ── SUBFIELD ── */
+  .subfield {
+    display: none;
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: #f7f7f7;
+    border-left: 3px solid var(--ouro2);
+    border-radius: 0 6px 6px 0;
+  }
+  .subfield.visivel { display: block; }
+  .subfield label { font-size: .83rem; margin-bottom: 5px; font-weight: 500; }
+
+  /* ── AVISO AGENDAMENTO ── */
+  .aviso-agendamento {
+    display: none;
+    background: #fff8e1;
+    border: 1px solid #f0c040;
+    border-radius: 6px;
+    padding: 10px 13px;
+    font-size: .83rem;
+    color: #7a5500;
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+  .aviso-agendamento.visivel { display: block; }
+
+  /* ── BOTÃO ── */
+  .btn {
+    display: inline-block;
+    padding: 12px 32px;
+    border: none;
+    border-radius: 8px;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--petroleo); color: #fff; }
+  .btn-primary:hover { opacity: .88; }
+  .btn-gold { background: var(--ouro); color: #1a1a1a; }
+  .btn-gold:hover { opacity: .88; }
+  .btn-sm { padding: 7px 16px; font-size: .82rem; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* ── SUCESSO ── */
+  .sucesso-box {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .sucesso-box .ico { font-size: 3rem; margin-bottom: 12px; }
+  .sucesso-box h2 { color: var(--petroleo); margin-bottom: 8px; }
+  .sucesso-box p { color: #555; font-size: .9rem; }
+  .sucesso-box .btn { margin-top: 20px; }
+
+  /* ── ENCERRADO ── */
+  .encerrado-box {
+    display: none;
+    text-align: center;
+    padding: 50px 20px;
+    color: #c0392b;
+  }
+  .encerrado-box .ico { font-size: 3rem; margin-bottom: 12px; }
+  .encerrado-box h2 { margin-bottom: 8px; }
+  .encerrado-box p { font-size: .9rem; color: #555; }
+
+  /* ── ADMIN PANEL ── */
+  #adminPanel { display: none; }
+  .admin-header {
+    background: var(--petroleo2);
+    color: #fff;
+    padding: 18px 24px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .admin-header h2 { font-size: 1rem; font-weight: 700; }
+  .admin-header .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .dia-bloco { margin-bottom: 36px; }
+  .dia-titulo {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--petroleo);
+    background: #eaf0f3;
+    padding: 10px 16px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--ouro);
+  }
+
+  .coro-card-rel {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .coro-card-rel .coro-nome {
+    background: var(--petroleo);
+    color: #fff;
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: .9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .coro-card-rel .coro-nome .btn-edit-resp { 
+    background: var(--ouro); color: #1a1a1a; border: none; 
+    border-radius: 5px; padding: 4px 11px; font-size: .75rem; 
+    font-weight: 700; cursor: pointer; 
+  }
+  .coro-card-rel .coro-corpo { padding: 14px 16px; }
+  .item-tec {
+    display: flex;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: .85rem;
+    align-items: flex-start;
+  }
+  .item-tec:last-child { border-bottom: none; }
+  .item-tec .it-label { font-weight: 600; color: #555; min-width: 200px; flex-shrink: 0; }
+  .item-tec .it-val { color: #1a1a1a; }
+  .it-alerta { color: #c0392b; font-weight: 700; }
+  .it-ok { color: #27ae60; }
+
+  /* ── CONFIG PRAZO ── */
+  .config-prazo-box {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .config-prazo-box h3 { font-size: .9rem; font-weight: 700; margin-bottom: 12px; color: var(--petroleo); }
+  .config-prazo-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .config-prazo-row input[type=datetime-local] {
+    border: 1px solid #ccc; border-radius: 6px; padding: 8px 10px;
+    font-size: .875rem; flex: 1; min-width: 200px;
+  }
+
+  /* ── ESTRUTURA GERAL ── */
+  .estrutura-card {
+    background: #fff;
+    border: 2px solid var(--ouro2);
+    border-radius: 10px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .estrutura-card .est-header {
+    background: var(--ouro);
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: .95rem;
+    color: #1a1a1a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .estrutura-card .est-corpo { padding: 16px 18px; }
+
+  /* ── LOGIN ── */
+  #loginBox {
+    max-width: 380px;
+    margin: 80px auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.12);
+    padding: 36px 32px;
+    text-align: center;
+  }
+  #loginBox h2 { color: var(--petroleo); margin-bottom: 6px; font-size: 1.2rem; }
+  #loginBox p { color: #777; font-size: .85rem; margin-bottom: 20px; }
+  #loginBox input {
+    width: 100%; border: 1px solid #ccc; border-radius: 6px;
+    padding: 10px 12px; font-size: .9rem; margin-bottom: 12px;
+  }
+  #loginBox .erro { color: #c0392b; font-size: .82rem; margin-top: -6px; margin-bottom: 10px; }
+
+  /* ── UTILITÁRIOS ── */
+  .loader { text-align: center; padding: 40px; color: #888; font-size: .9rem; }
+  .sem-resposta { color: #aaa; font-style: italic; font-size: .85rem; padding: 10px 0; }
+  .badge-dia {
+    display: inline-block;
+    background: var(--petroleo);
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: .72rem;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .resumo-topo {
+    background: #eaf0f3;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: .85rem;
+    margin-bottom: 20px;
+    color: var(--petroleo);
+  }
+
+  @media (max-width: 540px) {
+    .container { padding: 20px 12px 60px; }
+    .card { padding: 20px 16px; }
+    .item-tec .it-label { min-width: 140px; }
+    .config-prazo-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎼 VII ENCoros 2026 — Necessidades Técnicas</h1>
+  <p>Goiânia · 03 a 07 de setembro de 2026</p>
+</div>
+
+<!-- ── FORMULÁRIO PÚBLICO ── -->
+<div id="viewFormulario">
+  <div class="container">
+
+    <div id="prazoBar" class="prazo-bar">
+      <span>⏰ Prazo para envio:</span>
+      <span id="prazoValor" class="prazo-valor">carregando...</span>
+    </div>
+
+    <div id="encerradoBox" class="encerrado-box" style="display:none">
+      <div class="ico">🔒</div>
+      <h2>Prazo encerrado</h2>
+      <p>O período para envio de necessidades técnicas foi encerrado.<br>Em caso de dúvidas, entre em contato: <strong>(62) 99154-6757</strong></p>
+    </div>
+
+    <div id="formArea">
+      <div class="aviso">
+        <strong>📋 Informações importantes</strong>
+        O teatro disponibilizará: <strong>piano</strong>, <strong>teclado emergencial</strong> e <strong>estrutura geral de som com microfones de ambiência</strong>.<br>
+        Bateria, percussão, outros instrumentos, amplificadores e cabos são de <strong>responsabilidade do coral</strong>.
+      </div>
+
+      <div class="card">
+        <h2>Identificação do Coro</h2>
+
+        <div class="campo">
+          <label>Selecione o seu coro <span class="obrig">*</span></label>
+          <select id="selCoro">
+            <option value="">— carregando coros... —</option>
+          </select>
+        </div>
+
+        <div id="infoCoro" style="display:none; padding:10px 14px; background:#f0f4f7; border-radius:6px; font-size:.85rem; color:var(--petroleo2); margin-top:-8px;">
+          <strong id="infoNomeCoro"></strong><br>
+          <span id="infoRegente"></span> · <span id="infoDia"></span>
+        </div>
+
+        <div class="campo" style="margin-top:16px;">
+          <label>Nome de quem está preenchendo <span class="obrig">*</span></label>
+          <input type="text" id="nomeResponsavel" placeholder="Ex: João Silva (regente) ou Maria Costa (produtora)"/>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Necessidades Técnicas</h2>
+
+        <!-- 1. Estantes -->
+        <div class="campo">
+          <label>Quantidade de estantes de partitura <span class="obrig">*</span></label>
+          <input type="number" id="estantes" min="0" max="100" placeholder="0" value="0"/>
+        </div>
+
+        <!-- 2. Microfones solo -->
+        <div class="campo">
+          <label>Microfones para solo — quantidade</label>
+          <input type="number" id="micSolo" min="0" max="20" placeholder="0" value="0"/>
+          <p style="font-size:.78rem;color:#888;margin-top:4px;">O tipo disponível é definido pela organização. Microfones de ambiência já estarão montados.</p>
+        </div>
+
+        <!-- 3. Piano -->
+        <div class="campo">
+          <label>Vai usar piano?</label>
+          <div class="radio-group" id="rgPiano">
+            <label><input type="radio" name="piano" value="nao" checked> Não</label>
+            <label><input type="radio" name="piano" value="organizacao"> Sim — da organização</label>
+            <label><input type="radio" name="piano" value="proprio"> Sim — piano próprio</label>
+          </div>
+        </div>
+
+        <!-- 4. Teclado -->
+        <div class="campo">
+          <label>Vai usar teclado?</label>
+          <div class="radio-group" id="rgTeclado">
+            <label><input type="radio" name="teclado" value="nao" checked> Não</label>
+            <label><input type="radio" name="teclado" value="organizacao"> Sim — teclado emergencial da organização</label>
+            <label><input type="radio" name="teclado" value="proprio"> Sim — teclado próprio</label>
+          </div>
+        </div>
+
+        <!-- 5. Bateria -->
+        <div class="campo">
+          <label>Vai usar bateria?</label>
+          <div class="radio-group" id="rgBateria">
+            <label><input type="radio" name="bateria" value="nao" checked> Não</label>
+            <label><input type="radio" name="bateria" value="sim"> Sim (por conta do coral)</label>
+          </div>
+          <div class="aviso-agendamento" id="avisoBateria">
+            ⚠️ Instrumentos de maior porte exigem <strong>agendamento prévio de montagem e desmontagem</strong> com a gestão.<br>
+            Entre em contato: <strong>(62) 99154-6757</strong>
+          </div>
+          <div class="subfield" id="subfieldBateria">
+            <label>Sugestão de horário para montagem:</label>
+            <input type="text" id="bateriaMontagem" placeholder="Ex: quinta-feira às 17h"/>
+          </div>
+        </div>
+
+        <!-- 6. Percussão -->
+        <div class="campo">
+          <label>Vai usar percussão?</label>
+          <div class="radio-group" id="rgPercussao">
+            <label><input type="radio" name="percussao" value="nao" checked> Não</label>
+            <label><input type="radio" name="percussao" value="sim"> Sim (por conta do coral)</label>
+          </div>
+          <div class="aviso-agendamento" id="avisoPercussao">
+            ⚠️ Instrumentos de maior porte exigem <strong>agendamento prévio de montagem e desmontagem</strong> com a gestão.<br>
+            Entre em contato: <strong>(62) 99154-6757</strong>
+          </div>
+          <div class="subfield" id="subfieldPercussao">
+            <label>Qual(is) instrumento(s) de percussão?</label>
+            <input type="text" id="percussaoQuais" placeholder="Ex: tímpano, caixa clara, pandeiro"/>
+            <label style="margin-top:10px;">Sugestão de horário para montagem:</label>
+            <input type="text" id="percussaoMontagem" placeholder="Ex: sábado às 16h"/>
+          </div>
+        </div>
+
+        <!-- 7. Outro instrumento -->
+        <div class="campo">
+          <label>Vai usar outro instrumento?</label>
+          <div class="radio-group" id="rgOutroInstr">
+            <label><input type="radio" name="outroInstr" value="nao" checked> Não</label>
+            <label><input type="radio" name="outroInstr" value="sim"> Sim (por conta do coral)</label>
+          </div>
+          <div class="subfield" id="subfieldOutroInstr">
+            <label>Qual(is)?</label>
+            <input type="text" id="outroInstrQuais" placeholder="Ex: guitarra, violão, flauta, violino..."/>
+          </div>
+        </div>
+
+        <!-- 8. Cubo / caixa de som -->
+        <div class="campo">
+          <label>Vai precisar de cubo ou caixa de som?</label>
+          <div class="radio-group" id="rgCubo">
+            <label><input type="radio" name="cubo" value="nao" checked> Não</label>
+            <label><input type="radio" name="cubo" value="sim"> Sim</label>
+          </div>
+          <div class="subfield" id="subfieldCubo">
+            <label>Para qual equipamento?</label>
+            <input type="text" id="cuboEquipamento" placeholder="Ex: guitarra, teclado próprio, monitor de palco..."/>
+          </div>
+        </div>
+
+        <!-- 9. Músicos convidados -->
+        <div class="campo">
+          <label>Vai trazer músicos convidados?</label>
+          <div class="radio-group" id="rgMusicos">
+            <label><input type="radio" name="musicos" value="nao" checked> Não</label>
+            <label><input type="radio" name="musicos" value="sim"> Sim</label>
+          </div>
+          <div class="subfield" id="subfieldMusicos">
+            <label>Quantos músicos?</label>
+            <input type="number" id="musicosQtd" min="1" max="50" placeholder="1"/>
+            <label style="margin-top:10px;">Quais instrumentos?</label>
+            <input type="text" id="musicosInstr" placeholder="Ex: violão, violino e flauta"/>
+          </div>
+        </div>
+
+        <!-- 10. Cabos -->
+        <div class="campo">
+          <label>Vai trazer os próprios cabos?</label>
+          <div class="radio-group" id="rgCabos">
+            <label><input type="radio" name="cabos" value="sim" checked> Sim</label>
+            <label><input type="radio" name="cabos" value="nao"> Não</label>
+            <label><input type="radio" name="cabos" value="parcial"> Parcialmente</label>
+          </div>
+          <div class="subfield" id="subfieldCabos">
+            <label>Observação sobre cabos:</label>
+            <input type="text" id="cabosObs" placeholder="Ex: tenho cabo P10 mas não tenho XLR"/>
+          </div>
+        </div>
+
+        <!-- 11. Observações gerais -->
+        <div class="campo">
+          <label>Observações gerais</label>
+          <textarea id="obsGerais" placeholder="Qualquer informação técnica adicional relevante para a sua apresentação..."></textarea>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top: 8px;">
+        <button class="btn btn-primary" id="btnEnviar" onclick="enviarFormulario()">
+          Enviar Necessidades Técnicas
+        </button>
+        <p style="font-size:.78rem; color:#888; margin-top:10px;">Você poderá reeditar suas respostas acessando este link novamente.</p>
+      </div>
+
+      <!-- SUCESSO -->
+      <div class="sucesso-box" id="sucessoBox">
+        <div class="ico">✅</div>
+        <h2>Enviado com sucesso!</h2>
+        <p>Suas necessidades técnicas foram salvas.<br>Caso precise alterar algo, acesse este link novamente antes do prazo.</p>
+        <button class="btn btn-primary btn-sm" style="margin-top:16px;" onclick="location.reload()">Editar respostas</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── LOGIN ADMIN ── -->
+<div id="loginBox" style="display:none;">
+  <h2>🔐 Acesso Admin</h2>
+  <p>Relatório de Necessidades Técnicas</p>
+  <input type="password" id="senhaAdmin" placeholder="Senha" onkeydown="if(event.key==='Enter')fazerLogin()"/>
+  <div class="erro" id="erroLogin" style="display:none;">Senha incorreta.</div>
+  <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="fazerLogin()">Entrar</button>
+  <br><br>
+  <a href="?" style="font-size:.8rem;color:#888;">← Voltar ao formulário</a>
+</div>
+
+<!-- ── PAINEL ADMIN ── -->
+<div id="adminPanel">
+  <div class="container" style="max-width:960px;">
+
+    <div class="admin-header" style="border-radius:10px; margin-bottom:20px;">
+      <h2>📊 Relatório Técnico — VII ENCoros 2026</h2>
+      <div class="btns">
+        <button class="btn btn-gold btn-sm" onclick="imprimirRelatorio()">🖨️ Imprimir / PDF</button>
+        <button class="btn btn-sm" style="background:#fff;color:var(--petroleo);" onclick="location.href='?'">← Formulário</button>
+      </div>
+    </div>
+
+    <!-- Config prazo -->
+    <div class="config-prazo-box">
+      <h3>⚙️ Configurações</h3>
+      <div class="config-prazo-row">
+        <div>
+          <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:5px;">Prazo para envio dos maestros:</label>
+          <input type="datetime-local" id="inputPrazoAdmin"/>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="salvarPrazo()">Salvar prazo</button>
+      </div>
+      <div id="msgPrazo" style="font-size:.8rem;color:green;margin-top:8px;display:none;">✅ Prazo atualizado!</div>
+    </div>
+
+    <!-- Estrutura Geral -->
+    <div class="estrutura-card">
+      <div class="est-header">
+        🎭 Estrutura Geral do Teatro
+        <button class="btn btn-sm" style="background:var(--petroleo);color:#fff;" onclick="toggleEstruturaForm()">✏️ Editar</button>
+      </div>
+      <div class="est-corpo" id="estruturaVisualizacao">
+        <div class="loader">Carregando...</div>
+      </div>
+      <div id="estruturaForm" style="display:none; padding:16px 18px; border-top:1px solid #eee;">
+        <div class="campo">
+          <label>Microfones de ambiência disponíveis</label>
+          <input type="text" id="estMicAmbiencia" placeholder="Ex: 4 microfones condensadores suspensão"/>
+        </div>
+        <div class="campo">
+          <label>Piano da organização</label>
+          <input type="text" id="estPiano" placeholder="Ex: Piano Yamaha de cauda — disponível"/>
+        </div>
+        <div class="campo">
+          <label>Teclado emergencial</label>
+          <input type="text" id="estTeclado" placeholder="Ex: Teclado Roland 88 teclas — disponível"/>
+        </div>
+        <div class="campo">
+          <label>Sistema de som base</label>
+          <input type="text" id="estSom" placeholder="Ex: Sistema estéreo + mesa digital + 2 monitores"/>
+        </div>
+        <div class="campo">
+          <label>Disposição de palco padrão</label>
+          <textarea id="estPalco" placeholder="Descreva a disposição padrão do palco..."></textarea>
+        </div>
+        <div class="campo">
+          <label>Observações gerais da estrutura</label>
+          <textarea id="estObs" placeholder="Outras informações relevantes..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button class="btn btn-primary btn-sm" onclick="salvarEstrutura()">Salvar</button>
+          <button class="btn btn-sm" style="background:#eee;" onclick="toggleEstruturaForm()">Cancelar</button>
+        </div>
+        <div id="msgEstrutura" style="font-size:.8rem;color:green;margin-top:8px;display:none;">✅ Estrutura salva!</div>
+      </div>
+    </div>
+
+    <!-- Resumo -->
+    <div class="resumo-topo" id="resumoTopo">Carregando respostas...</div>
+
+    <!-- Relatório por dia -->
+    <div id="relatorioDias">
+      <div class="loader">Carregando...</div>
+    </div>
+
+    <!-- Sem resposta -->
+    <div id="semResposta" style="display:none;">
+      <div class="estrutura-card" style="border-color:#ddd;">
+        <div class="est-header" style="background:#f0f0f0;color:#555;">⚠️ Coros sem resposta</div>
+        <div class="est-corpo" id="listaSemResposta"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL EDIÇÃO RESPOSTA -->
+<div id="modalEdicao" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;overflow-y:auto;">
+  <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:10px;overflow:hidden;">
+    <div style="background:var(--petroleo);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+      <strong id="modalCoroNome">Editar resposta</strong>
+      <button onclick="fecharModal()" style="background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:24px 20px;">
+      <div id="modalConteudo"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn btn-primary btn-sm" onclick="salvarEdicaoModal()">Salvar alterações</button>
+        <button class="btn btn-sm" style="background:#eee;" onclick="fecharModal()">Cancelar</button>
+      </div>
+      <div id="msgModal" style="font-size:.8rem;color:green;margin-top:8px;display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── FIREBASE CONFIG ──
+const firebaseConfig = {
+  apiKey: "AIzaSyDgLIpoGCO4Lb5oeiXNwArAQtGmquRSMhA",
+  authDomain: "rifa-onix-barail---abril-26.firebaseapp.com",
+  projectId: "rifa-onix-barail---abril-26",
+  storageBucket: "rifa-onix-barail---abril-26.firebasestorage.app",
+  messagingSenderId: "462942707997",
+  appId: "1:462942707997:web:66fe13bb669444769fc1f4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const COL_INSCRICOES  = 'encoros2026_inscricoes';
+const COL_TECNICO     = 'encoros2026_tecnico';     // respostas do formulário técnico
+const COL_CONFIG_TEC  = 'encoros2026_config_tecnico'; // prazo + estrutura geral
+
+const ADMIN_SENHA = 'goiania26';
+const DIAS_ORDEM  = ['quinta','sexta','sabado','domingo','segunda'];
+const DIAS_LABEL  = {
+  quinta:  'Quinta-feira — 04/09',
+  sexta:   'Sexta-feira — 05/09',
+  sabado:  'Sábado — 06/09',
+  domingo: 'Domingo — 07/09',
+  segunda: 'Segunda-feira — 08/09'
+};
+
+// ── ROTEAMENTO ──
+const params = new URLSearchParams(location.search);
+const modoAdmin = params.get('admin') === '1';
+const jaLogado  = sessionStorage.getItem('tec_admin') === '1';
+
+window.addEventListener('DOMContentLoaded', () => {
+  if(modoAdmin){
+    if(jaLogado){ mostrarAdmin(); }
+    else { mostrarLogin(); }
+  } else {
+    iniciarFormulario();
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// ── FORMULÁRIO PÚBLICO ──
+// ═══════════════════════════════════════════════════════
+let prazoFim = null;
+let corosDisponiveis = [];
+
+async function iniciarFormulario(){
+  document.getElementById('viewFormulario').style.display = 'block';
+  await carregarPrazo();
+  await carregarCoros();
+  configurarSubfields();
+}
+
+async function carregarPrazo(){
+  try {
+    const snap = await db.collection(COL_CONFIG_TEC).doc('config').get();
+    if(snap.exists && snap.data().prazoFim){
+      prazoFim = snap.data().prazoFim.toDate ? snap.data().prazoFim.toDate() : new Date(snap.data().prazoFim);
+    } else {
+      // default: terça 26/08 às 23:59
+      prazoFim = new Date('2026-08-25T23:59:00');
+    }
+  } catch(e){
+    prazoFim = new Date('2026-08-25T23:59:00');
+  }
+  const agora = new Date();
+  const el = document.getElementById('prazoValor');
+  const encerrado = agora > prazoFim;
+  if(encerrado){
+    el.innerHTML = `<span class="prazo-encerrado">Encerrado em ${formatarData(prazoFim)}</span>`;
+    document.getElementById('formArea').style.display = 'none';
+    document.getElementById('encerradoBox').style.display = 'block';
+  } else {
+    el.textContent = formatarData(prazoFim);
+  }
+}
+
+async function carregarCoros(){
+  const sel = document.getElementById('selCoro');
+  try {
+    const snap = await db.collection(COL_INSCRICOES).get();
+    corosDisponiveis = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      if(d.nomeCoro && d.status === 'Aprovado' && d.modalidade === 'Presencial'){
+        corosDisponiveis.push({ id: doc.id, ...d });
+      }
+    });
+    // Adicionar coros institucionais fixos
+    const fixos = [
+      { id:'900000001', nomeCoro:'Coral Sinfônico da UFG (CSUFG)', nomeRegente:'Organização', diaApresentacao:'quinta', isInstitucional:true },
+      { id:'900000002', nomeCoro:'Coro Sinfônico Jovem de Goiás (CSJG)', nomeRegente:'Weber Assis', diaApresentacao:'sabado', isInstitucional:true },
+      { id:'900000003', nomeCoro:'Coro Juvenil de Goiânia', nomeRegente:'Eliseu Ferreira', diaApresentacao:'sexta', isInstitucional:true },
+      { id:'900000004', nomeCoro:'Onix Brasil Vocal Internacional', nomeRegente:'Paulo Sergio Motta', diaApresentacao:'sexta', isInstitucional:true },
+      { id:'900000005', nomeCoro:'Coro Sinfônico de Goiânia', nomeRegente:'Ângelo Dias', diaApresentacao:'sabado', isInstitucional:true },
+      { id:'900000006', nomeCoro:'Concerto de Abertura — Coros Institucionais', nomeRegente:'Ângelo Dias', diaApresentacao:'quinta', isInstitucional:true },
+    ];
+    fixos.forEach(f => {
+      if(!corosDisponiveis.find(c => c.id === f.id)) corosDisponiveis.push(f);
+    });
+    corosDisponiveis.sort((a,b) => {
+      const di = DIAS_ORDEM.indexOf(a.diaApresentacao) - DIAS_ORDEM.indexOf(b.diaApresentacao);
+      if(di !== 0) return di;
+      return (a.nomeCoro||'').localeCompare(b.nomeCoro||'','pt-BR');
+    });
+    sel.innerHTML = '<option value="">— Selecione o seu coro —</option>';
+    corosDisponiveis.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = `${c.nomeCoro} (${DIAS_LABEL[c.diaApresentacao] || c.diaApresentacao || '—'})`;
+      sel.appendChild(opt);
+    });
+  } catch(e){
+    sel.innerHTML = '<option value="">Erro ao carregar coros</option>';
+  }
+
+  sel.addEventListener('change', async () => {
+    const coro = corosDisponiveis.find(c => c.id === sel.value);
+    const info = document.getElementById('infoCoro');
+    if(coro){
+      document.getElementById('infoNomeCoro').textContent = coro.nomeCoro;
+      document.getElementById('infoRegente').textContent = coro.nomeRegente || '—';
+      document.getElementById('infoDia').textContent = DIAS_LABEL[coro.diaApresentacao] || '—';
+      info.style.display = 'block';
+      await preencherResposta(coro.id);
+    } else {
+      info.style.display = 'none';
+    }
+  });
+}
+
+async function preencherResposta(coroId){
+  try {
+    const snap = await db.collection(COL_TECNICO).doc(coroId).get();
+    if(!snap.exists) return;
+    const d = snap.data();
+    if(d.nomeResponsavel) document.getElementById('nomeResponsavel').value = d.nomeResponsavel;
+    if(d.estantes !== undefined) document.getElementById('estantes').value = d.estantes;
+    if(d.micSolo !== undefined) document.getElementById('micSolo').value = d.micSolo;
+    setRadio('piano', d.piano || 'nao');
+    setRadio('teclado', d.teclado || 'nao');
+    setRadio('bateria', d.bateria || 'nao');
+    if(d.bateriaMontagem) document.getElementById('bateriaMontagem').value = d.bateriaMontagem;
+    setRadio('percussao', d.percussao || 'nao');
+    if(d.percussaoQuais) document.getElementById('percussaoQuais').value = d.percussaoQuais;
+    if(d.percussaoMontagem) document.getElementById('percussaoMontagem').value = d.percussaoMontagem;
+    setRadio('outroInstr', d.outroInstr || 'nao');
+    if(d.outroInstrQuais) document.getElementById('outroInstrQuais').value = d.outroInstrQuais;
+    setRadio('cubo', d.cubo || 'nao');
+    if(d.cuboEquipamento) document.getElementById('cuboEquipamento').value = d.cuboEquipamento;
+    setRadio('musicos', d.musicos || 'nao');
+    if(d.musicosQtd) document.getElementById('musicosQtd').value = d.musicosQtd;
+    if(d.musicosInstr) document.getElementById('musicosInstr').value = d.musicosInstr;
+    setRadio('cabos', d.cabos || 'sim');
+    if(d.cabosObs) document.getElementById('cabosObs').value = d.cabosObs;
+    if(d.obsGerais) document.getElementById('obsGerais').value = d.obsGerais;
+    atualizarSubfields();
+  } catch(e){}
+}
+
+function setRadio(name, value){
+  const el = document.querySelector(`input[name="${name}"][value="${value}"]`);
+  if(el) el.checked = true;
+}
+
+function getRadio(name){
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+
+function configurarSubfields(){
+  const pares = [
+    ['bateria','sim',  ['subfieldBateria','avisoBateria']],
+    ['percussao','sim',['subfieldPercussao','avisoPercussao']],
+    ['outroInstr','sim',['subfieldOutroInstr']],
+    ['cubo','sim',    ['subfieldCubo']],
+    ['musicos','sim', ['subfieldMusicos']],
+    ['cabos','nao',   ['subfieldCabos']],
+    ['cabos','parcial',['subfieldCabos']],
+  ];
+  document.querySelectorAll('input[type=radio]').forEach(r => {
+    r.addEventListener('change', atualizarSubfields);
+  });
+  atualizarSubfields();
+}
+
+function atualizarSubfields(){
+  // bateria
+  const batSim = getRadio('bateria') === 'sim';
+  document.getElementById('subfieldBateria').classList.toggle('visivel', batSim);
+  document.getElementById('avisoBateria').classList.toggle('visivel', batSim);
+  // percussao
+  const perSim = getRadio('percussao') === 'sim';
+  document.getElementById('subfieldPercussao').classList.toggle('visivel', perSim);
+  document.getElementById('avisoPercussao').classList.toggle('visivel', perSim);
+  // outro instrumento
+  document.getElementById('subfieldOutroInstr').classList.toggle('visivel', getRadio('outroInstr') === 'sim');
+  // cubo
+  document.getElementById('subfieldCubo').classList.toggle('visivel', getRadio('cubo') === 'sim');
+  // musicos
+  document.getElementById('subfieldMusicos').classList.toggle('visivel', getRadio('musicos') === 'sim');
+  // cabos
+  const cabos = getRadio('cabos');
+  document.getElementById('subfieldCabos').classList.toggle('visivel', cabos === 'nao' || cabos === 'parcial');
+}
+
+async function enviarFormulario(){
+  const coroId = document.getElementById('selCoro').value;
+  const nomeResp = document.getElementById('nomeResponsavel').value.trim();
+  if(!coroId){ alert('Selecione o seu coro.'); return; }
+  if(!nomeResp){ alert('Informe o nome de quem está preenchendo.'); return; }
+  if(new Date() > prazoFim){ alert('O prazo para envio já encerrou.'); return; }
+
+  const btn = document.getElementById('btnEnviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const dados = {
+    coroId,
+    nomeResponsavel: nomeResp,
+    estantes: parseInt(document.getElementById('estantes').value) || 0,
+    micSolo:  parseInt(document.getElementById('micSolo').value) || 0,
+    piano:    getRadio('piano'),
+    teclado:  getRadio('teclado'),
+    bateria:  getRadio('bateria'),
+    bateriaMontagem: document.getElementById('bateriaMontagem').value.trim(),
+    percussao: getRadio('percussao'),
+    percussaoQuais: document.getElementById('percussaoQuais').value.trim(),
+    percussaoMontagem: document.getElementById('percussaoMontagem').value.trim(),
+    outroInstr: getRadio('outroInstr'),
+    outroInstrQuais: document.getElementById('outroInstrQuais').value.trim(),
+    cubo: getRadio('cubo'),
+    cuboEquipamento: document.getElementById('cuboEquipamento').value.trim(),
+    musicos: getRadio('musicos'),
+    musicosQtd: parseInt(document.getElementById('musicosQtd').value) || 0,
+    musicosInstr: document.getElementById('musicosInstr').value.trim(),
+    cabos: getRadio('cabos'),
+    cabosObs: document.getElementById('cabosObs').value.trim(),
+    obsGerais: document.getElementById('obsGerais').value.trim(),
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  // salvar histórico
+  dados.historico = firebase.firestore.FieldValue.arrayUnion({
+    ts: new Date().toISOString(),
+    nomeResponsavel: nomeResp
+  });
+
+  try {
+    await db.collection(COL_TECNICO).doc(coroId).set(dados, { merge: true });
+    document.getElementById('formArea').style.display = 'none';
+    document.getElementById('sucessoBox').style.display = 'block';
+  } catch(e){
+    alert('Erro ao salvar. Tente novamente.');
+    btn.disabled = false;
+    btn.textContent = 'Enviar Necessidades Técnicas';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// ── ADMIN ──
+// ═══════════════════════════════════════════════════════
+function mostrarLogin(){
+  document.getElementById('viewFormulario').style.display = 'none';
+  document.getElementById('loginBox').style.display = 'block';
+}
+
+function fazerLogin(){
+  const senha = document.getElementById('senhaAdmin').value;
+  if(senha === ADMIN_SENHA){
+    sessionStorage.setItem('tec_admin','1');
+    document.getElementById('loginBox').style.display = 'none';
+    mostrarAdmin();
+  } else {
+    document.getElementById('erroLogin').style.display = 'block';
+  }
+}
+
+async function mostrarAdmin(){
+  document.getElementById('viewFormulario').style.display = 'none';
+  document.getElementById('loginBox').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'block';
+  await carregarConfigAdmin();
+  await carregarRelatorio();
+}
+
+async function carregarConfigAdmin(){
+  try {
+    const snap = await db.collection(COL_CONFIG_TEC).doc('config').get();
+    if(snap.exists){
+      const d = snap.data();
+      if(d.prazoFim){
+        const dt = d.prazoFim.toDate ? d.prazoFim.toDate() : new Date(d.prazoFim);
+        document.getElementById('inputPrazoAdmin').value = toLocalDatetime(dt);
+      }
+    } else {
+      document.getElementById('inputPrazoAdmin').value = '2026-08-25T23:59';
+    }
+    await carregarEstrutura();
+  } catch(e){}
+}
+
+async function salvarPrazo(){
+  const val = document.getElementById('inputPrazoAdmin').value;
+  if(!val){ alert('Informe a data/hora.'); return; }
+  const dt = new Date(val);
+  await db.collection(COL_CONFIG_TEC).doc('config').set({ prazoFim: dt }, { merge: true });
+  const msg = document.getElementById('msgPrazo');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+}
+
+async function carregarEstrutura(){
+  const viz = document.getElementById('estruturaVisualizacao');
+  try {
+    const snap = await db.collection(COL_CONFIG_TEC).doc('estrutura').get();
+    if(snap.exists){
+      const d = snap.data();
+      viz.innerHTML = renderEstrutura(d);
+      document.getElementById('estMicAmbiencia').value = d.micAmbiencia || '';
+      document.getElementById('estPiano').value = d.piano || '';
+      document.getElementById('estTeclado').value = d.teclado || '';
+      document.getElementById('estSom').value = d.som || '';
+      document.getElementById('estPalco').value = d.palco || '';
+      document.getElementById('estObs').value = d.obs || '';
+    } else {
+      viz.innerHTML = '<p style="color:#aaa;font-style:italic;font-size:.85rem;">Estrutura geral ainda não preenchida. Clique em Editar.</p>';
+    }
+  } catch(e){
+    viz.innerHTML = '<p style="color:#c0392b;font-size:.85rem;">Erro ao carregar.</p>';
+  }
+}
+
+function renderEstrutura(d){
+  const campos = [
+    ['Microfones de ambiência', d.micAmbiencia],
+    ['Piano da organização', d.piano],
+    ['Teclado emergencial', d.teclado],
+    ['Sistema de som base', d.som],
+    ['Disposição de palco padrão', d.palco],
+    ['Observações', d.obs],
+  ];
+  return campos.filter(([,v]) => v).map(([l,v]) => `
+    <div class="item-tec">
+      <span class="it-label">${l}</span>
+      <span class="it-val">${v}</span>
+    </div>`).join('') || '<p style="color:#aaa;font-style:italic;font-size:.85rem;">Nenhuma informação cadastrada.</p>';
+}
+
+function toggleEstruturaForm(){
+  const f = document.getElementById('estruturaForm');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function salvarEstrutura(){
+  const dados = {
+    micAmbiencia: document.getElementById('estMicAmbiencia').value.trim(),
+    piano:        document.getElementById('estPiano').value.trim(),
+    teclado:      document.getElementById('estTeclado').value.trim(),
+    som:          document.getElementById('estSom').value.trim(),
+    palco:        document.getElementById('estPalco').value.trim(),
+    obs:          document.getElementById('estObs').value.trim(),
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  await db.collection(COL_CONFIG_TEC).doc('estrutura').set(dados);
+  document.getElementById('estruturaVisualizacao').innerHTML = renderEstrutura(dados);
+  document.getElementById('estruturaForm').style.display = 'none';
+  const msg = document.getElementById('msgEstrutura');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+}
+
+// ── RELATÓRIO ──
+let todosOsCoros = [];
+let todasRespostas = {};
+
+async function carregarRelatorio(){
+  document.getElementById('relatorioDias').innerHTML = '<div class="loader">Carregando...</div>';
+  try {
+    // coros inscritos
+    const snapCoros = await db.collection(COL_INSCRICOES).get();
+    todosOsCoros = [];
+    snapCoros.forEach(doc => {
+      const d = doc.data();
+      if(d.nomeCoro && d.status === 'Aprovado' && d.modalidade === 'Presencial'){
+        todosOsCoros.push({ id: doc.id, ...d });
+      }
+    });
+    // fixos
+    const fixos = [
+      { id:'900000001', nomeCoro:'Coral Sinfônico da UFG (CSUFG)', nomeRegente:'Organização', diaApresentacao:'quinta', isInstitucional:true },
+      { id:'900000002', nomeCoro:'Coro Sinfônico Jovem de Goiás (CSJG)', nomeRegente:'Weber Assis', diaApresentacao:'sabado', isInstitucional:true },
+      { id:'900000003', nomeCoro:'Coro Juvenil de Goiânia', nomeRegente:'Eliseu Ferreira', diaApresentacao:'sexta', isInstitucional:true },
+      { id:'900000004', nomeCoro:'Onix Brasil Vocal Internacional', nomeRegente:'Paulo Sergio Motta', diaApresentacao:'sexta', isInstitucional:true },
+      { id:'900000005', nomeCoro:'Coro Sinfônico de Goiânia', nomeRegente:'Ângelo Dias', diaApresentacao:'sabado', isInstitucional:true },
+      { id:'900000006', nomeCoro:'Concerto de Abertura — Coros Institucionais', nomeRegente:'Ângelo Dias', diaApresentacao:'quinta', isInstitucional:true },
+    ];
+    fixos.forEach(f => { if(!todosOsCoros.find(c => c.id === f.id)) todosOsCoros.push(f); });
+
+    // respostas técnicas
+    const snapTec = await db.collection(COL_TECNICO).get();
+    todasRespostas = {};
+    snapTec.forEach(doc => { todasRespostas[doc.id] = doc.data(); });
+
+    renderRelatorio();
+  } catch(e){
+    document.getElementById('relatorioDias').innerHTML = '<p style="color:#c0392b;padding:20px;">Erro ao carregar dados.</p>';
+  }
+}
+
+function renderRelatorio(){
+  const comResp  = todosOsCoros.filter(c => todasRespostas[c.id]);
+  const semResp  = todosOsCoros.filter(c => !todasRespostas[c.id]);
+
+  document.getElementById('resumoTopo').innerHTML =
+    `<strong>${todosOsCoros.length}</strong> coros no total · ` +
+    `<strong style="color:green">${comResp.length}</strong> com resposta · ` +
+    `<strong style="color:#c0392b">${semResp.length}</strong> sem resposta`;
+
+  let html = '';
+  DIAS_ORDEM.forEach(diaId => {
+    const coros = todosOsCoros.filter(c => c.diaApresentacao === diaId).sort((a,b) =>
+      (a.nomeCoro||'').localeCompare(b.nomeCoro||'','pt-BR'));
+    if(coros.length === 0) return;
+    html += `<div class="dia-bloco"><div class="dia-titulo">${DIAS_LABEL[diaId]||diaId}</div>`;
+    coros.forEach(coro => {
+      const r = todasRespostas[coro.id];
+      html += renderCoroCard(coro, r);
+    });
+    html += '</div>';
+  });
+  document.getElementById('relatorioDias').innerHTML = html || '<p class="sem-resposta">Nenhum dado disponível.</p>';
+
+  // sem resposta
+  if(semResp.length > 0){
+    document.getElementById('semResposta').style.display = 'block';
+    document.getElementById('listaSemResposta').innerHTML = semResp.map(c =>
+      `<div class="item-tec"><span class="it-label">${c.nomeCoro}</span><span class="it-val" style="color:#aaa;">${DIAS_LABEL[c.diaApresentacao]||'—'} · sem resposta</span></div>`
+    ).join('');
+  }
+}
+
+function renderCoroCard(coro, r){
+  const temResp = !!r;
+  const nomeBtn = `<button class="btn-edit-resp" onclick="abrirModal('${coro.id}')">✏️ Editar</button>`;
+
+  if(!temResp){
+    return `
+      <div class="coro-card-rel">
+        <div class="coro-nome">
+          <span>${coro.nomeCoro}</span>
+          ${nomeBtn}
+        </div>
+        <div class="coro-corpo">
+          <p class="sem-resposta">Sem resposta ainda.</p>
+        </div>
+      </div>`;
+  }
+
+  const linhas = [
+    ['Estantes de partitura', r.estantes > 0 ? `${r.estantes} estante(s)` : 'Não precisa', r.estantes > 0 ? 'it-alerta' : 'it-ok'],
+    ['Microfone(s) para solo', r.micSolo > 0 ? `${r.micSolo} microfone(s)` : 'Não precisa', r.micSolo > 0 ? 'it-alerta' : 'it-ok'],
+    ['Piano', labelInstr(r.piano), r.piano !== 'nao' ? 'it-alerta' : 'it-ok'],
+    ['Teclado', labelInstr(r.teclado), r.teclado !== 'nao' ? 'it-alerta' : 'it-ok'],
+    ['Bateria', r.bateria === 'sim' ? `⚠️ Sim — montagem: ${r.bateriaMontagem || 'não informado'}` : 'Não', r.bateria === 'sim' ? 'it-alerta' : 'it-ok'],
+    ['Percussão', r.percussao === 'sim' ? `⚠️ Sim (${r.percussaoQuais||'—'}) — montagem: ${r.percussaoMontagem||'não informado'}` : 'Não', r.percussao === 'sim' ? 'it-alerta' : 'it-ok'],
+    ['Outro instrumento', r.outroInstr === 'sim' ? `Sim: ${r.outroInstrQuais||'—'}` : 'Não', r.outroInstr === 'sim' ? 'it-alerta' : 'it-ok'],
+    ['Cubo / caixa de som', r.cubo === 'sim' ? `Sim: ${r.cuboEquipamento||'—'}` : 'Não', r.cubo === 'sim' ? 'it-alerta' : 'it-ok'],
+    ['Músicos convidados', r.musicos === 'sim' ? `Sim: ${r.musicosQtd||'?'} músico(s) — ${r.musicosInstr||'—'}` : 'Não', r.musicos === 'sim' ? 'it-alerta' : 'it-ok'],
+    ['Cabos', labelCabos(r.cabos, r.cabosObs), r.cabos === 'nao' ? 'it-alerta' : 'it-ok'],
+    ['Observações', r.obsGerais || '—', ''],
+  ];
+
+  const resp = r.nomeResponsavel ? `<span style="font-size:.75rem;opacity:.7;margin-left:8px;">por ${r.nomeResponsavel}</span>` : '';
+
+  return `
+    <div class="coro-card-rel">
+      <div class="coro-nome">
+        <span>${coro.nomeCoro}${resp}</span>
+        ${nomeBtn}
+      </div>
+      <div class="coro-corpo">
+        ${linhas.map(([l,v,cls]) => `
+          <div class="item-tec">
+            <span class="it-label">${l}</span>
+            <span class="it-val ${cls||''}">${v}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function labelInstr(v){
+  if(!v || v === 'nao') return 'Não';
+  if(v === 'organizacao') return '✅ Sim — da organização';
+  if(v === 'proprio') return '⚠️ Sim — próprio (trazer)';
+  return v;
+}
+function labelCabos(v, obs){
+  if(v === 'sim') return 'Sim — traz os próprios';
+  if(v === 'nao') return `⚠️ Não — ${obs||'sem observação'}`;
+  if(v === 'parcial') return `⚠️ Parcialmente — ${obs||'sem observação'}`;
+  return '—';
+}
+
+// ── MODAL EDIÇÃO ──
+let modalCoroId = null;
+
+function abrirModal(coroId){
+  modalCoroId = coroId;
+  const coro = todosOsCoros.find(c => c.id === coroId);
+  const r = todasRespostas[coroId] || {};
+  document.getElementById('modalCoroNome').textContent = coro ? coro.nomeCoro : coroId;
+
+  document.getElementById('modalConteudo').innerHTML = `
+    <div class="campo"><label>Responsável</label>
+      <input type="text" id="m_nomeResp" value="${r.nomeResponsavel||''}"/></div>
+    <div class="campo"><label>Estantes</label>
+      <input type="number" id="m_estantes" value="${r.estantes||0}" min="0"/></div>
+    <div class="campo"><label>Microfones solo</label>
+      <input type="number" id="m_micSolo" value="${r.micSolo||0}" min="0"/></div>
+    <div class="campo"><label>Piano</label>
+      <select id="m_piano">
+        <option value="nao" ${r.piano==='nao'||!r.piano?'selected':''}>Não</option>
+        <option value="organizacao" ${r.piano==='organizacao'?'selected':''}>Da organização</option>
+        <option value="proprio" ${r.piano==='proprio'?'selected':''}>Próprio</option>
+      </select></div>
+    <div class="campo"><label>Teclado</label>
+      <select id="m_teclado">
+        <option value="nao" ${r.teclado==='nao'||!r.teclado?'selected':''}>Não</option>
+        <option value="organizacao" ${r.teclado==='organizacao'?'selected':''}>Da organização</option>
+        <option value="proprio" ${r.teclado==='proprio'?'selected':''}>Próprio</option>
+      </select></div>
+    <div class="campo"><label>Bateria</label>
+      <select id="m_bateria">
+        <option value="nao" ${r.bateria==='nao'||!r.bateria?'selected':''}>Não</option>
+        <option value="sim" ${r.bateria==='sim'?'selected':''}>Sim (por conta do coral)</option>
+      </select></div>
+    <div class="campo"><label>Montagem bateria</label>
+      <input type="text" id="m_bateriaMontagem" value="${r.bateriaMontagem||''}"/></div>
+    <div class="campo"><label>Percussão</label>
+      <select id="m_percussao">
+        <option value="nao" ${r.percussao==='nao'||!r.percussao?'selected':''}>Não</option>
+        <option value="sim" ${r.percussao==='sim'?'selected':''}>Sim</option>
+      </select></div>
+    <div class="campo"><label>Quais percussão</label>
+      <input type="text" id="m_percussaoQuais" value="${r.percussaoQuais||''}"/></div>
+    <div class="campo"><label>Montagem percussão</label>
+      <input type="text" id="m_percussaoMontagem" value="${r.percussaoMontagem||''}"/></div>
+    <div class="campo"><label>Outro instrumento</label>
+      <select id="m_outroInstr">
+        <option value="nao" ${r.outroInstr==='nao'||!r.outroInstr?'selected':''}>Não</option>
+        <option value="sim" ${r.outroInstr==='sim'?'selected':''}>Sim</option>
+      </select></div>
+    <div class="campo"><label>Quais instrumentos</label>
+      <input type="text" id="m_outroInstrQuais" value="${r.outroInstrQuais||''}"/></div>
+    <div class="campo"><label>Cubo / caixa de som</label>
+      <select id="m_cubo">
+        <option value="nao" ${r.cubo==='nao'||!r.cubo?'selected':''}>Não</option>
+        <option value="sim" ${r.cubo==='sim'?'selected':''}>Sim</option>
+      </select></div>
+    <div class="campo"><label>Para qual equipamento</label>
+      <input type="text" id="m_cuboEquip" value="${r.cuboEquipamento||''}"/></div>
+    <div class="campo"><label>Músicos convidados</label>
+      <select id="m_musicos">
+        <option value="nao" ${r.musicos==='nao'||!r.musicos?'selected':''}>Não</option>
+        <option value="sim" ${r.musicos==='sim'?'selected':''}>Sim</option>
+      </select></div>
+    <div class="campo"><label>Qtd músicos</label>
+      <input type="number" id="m_musicosQtd" value="${r.musicosQtd||0}" min="0"/></div>
+    <div class="campo"><label>Instrumentos convidados</label>
+      <input type="text" id="m_musicosInstr" value="${r.musicosInstr||''}"/></div>
+    <div class="campo"><label>Cabos</label>
+      <select id="m_cabos">
+        <option value="sim" ${r.cabos==='sim'||!r.cabos?'selected':''}>Sim — traz os próprios</option>
+        <option value="nao" ${r.cabos==='nao'?'selected':''}>Não</option>
+        <option value="parcial" ${r.cabos==='parcial'?'selected':''}>Parcialmente</option>
+      </select></div>
+    <div class="campo"><label>Obs cabos</label>
+      <input type="text" id="m_cabosObs" value="${r.cabosObs||''}"/></div>
+    <div class="campo"><label>Observações gerais</label>
+      <textarea id="m_obsGerais">${r.obsGerais||''}</textarea></div>
+  `;
+  document.getElementById('modalEdicao').style.display = 'block';
+}
+
+function fecharModal(){
+  document.getElementById('modalEdicao').style.display = 'none';
+  modalCoroId = null;
+}
+
+async function salvarEdicaoModal(){
+  if(!modalCoroId) return;
+  const dados = {
+    coroId: modalCoroId,
+    nomeResponsavel: document.getElementById('m_nomeResp').value.trim(),
+    estantes: parseInt(document.getElementById('m_estantes').value)||0,
+    micSolo:  parseInt(document.getElementById('m_micSolo').value)||0,
+    piano:    document.getElementById('m_piano').value,
+    teclado:  document.getElementById('m_teclado').value,
+    bateria:  document.getElementById('m_bateria').value,
+    bateriaMontagem: document.getElementById('m_bateriaMontagem').value.trim(),
+    percussao: document.getElementById('m_percussao').value,
+    percussaoQuais: document.getElementById('m_percussaoQuais').value.trim(),
+    percussaoMontagem: document.getElementById('m_percussaoMontagem').value.trim(),
+    outroInstr: document.getElementById('m_outroInstr').value,
+    outroInstrQuais: document.getElementById('m_outroInstrQuais').value.trim(),
+    cubo: document.getElementById('m_cubo').value,
+    cuboEquipamento: document.getElementById('m_cuboEquip').value.trim(),
+    musicos: document.getElementById('m_musicos').value,
+    musicosQtd: parseInt(document.getElementById('m_musicosQtd').value)||0,
+    musicosInstr: document.getElementById('m_musicosInstr').value.trim(),
+    cabos: document.getElementById('m_cabos').value,
+    cabosObs: document.getElementById('m_cabosObs').value.trim(),
+    obsGerais: document.getElementById('m_obsGerais').value.trim(),
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  await db.collection(COL_TECNICO).doc(modalCoroId).set(dados, { merge: true });
+  todasRespostas[modalCoroId] = dados;
+  const msg = document.getElementById('msgModal');
+  msg.textContent = '✅ Salvo!';
+  msg.style.display = 'block';
+  setTimeout(() => { fecharModal(); renderRelatorio(); }, 1200);
+}
+
+function imprimirRelatorio(){ window.print(); }
+
+// ── UTILITÁRIOS ──
+function formatarData(dt){
+  if(!dt) return '—';
+  return dt.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function toLocalDatetime(dt){
+  const pad = n => String(n).padStart(2,'0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+}
+</script>
+</body>
+</html>
