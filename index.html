@@ -2567,34 +2567,12 @@
     PROGRAMACAO_DATA.forEach(dia => {
       if((dia.corosFixos || []).length === 0) return;
 
-      if(!todosCronogramas[dia.id]){
-        // Dia sem nenhum cronograma salvo: cria seed do zero
-        todosCronogramas[dia.id] = gerarCronogramaSeed(dia.id);
-        alterou = true;
-        return;
-      }
+      // NUNCA toca em dia que já existe no Firestore — qualquer dado é intocável
+      if(todosCronogramas[dia.id]) return;
 
-      const cronoExistente = todosCronogramas[dia.id];
-      const temAmadores = (cronoExistente.coros || []).some(c => !c.fixo && !c.livre);
-
-      // SE já tem coros amadores no cronograma, não tocamos em NADA.
-      // O admin montou esse cronograma manualmente — é intocável.
-      if(temAmadores) return;
-
-      // Só sincroniza duração/anfitrião dos fixos quando não há amadores
-      cronoExistente.coros.forEach(item => {
-        if(!item.fixo) return;
-        const definicaoAtual = dia.corosFixos.find(c => c.nomeCoro === item.nomeCoro);
-        if(!definicaoAtual) return;
-        if(item.anfitriao !== !!definicaoAtual.anfitriao){
-          item.anfitriao = !!definicaoAtual.anfitriao;
-          alterou = true;
-        }
-        if(item.duracaoMinutos !== definicaoAtual.duracaoMinutos){
-          item.duracaoMinutos = definicaoAtual.duracaoMinutos;
-          alterou = true;
-        }
-      });
+      // Só cria seed se o dia não existe de forma alguma
+      todosCronogramas[dia.id] = gerarCronogramaSeed(dia.id);
+      alterou = true;
     });
 
     if(alterou){
