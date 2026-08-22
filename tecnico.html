@@ -635,6 +635,14 @@
           <input type="text" id="estMonitor" placeholder="Ex: 4 monitores de chão"/>
         </div>
         <div class="campo">
+          <label>Retorno de palco</label>
+          <input type="text" id="estRetorno" placeholder="Ex: 4 retornos de chão / sistema in-ear"/>
+        </div>
+        <div class="campo">
+          <label>Caixas de som adicionais</label>
+          <input type="text" id="estCaixasAdicional" placeholder="Ex: 2 caixas de apoio laterais disponíveis"/>
+        </div>
+        <div class="campo">
           <label>Cubo / amplificador disponível</label>
           <input type="text" id="estCubo" placeholder="Ex: 1 cubo para teclado — disponível mediante agendamento"/>
         </div>
@@ -693,6 +701,10 @@
         <div class="campo">
           <label>Telão / projeção</label>
           <input type="text" id="estTelao" placeholder="Ex: Telão 6x4m com projetor — disponível"/>
+        </div>
+        <div class="campo">
+          <label>Data show / projetor</label>
+          <input type="text" id="estDatashow" placeholder="Ex: Projetor Epson 5000 lumens — disponível"/>
         </div>
         <div class="campo">
           <label>Transmissão ao vivo</label>
@@ -1096,6 +1108,8 @@ async function carregarEstrutura(){
       document.getElementById('estMicSolo').value = d.micSolo || '';
       document.getElementById('estPA').value = d.pa || '';
       document.getElementById('estMonitor').value = d.monitor || '';
+      document.getElementById('estRetorno').value = d.retorno || '';
+      document.getElementById('estCaixasAdicional').value = d.caixasAdicional || '';
       document.getElementById('estCubo').value = d.cubo || '';
       document.getElementById('estPiano').value = d.piano || '';
       document.getElementById('estTeclado').value = d.teclado || '';
@@ -1109,6 +1123,7 @@ async function carregarEstrutura(){
       document.getElementById('estCadeiras').value = d.cadeiras || '';
       document.getElementById('estPraticaveis').value = d.praticaveis || '';
       document.getElementById('estTelao').value = d.telao || '';
+      document.getElementById('estDatashow').value = d.datashow || '';
       document.getElementById('estTransmissao').value = d.transmissao || '';
       document.getElementById('estCamarins').value = d.camarins || '';
       document.getElementById('estTomadas').value = d.tomadas || '';
@@ -1129,6 +1144,8 @@ function renderEstrutura(d){
     ['Microfones de solo', d.micSolo],
     ['Caixas de som / PA', d.pa],
     ['Monitores de palco', d.monitor],
+    ['Retorno de palco', d.retorno],
+    ['Caixas de som adicionais', d.caixasAdicional],
     ['Cubo / amplificador', d.cubo],
     ['🎹 Piano', d.piano],
     ['Teclado emergencial', d.teclado],
@@ -1142,6 +1159,7 @@ function renderEstrutura(d){
     ['Cadeiras no palco', d.cadeiras],
     ['Praticáveis / tablados', d.praticaveis],
     ['📽️ Telão / projeção', d.telao],
+    ['Data show / projetor', d.datashow],
     ['Transmissão ao vivo', d.transmissao],
     ['🔌 Camarins', d.camarins],
     ['Tomadas no palco', d.tomadas],
@@ -1167,6 +1185,8 @@ async function salvarEstrutura(){
     micSolo:      document.getElementById('estMicSolo').value.trim(),
     pa:           document.getElementById('estPA').value.trim(),
     monitor:      document.getElementById('estMonitor').value.trim(),
+    retorno:      document.getElementById('estRetorno').value.trim(),
+    caixasAdicional: document.getElementById('estCaixasAdicional').value.trim(),
     cubo:         document.getElementById('estCubo').value.trim(),
     piano:        document.getElementById('estPiano').value.trim(),
     teclado:      document.getElementById('estTeclado').value.trim(),
@@ -1180,6 +1200,7 @@ async function salvarEstrutura(){
     cadeiras:     document.getElementById('estCadeiras').value.trim(),
     praticaveis:  document.getElementById('estPraticaveis').value.trim(),
     telao:        document.getElementById('estTelao').value.trim(),
+    datashow:     document.getElementById('estDatashow').value.trim(),
     transmissao:  document.getElementById('estTransmissao').value.trim(),
     camarins:     document.getElementById('estCamarins').value.trim(),
     tomadas:      document.getElementById('estTomadas').value.trim(),
@@ -1222,6 +1243,21 @@ async function carregarRelatorio(){
     ];
     fixos.forEach(f => { if(!todosOsCoros.find(c => c.id === f.id)) todosOsCoros.push(f); });
 
+    // puxar ordem do cronograma do Firestore
+    const ordemCronograma = {}; // { coroId: posicaoGlobal }
+    try {
+      const snapCron = await db.collection('encoros2026_cronograma').get();
+      snapCron.forEach(docDia => {
+        const dia = docDia.data();
+        const itens = dia.itens || [];
+        itens.forEach((item, idx) => {
+          // item pode ser fixo (nomeCoro) ou livre (inscricaoId)
+          const id = item.inscricaoId || item.coroId || null;
+          if(id) ordemCronograma[id] = (DIAS_ORDEM.indexOf(docDia.id) * 1000) + idx;
+        });
+      });
+    } catch(e){ /* cronograma indisponível, usa ordem alfabética */ }
+
     // respostas técnicas
     const snapTec = await db.collection(COL_TECNICO).get();
     todasRespostas = {};
@@ -1230,6 +1266,13 @@ async function carregarRelatorio(){
         const coroId = doc.id.replace('tecnico_','');
         todasRespostas[coroId] = doc.data();
       }
+    });
+
+    // injeta ordem no objeto de cada coro
+    todosOsCoros.forEach(c => {
+      c._ordemCron = ordemCronograma[c.id] !== undefined
+        ? ordemCronograma[c.id]
+        : (DIAS_ORDEM.indexOf(c.diaApresentacao) * 1000) + 999;
     });
 
     renderRelatorio();
@@ -1249,8 +1292,9 @@ function renderRelatorio(){
 
   let html = '';
   DIAS_ORDEM.forEach(diaId => {
-    const coros = todosOsCoros.filter(c => c.diaApresentacao === diaId).sort((a,b) =>
-      (a.nomeCoro||'').localeCompare(b.nomeCoro||'','pt-BR'));
+    const coros = todosOsCoros
+      .filter(c => c.diaApresentacao === diaId)
+      .sort((a,b) => (a._ordemCron||999) - (b._ordemCron||999));
     if(coros.length === 0) return;
     html += `<div class="dia-bloco"><div class="dia-titulo">${DIAS_LABEL[diaId]||diaId}</div>`;
     coros.forEach(coro => {
