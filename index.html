@@ -4237,6 +4237,7 @@
           return acc + min;
         }, 0);
         camposAtualizados.levaEquipamento = checkboxEquipamento?.checked || false;
+      }
 
       const btnSubmit = formConfirmacao.querySelector('button[type="submit"]');
       btnSubmit.disabled = true;
@@ -4519,18 +4520,18 @@
     const obras = item.obrasRepertorio || [];
 
     function renderRepAdmin(obrasArr){
-      repContainer.innerHTML = `
-        <div id="adminObrasLista" class="space-y-2 mb-3">
-          ${obrasArr.map((o,i) => `
-            <div class="flex gap-2 items-center border border-gray-200 rounded-lg px-3 py-2 bg-gray-50" data-idx="${i}">
-              <input type="text" class="obra-nome input-field text-xs flex-1" placeholder="Nome da obra" value="${escapeHtml(o.nomeObra||'')}"/>
-              <input type="text" class="obra-comp input-field text-xs flex-1" placeholder="Compositor" value="${escapeHtml(o.compositor||'')}"/>
-              <input type="text" class="obra-arr input-field text-xs w-28" placeholder="Arranjador" value="${escapeHtml(o.arranjador||'')}"/>
-              <input type="text" class="obra-dur input-field text-xs w-16" placeholder="Dur." value="${escapeHtml(o.duracaoObra||o.duracao||o.duracaoMinutos||'')}"/>
-              <button onclick="this.closest('[data-idx]').remove()" class="text-red-400 hover:text-red-600 text-lg font-bold shrink-0">×</button>
-            </div>`).join('')}
-        </div>
-        <button onclick="adminAdicionarObra()" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-gray-500 hover:border-gold hover:text-gold transition">+ Adicionar obra</button>`;
+      let linhas = '';
+      obrasArr.forEach((o,i) => {
+        linhas += '<div class="flex gap-2 items-center border border-gray-200 rounded-lg px-3 py-2 bg-gray-50" data-idx="'+i+'">' +
+          '<input type="text" class="obra-nome input-field text-xs flex-1" placeholder="Nome da obra" value="'+escapeHtml(o.nomeObra||'')+'" />' +
+          '<input type="text" class="obra-comp input-field text-xs flex-1" placeholder="Compositor" value="'+escapeHtml(o.compositor||'')+'" />' +
+          '<input type="text" class="obra-arr input-field text-xs w-28" placeholder="Arranjador" value="'+escapeHtml(o.arranjador||'')+'" />' +
+          '<input type="text" class="obra-dur input-field text-xs w-16" placeholder="Dur." value="'+escapeHtml(o.duracaoObra||o.duracao||o.duracaoMinutos||'')+'" />' +
+          '<button onclick="adminRemoverObra(this)" class="text-red-400 hover:text-red-600 text-lg font-bold shrink-0">×</button>' +
+          '</div>';
+      });
+      repContainer.innerHTML = '<div id="adminObrasLista" class="space-y-2 mb-3">' + linhas + '</div>' +
+        '<button onclick="adminAdicionarObra()" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-gray-500 hover:border-gold hover:text-gold transition">+ Adicionar obra</button>';
       repResumo.classList.add('hidden');
     }
 
