@@ -5993,6 +5993,16 @@
   adminTabBlog.addEventListener('click', () => setAdminSubview('blog'));
   adminTabFichas.addEventListener('click', () => setAdminSubview('fichas'));
   if(adminTabEnsaios) adminTabEnsaios.addEventListener('click', () => setAdminSubview('ensaios'));
+  if(adminTabTecnico) adminTabTecnico.addEventListener('click', () => setAdminSubview('tecnico'));
+
+  window.copiarLinkTecnico = function(){
+    const link = location.origin + location.pathname.replace('index.html','') + 'tecnico.html';
+    navigator.clipboard.writeText(link).then(() => {
+      const msg = document.getElementById('msgCopiarTecnico');
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 2500);
+    });
+  };
 
   // ======================================================================
   // GESTÃO DE CRONOGRAMA — montagem de blocos de apresentação por dia
