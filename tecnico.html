@@ -483,6 +483,19 @@
           </div>
         </div>
 
+        <!-- 7b. Base instrumental / playback -->
+        <div class="campo">
+          <label>Vai usar base instrumental / playback?</label>
+          <div class="radio-group" id="rgPlayback">
+            <label><input type="radio" name="playback" value="nao" checked> Não</label>
+            <label><input type="radio" name="playback" value="sim"> Sim (por conta do coral)</label>
+          </div>
+          <div class="subfield" id="subfieldPlayback">
+            <label>Como será ligada?</label>
+            <input type="text" id="playbackConexao" placeholder="Ex: ligada à mesa de som, caixa própria, notebook..."/>
+          </div>
+        </div>
+
         <!-- 8. Cubo / caixa de som -->
         <div class="campo">
           <label>Vai precisar de cubo ou caixa de som?</label>
@@ -597,31 +610,116 @@
         <div class="loader">Carregando...</div>
       </div>
       <div id="estruturaForm" style="display:none; padding:16px 18px; border-top:1px solid #eee;">
+
+        <p style="font-size:.8rem;color:#888;margin-bottom:16px;">Preencha a infraestrutura base que o teatro oferece. Essas informações aparecem no topo do relatório técnico.</p>
+
+        <div style="font-size:.82rem;font-weight:700;color:var(--petroleo);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.05em;">🎤 Som</div>
         <div class="campo">
-          <label>Microfones de ambiência disponíveis</label>
-          <input type="text" id="estMicAmbiencia" placeholder="Ex: 4 microfones condensadores suspensão"/>
+          <label>Mesa de som</label>
+          <input type="text" id="estMesa" placeholder="Ex: Mesa digital Yamaha CL5 — 48 canais"/>
         </div>
         <div class="campo">
-          <label>Piano da organização</label>
-          <input type="text" id="estPiano" placeholder="Ex: Piano Yamaha de cauda — disponível"/>
+          <label>Microfones de ambiência</label>
+          <input type="text" id="estMicAmbiencia" placeholder="Ex: 4 microfones condensadores em suspensão"/>
+        </div>
+        <div class="campo">
+          <label>Microfones de solo disponíveis</label>
+          <input type="text" id="estMicSolo" placeholder="Ex: 4 microfones dinâmicos SM58"/>
+        </div>
+        <div class="campo">
+          <label>Caixas de som / PA principal</label>
+          <input type="text" id="estPA" placeholder="Ex: 2 caixas L-Acoustics esquerda/direita + subwoofer"/>
+        </div>
+        <div class="campo">
+          <label>Monitores de palco</label>
+          <input type="text" id="estMonitor" placeholder="Ex: 4 monitores de chão"/>
+        </div>
+        <div class="campo">
+          <label>Cubo / amplificador disponível</label>
+          <input type="text" id="estCubo" placeholder="Ex: 1 cubo para teclado — disponível mediante agendamento"/>
+        </div>
+
+        <div style="font-size:.82rem;font-weight:700;color:var(--petroleo);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.05em;">🎹 Instrumentos</div>
+        <div class="campo">
+          <label>Piano</label>
+          <input type="text" id="estPiano" placeholder="Ex: Piano Yamaha de cauda C3 — disponível"/>
         </div>
         <div class="campo">
           <label>Teclado emergencial</label>
           <input type="text" id="estTeclado" placeholder="Ex: Teclado Roland 88 teclas — disponível"/>
         </div>
+
+        <div style="font-size:.82rem;font-weight:700;color:var(--petroleo);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.05em;">💡 Iluminação</div>
         <div class="campo">
-          <label>Sistema de som base</label>
-          <input type="text" id="estSom" placeholder="Ex: Sistema estéreo + mesa digital + 2 monitores"/>
+          <label>Sistema de iluminação</label>
+          <input type="text" id="estIluminacao" placeholder="Ex: Varas de luz frontais, laterais e contra-luz — operador fixo"/>
         </div>
         <div class="campo">
-          <label>Disposição de palco padrão</label>
-          <textarea id="estPalco" placeholder="Descreva a disposição padrão do palco..."></textarea>
+          <label>Operador de luz</label>
+          <input type="text" id="estOpLuz" placeholder="Ex: Disponível — combinar cues com antecedência"/>
         </div>
         <div class="campo">
-          <label>Observações gerais da estrutura</label>
-          <textarea id="estObs" placeholder="Outras informações relevantes..."></textarea>
+          <label>Refletores / spots especiais</label>
+          <input type="text" id="estSpots" placeholder="Ex: 2 follow spots disponíveis"/>
         </div>
-        <div style="display:flex;gap:10px;margin-top:4px;">
+
+        <div style="font-size:.82rem;font-weight:700;color:var(--petroleo);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.05em;">🎭 Palco</div>
+        <div class="campo">
+          <label>Dimensões do palco</label>
+          <input type="text" id="estDimensoes" placeholder="Ex: 14m de boca x 10m de profundidade"/>
+        </div>
+        <div class="campo">
+          <label>Disposição padrão</label>
+          <textarea id="estPalco" placeholder="Ex: Risers em 3 fileiras, maestro ao centro, piano à esquerda..."></textarea>
+        </div>
+        <div class="campo">
+          <label>Risers / palco elevado</label>
+          <input type="text" id="estRisers" placeholder="Ex: 6 risers disponíveis — altura 20cm e 40cm"/>
+        </div>
+        <div class="campo">
+          <label>Estantes de partitura disponíveis</label>
+          <input type="text" id="estEstantes" placeholder="Ex: 30 estantes de metal"/>
+        </div>
+        <div class="campo">
+          <label>Cadeiras disponíveis no palco</label>
+          <input type="text" id="estCadeiras" placeholder="Ex: 50 cadeiras sem braço"/>
+        </div>
+        <div class="campo">
+          <label>Praticáveis / tablados</label>
+          <input type="text" id="estPraticaveis" placeholder="Ex: Modulares 1x1m — combinação variável"/>
+        </div>
+
+        <div style="font-size:.82rem;font-weight:700;color:var(--petroleo);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.05em;">📽️ Projeção e Vídeo</div>
+        <div class="campo">
+          <label>Telão / projeção</label>
+          <input type="text" id="estTelao" placeholder="Ex: Telão 6x4m com projetor — disponível"/>
+        </div>
+        <div class="campo">
+          <label>Transmissão ao vivo</label>
+          <input type="text" id="estTransmissao" placeholder="Ex: Transmissão YouTube — câmera fixa + operador"/>
+        </div>
+
+        <div style="font-size:.82rem;font-weight:700;color:var(--petroleo);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.05em;">🔌 Infraestrutura Geral</div>
+        <div class="campo">
+          <label>Camarins disponíveis</label>
+          <input type="text" id="estCamarins" placeholder="Ex: 2 camarins coletivos — capacidade 30 pessoas cada"/>
+        </div>
+        <div class="campo">
+          <label>Tomadas no palco</label>
+          <input type="text" id="estTomadas" placeholder="Ex: 6 tomadas 110V e 4 tomadas 220V"/>
+        </div>
+        <div class="campo">
+          <label>Acesso para carga e descarga</label>
+          <input type="text" id="estAcesso" placeholder="Ex: Entrada lateral — portão 2m x 3m"/>
+        </div>
+
+        <div style="font-size:.82rem;font-weight:700;color:var(--petroleo);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.05em;">📋 Outros</div>
+        <div class="campo">
+          <label>Observações gerais</label>
+          <textarea id="estObs" placeholder="Qualquer informação relevante sobre a estrutura do teatro..."></textarea>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;">
           <button class="btn btn-primary btn-sm" onclick="salvarEstrutura()">Salvar</button>
           <button class="btn btn-sm" style="background:#eee;" onclick="toggleEstruturaForm()">Cancelar</button>
         </div>
@@ -680,8 +778,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const COL_INSCRICOES  = 'encoros2026_inscricoes';
-const COL_TECNICO     = 'encoros2026_tecnico';     // respostas do formulário técnico
-const COL_CONFIG_TEC  = 'encoros2026_config_tecnico'; // prazo + estrutura geral
+const COL_TECNICO     = 'encoros2026_config';     // respostas do formulário técnico
+const COL_CONFIG_TEC  = 'encoros2026_config'; // prazo + estrutura geral
 
 const ADMIN_SENHA = 'goiania26';
 const DIAS_ORDEM  = ['quinta','sexta','sabado','domingo','segunda'];
@@ -722,7 +820,7 @@ async function iniciarFormulario(){
 
 async function carregarPrazo(){
   try {
-    const snap = await db.collection(COL_CONFIG_TEC).doc('config').get();
+    const snap = await db.collection(COL_CONFIG_TEC).doc('tecnico_config').get();
     if(snap.exists && snap.data().prazoFim){
       prazoFim = snap.data().prazoFim.toDate ? snap.data().prazoFim.toDate() : new Date(snap.data().prazoFim);
     } else {
@@ -800,7 +898,7 @@ async function carregarCoros(){
 
 async function preencherResposta(coroId){
   try {
-    const snap = await db.collection(COL_TECNICO).doc(coroId).get();
+    const snap = await db.collection(COL_TECNICO).doc('tecnico_'+coroId).get();
     if(!snap.exists) return;
     const d = snap.data();
     if(d.nomeResponsavel) document.getElementById('nomeResponsavel').value = d.nomeResponsavel;
@@ -815,6 +913,8 @@ async function preencherResposta(coroId){
     if(d.percussaoMontagem) document.getElementById('percussaoMontagem').value = d.percussaoMontagem;
     setRadio('outroInstr', d.outroInstr || 'nao');
     if(d.outroInstrQuais) document.getElementById('outroInstrQuais').value = d.outroInstrQuais;
+    setRadio('playback', d.playback || 'nao');
+    if(d.playbackConexao) document.getElementById('playbackConexao').value = d.playbackConexao;
     setRadio('cubo', d.cubo || 'nao');
     if(d.cuboEquipamento) document.getElementById('cuboEquipamento').value = d.cuboEquipamento;
     setRadio('musicos', d.musicos || 'nao');
@@ -842,6 +942,7 @@ function configurarSubfields(){
     ['bateria','sim',  ['subfieldBateria','avisoBateria']],
     ['percussao','sim',['subfieldPercussao','avisoPercussao']],
     ['outroInstr','sim',['subfieldOutroInstr']],
+    ['playback','sim',  ['subfieldPlayback']],
     ['cubo','sim',    ['subfieldCubo']],
     ['musicos','sim', ['subfieldMusicos']],
     ['cabos','nao',   ['subfieldCabos']],
@@ -864,6 +965,8 @@ function atualizarSubfields(){
   document.getElementById('avisoPercussao').classList.toggle('visivel', perSim);
   // outro instrumento
   document.getElementById('subfieldOutroInstr').classList.toggle('visivel', getRadio('outroInstr') === 'sim');
+  // playback
+  document.getElementById('subfieldPlayback').classList.toggle('visivel', getRadio('playback') === 'sim');
   // cubo
   document.getElementById('subfieldCubo').classList.toggle('visivel', getRadio('cubo') === 'sim');
   // musicos
@@ -898,6 +1001,8 @@ async function enviarFormulario(){
     percussaoMontagem: document.getElementById('percussaoMontagem').value.trim(),
     outroInstr: getRadio('outroInstr'),
     outroInstrQuais: document.getElementById('outroInstrQuais').value.trim(),
+    playback: getRadio('playback'),
+    playbackConexao: document.getElementById('playbackConexao').value.trim(),
     cubo: getRadio('cubo'),
     cuboEquipamento: document.getElementById('cuboEquipamento').value.trim(),
     musicos: getRadio('musicos'),
@@ -916,7 +1021,7 @@ async function enviarFormulario(){
   });
 
   try {
-    await db.collection(COL_TECNICO).doc(coroId).set(dados, { merge: true });
+    await db.collection(COL_TECNICO).doc('tecnico_'+coroId).set(dados, { merge: true });
     document.getElementById('formArea').style.display = 'none';
     document.getElementById('sucessoBox').style.display = 'block';
   } catch(e){
@@ -955,7 +1060,7 @@ async function mostrarAdmin(){
 
 async function carregarConfigAdmin(){
   try {
-    const snap = await db.collection(COL_CONFIG_TEC).doc('config').get();
+    const snap = await db.collection(COL_CONFIG_TEC).doc('tecnico_config').get();
     if(snap.exists){
       const d = snap.data();
       if(d.prazoFim){
@@ -973,7 +1078,7 @@ async function salvarPrazo(){
   const val = document.getElementById('inputPrazoAdmin').value;
   if(!val){ alert('Informe a data/hora.'); return; }
   const dt = new Date(val);
-  await db.collection(COL_CONFIG_TEC).doc('config').set({ prazoFim: dt }, { merge: true });
+  await db.collection(COL_CONFIG_TEC).doc('tecnico_config').set({ prazoFim: dt }, { merge: true });
   const msg = document.getElementById('msgPrazo');
   msg.style.display = 'block';
   setTimeout(() => msg.style.display = 'none', 3000);
@@ -982,15 +1087,32 @@ async function salvarPrazo(){
 async function carregarEstrutura(){
   const viz = document.getElementById('estruturaVisualizacao');
   try {
-    const snap = await db.collection(COL_CONFIG_TEC).doc('estrutura').get();
+    const snap = await db.collection(COL_CONFIG_TEC).doc('tecnico_estrutura').get();
     if(snap.exists){
       const d = snap.data();
       viz.innerHTML = renderEstrutura(d);
+      document.getElementById('estMesa').value = d.mesa || '';
       document.getElementById('estMicAmbiencia').value = d.micAmbiencia || '';
+      document.getElementById('estMicSolo').value = d.micSolo || '';
+      document.getElementById('estPA').value = d.pa || '';
+      document.getElementById('estMonitor').value = d.monitor || '';
+      document.getElementById('estCubo').value = d.cubo || '';
       document.getElementById('estPiano').value = d.piano || '';
       document.getElementById('estTeclado').value = d.teclado || '';
-      document.getElementById('estSom').value = d.som || '';
+      document.getElementById('estIluminacao').value = d.iluminacao || '';
+      document.getElementById('estOpLuz').value = d.opLuz || '';
+      document.getElementById('estSpots').value = d.spots || '';
+      document.getElementById('estDimensoes').value = d.dimensoes || '';
       document.getElementById('estPalco').value = d.palco || '';
+      document.getElementById('estRisers').value = d.risers || '';
+      document.getElementById('estEstantes').value = d.estantes || '';
+      document.getElementById('estCadeiras').value = d.cadeiras || '';
+      document.getElementById('estPraticaveis').value = d.praticaveis || '';
+      document.getElementById('estTelao').value = d.telao || '';
+      document.getElementById('estTransmissao').value = d.transmissao || '';
+      document.getElementById('estCamarins').value = d.camarins || '';
+      document.getElementById('estTomadas').value = d.tomadas || '';
+      document.getElementById('estAcesso').value = d.acesso || '';
       document.getElementById('estObs').value = d.obs || '';
     } else {
       viz.innerHTML = '<p style="color:#aaa;font-style:italic;font-size:.85rem;">Estrutura geral ainda não preenchida. Clique em Editar.</p>';
@@ -1002,12 +1124,29 @@ async function carregarEstrutura(){
 
 function renderEstrutura(d){
   const campos = [
+    ['🎤 Mesa de som', d.mesa],
     ['Microfones de ambiência', d.micAmbiencia],
-    ['Piano da organização', d.piano],
+    ['Microfones de solo', d.micSolo],
+    ['Caixas de som / PA', d.pa],
+    ['Monitores de palco', d.monitor],
+    ['Cubo / amplificador', d.cubo],
+    ['🎹 Piano', d.piano],
     ['Teclado emergencial', d.teclado],
-    ['Sistema de som base', d.som],
-    ['Disposição de palco padrão', d.palco],
-    ['Observações', d.obs],
+    ['💡 Iluminação', d.iluminacao],
+    ['Operador de luz', d.opLuz],
+    ['Refletores / spots', d.spots],
+    ['🎭 Dimensões do palco', d.dimensoes],
+    ['Disposição padrão', d.palco],
+    ['Risers / palco elevado', d.risers],
+    ['Estantes de partitura', d.estantes],
+    ['Cadeiras no palco', d.cadeiras],
+    ['Praticáveis / tablados', d.praticaveis],
+    ['📽️ Telão / projeção', d.telao],
+    ['Transmissão ao vivo', d.transmissao],
+    ['🔌 Camarins', d.camarins],
+    ['Tomadas no palco', d.tomadas],
+    ['Acesso carga/descarga', d.acesso],
+    ['📋 Observações gerais', d.obs],
   ];
   return campos.filter(([,v]) => v).map(([l,v]) => `
     <div class="item-tec">
@@ -1023,15 +1162,32 @@ function toggleEstruturaForm(){
 
 async function salvarEstrutura(){
   const dados = {
+    mesa:         document.getElementById('estMesa').value.trim(),
     micAmbiencia: document.getElementById('estMicAmbiencia').value.trim(),
+    micSolo:      document.getElementById('estMicSolo').value.trim(),
+    pa:           document.getElementById('estPA').value.trim(),
+    monitor:      document.getElementById('estMonitor').value.trim(),
+    cubo:         document.getElementById('estCubo').value.trim(),
     piano:        document.getElementById('estPiano').value.trim(),
     teclado:      document.getElementById('estTeclado').value.trim(),
-    som:          document.getElementById('estSom').value.trim(),
+    iluminacao:   document.getElementById('estIluminacao').value.trim(),
+    opLuz:        document.getElementById('estOpLuz').value.trim(),
+    spots:        document.getElementById('estSpots').value.trim(),
+    dimensoes:    document.getElementById('estDimensoes').value.trim(),
     palco:        document.getElementById('estPalco').value.trim(),
+    risers:       document.getElementById('estRisers').value.trim(),
+    estantes:     document.getElementById('estEstantes').value.trim(),
+    cadeiras:     document.getElementById('estCadeiras').value.trim(),
+    praticaveis:  document.getElementById('estPraticaveis').value.trim(),
+    telao:        document.getElementById('estTelao').value.trim(),
+    transmissao:  document.getElementById('estTransmissao').value.trim(),
+    camarins:     document.getElementById('estCamarins').value.trim(),
+    tomadas:      document.getElementById('estTomadas').value.trim(),
+    acesso:       document.getElementById('estAcesso').value.trim(),
     obs:          document.getElementById('estObs').value.trim(),
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
   };
-  await db.collection(COL_CONFIG_TEC).doc('estrutura').set(dados);
+  await db.collection(COL_CONFIG_TEC).doc('tecnico_estrutura').set(dados);
   document.getElementById('estruturaVisualizacao').innerHTML = renderEstrutura(dados);
   document.getElementById('estruturaForm').style.display = 'none';
   const msg = document.getElementById('msgEstrutura');
@@ -1069,7 +1225,12 @@ async function carregarRelatorio(){
     // respostas técnicas
     const snapTec = await db.collection(COL_TECNICO).get();
     todasRespostas = {};
-    snapTec.forEach(doc => { todasRespostas[doc.id] = doc.data(); });
+    snapTec.forEach(doc => {
+      if(doc.id.startsWith('tecnico_')){
+        const coroId = doc.id.replace('tecnico_','');
+        todasRespostas[coroId] = doc.data();
+      }
+    });
 
     renderRelatorio();
   } catch(e){
@@ -1134,6 +1295,7 @@ function renderCoroCard(coro, r){
     ['Bateria', r.bateria === 'sim' ? `⚠️ Sim — montagem: ${r.bateriaMontagem || 'não informado'}` : 'Não', r.bateria === 'sim' ? 'it-alerta' : 'it-ok'],
     ['Percussão', r.percussao === 'sim' ? `⚠️ Sim (${r.percussaoQuais||'—'}) — montagem: ${r.percussaoMontagem||'não informado'}` : 'Não', r.percussao === 'sim' ? 'it-alerta' : 'it-ok'],
     ['Outro instrumento', r.outroInstr === 'sim' ? `Sim: ${r.outroInstrQuais||'—'}` : 'Não', r.outroInstr === 'sim' ? 'it-alerta' : 'it-ok'],
+    ['Base instrumental / playback', r.playback === 'sim' ? `Sim: ${r.playbackConexao||'—'}` : 'Não', r.playback === 'sim' ? 'it-alerta' : 'it-ok'],
     ['Cubo / caixa de som', r.cubo === 'sim' ? `Sim: ${r.cuboEquipamento||'—'}` : 'Não', r.cubo === 'sim' ? 'it-alerta' : 'it-ok'],
     ['Músicos convidados', r.musicos === 'sim' ? `Sim: ${r.musicosQtd||'?'} músico(s) — ${r.musicosInstr||'—'}` : 'Não', r.musicos === 'sim' ? 'it-alerta' : 'it-ok'],
     ['Cabos', labelCabos(r.cabos, r.cabosObs), r.cabos === 'nao' ? 'it-alerta' : 'it-ok'],
@@ -1222,6 +1384,13 @@ function abrirModal(coroId){
       </select></div>
     <div class="campo"><label>Quais instrumentos</label>
       <input type="text" id="m_outroInstrQuais" value="${r.outroInstrQuais||''}"/></div>
+    <div class="campo"><label>Base instrumental / playback</label>
+      <select id="m_playback">
+        <option value="nao" ${r.playback==='nao'||!r.playback?'selected':''}>Não</option>
+        <option value="sim" ${r.playback==='sim'?'selected':''}>Sim</option>
+      </select></div>
+    <div class="campo"><label>Como será ligada</label>
+      <input type="text" id="m_playbackConexao" value="${r.playbackConexao||''}"/></div>
     <div class="campo"><label>Cubo / caixa de som</label>
       <select id="m_cubo">
         <option value="nao" ${r.cubo==='nao'||!r.cubo?'selected':''}>Não</option>
@@ -1273,6 +1442,8 @@ async function salvarEdicaoModal(){
     percussaoMontagem: document.getElementById('m_percussaoMontagem').value.trim(),
     outroInstr: document.getElementById('m_outroInstr').value,
     outroInstrQuais: document.getElementById('m_outroInstrQuais').value.trim(),
+    playback: document.getElementById('m_playback').value,
+    playbackConexao: document.getElementById('m_playbackConexao').value.trim(),
     cubo: document.getElementById('m_cubo').value,
     cuboEquipamento: document.getElementById('m_cuboEquip').value.trim(),
     musicos: document.getElementById('m_musicos').value,
@@ -1283,7 +1454,7 @@ async function salvarEdicaoModal(){
     obsGerais: document.getElementById('m_obsGerais').value.trim(),
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
   };
-  await db.collection(COL_TECNICO).doc(modalCoroId).set(dados, { merge: true });
+  await db.collection(COL_TECNICO).doc('tecnico_'+modalCoroId).set(dados, { merge: true });
   todasRespostas[modalCoroId] = dados;
   const msg = document.getElementById('msgModal');
   msg.textContent = '✅ Salvo!';
