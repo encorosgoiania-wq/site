@@ -5470,10 +5470,9 @@
     blocos.shift();
     blocos.forEach(bloco => {
       const get = (campo) => {
-        const regex = new RegExp(campo + '[^:]*:([\\s\\S]*?)(?=\\r?\\n[A-Z])', 'i');
+        const regex = new RegExp('^' + campo + '[^:\\r\\n]*:([^\\r\\n]*(?:\\r?\\n[ \\t][^\\r\\n]*)*)', 'im');
         const m = bloco.match(regex);
         if(!m) return '';
-        // juntar linhas dobradas (iCal fold: linha começa com espaço)
         return m[1].replace(/\r?\n[ \t]/g,'').replace(/\r/g,'').trim();
       };
       const dtstart = get('DTSTART');
@@ -5481,17 +5480,20 @@
       const summary = get('SUMMARY');
       const loc     = get('LOCATION');
       const desc    = get('DESCRIPTION');
-      if(!dtstart || !summary) return;
+      if(!dtstart) return;
+      const inicioDate = parseIcalDate(dtstart);
+      const fimDate = parseIcalDate(dtend);
+      if(!inicioDate || isNaN(inicioDate.getTime())) return;
       eventos.push({
         titulo:    decodeIcalText(summary),
         local:     decodeIcalText(loc),
         descricao: decodeIcalText(desc),
-        inicio:    parseIcalDate(dtstart),
-        fim:       parseIcalDate(dtend),
+        inicio:    inicioDate,
+        fim:       fimDate,
         dtRaw:     dtstart
       });
     });
-    eventos.sort((a,b) => a.inicio - b.inicio);
+    eventos.sort((a,b) => (a.inicio - b.inicio) || (a.titulo||'').localeCompare(b.titulo||'','pt-BR'));
     return eventos;
   }
 
