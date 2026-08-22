@@ -2966,11 +2966,71 @@
 
         // Busca o repertório completo na inscrição original, se houver
         const inscricaoOriginal = c.inscricaoId ? todasInscricoes.find(i => i.id === c.inscricaoId) : null;
-        const seedInstitucional = c.inscricaoId ? COROS_INSTITUCIONAIS_SEED.find(s => s.id === c.inscricaoId) : null;
-        const obras = (inscricaoOriginal?.obrasRepertorio?.length ? inscricaoOriginal.obrasRepertorio : null)
-          || (seedInstitucional?.obrasRepertorio?.length ? seedInstitucional.obrasRepertorio : null)
+
+        // Repertórios hardcoded dos coros fixos institucionais
+        const REPERTORIOS_FIXOS = {
+          '900000001': [ // Coral Sinfônico da UFG (CSUFG)
+          ],
+          '900000002': [ // Coro Sinfônico Jovem de Goiás (CSJG)
+            { nomeObra: 'Le Jardin Féérique', compositor: 'Maurice Ravel', arranjador: '' },
+            { nomeObra: 'Le Fleurs Et Les Arbres', compositor: 'Camille Saint-Saëns', arranjador: '' },
+            { nomeObra: 'The Tyger', compositor: 'Emil Raberg', arranjador: '' },
+            { nomeObra: 'Cunhataiporã', compositor: 'Geraldo Espíndola', arranjador: 'Samuel Kerr' },
+            { nomeObra: 'A Correnteza', compositor: 'Tom Jobim e Luiz Bonfá', arranjador: 'Weber Assis' },
+            { nomeObra: 'Viento Norte', compositor: 'Carlos Guastavino', arranjador: '' },
+          ],
+          '900000003': [ // Coro Juvenil de Goiânia
+            { nomeObra: 'Jubilate Deo', compositor: 'L. Halmós', arranjador: '' },
+            { nomeObra: 'Ave Maria', compositor: 'A. Bruckner', arranjador: '' },
+            { nomeObra: 'Christus Factus Est', compositor: 'A. Bruckner', arranjador: '' },
+            { nomeObra: 'Salmo 150', compositor: 'L. Lewandowski', arranjador: '' },
+            { nomeObra: 'Da Missa Kênia - Glória', compositor: 'P. Basler', arranjador: '' },
+          ],
+          '900000004': [ // Onix Brasil Vocal Internacional
+            { nomeObra: 'No Ordinary Love', compositor: 'Helen Folasade Adu (Sade) e Stuart Colin Matthewman', arranjador: '' },
+            { nomeObra: 'Anos Dourados', compositor: 'Antônio Carlos Jobim e Francisco Buarque de Hollanda', arranjador: '' },
+            { nomeObra: 'Consagração', compositor: 'Anderson e Marcelo Mattos', arranjador: 'Cristiane Carvalho e Wagner Derek' },
+          ],
+          '900000005': [ // Coro Sinfônico de Goiânia
+            { nomeObra: 'Réquiem für Mignon', compositor: 'Robert Schumann', arranjador: '' },
+            { nomeObra: 'Nunc dimittis', compositor: 'Gustav Holst', arranjador: '' },
+            { nomeObra: 'Già il sole dal Gange', compositor: 'Alessandro Scarlatti', arranjador: 'Angelo Dias' },
+            { nomeObra: 'Cateretê', compositor: 'Francisco Mignone', arranjador: '' },
+          ],
+          '900000006': [ // Concerto de Abertura
+            { nomeObra: 'Zadok the Priest', compositor: 'Handel', arranjador: '' },
+            { nomeObra: 'Cantique de J. Racine', compositor: 'Fauré', arranjador: '' },
+            { nomeObra: 'Sanctus', compositor: 'Gounod', arranjador: '' },
+            { nomeObra: 'Sereniteit', compositor: 'Jean Douliez', arranjador: '' },
+            { nomeObra: 'Aurora (a cappella)', compositor: 'J. Douliez', arranjador: '' },
+            { nomeObra: 'Invocação Pátria', compositor: 'Villa-Lobos', arranjador: '' },
+            { nomeObra: 'Ave Maria', compositor: 'Jean-Baptiste Fauré', arranjador: '' },
+            { nomeObra: 'Pregões de Goiás', compositor: 'M. A. Veiga', arranjador: 'J. Douliez' },
+            { nomeObra: 'Magnificat-Alleluia', compositor: 'Villa-Lobos', arranjador: '' },
+          ],
+        };
+
+        // Busca por nome também para itens sem inscricaoId
+        const NOMES_FIXOS = {
+          'CSUFG': '900000001',
+          'Coral Sinfônico da UFG': '900000001',
+          'CSJGOIÁS': '900000002', 'CSJG': '900000002',
+          'Coro Sinfônico Jovem de Goiás': '900000002',
+          'Coro Sinfônico Jovem de GOIÁS': '900000002',
+          'CJGOIÂNIA': '900000003',
+          'Coro Juvenil de Goiânia': '900000003',
+          'Onix Brasil Vocal Internacional': '900000004',
+          'CSGOIÂNIA': '900000005',
+          'Coro Sinfônico de Goiânia': '900000005',
+        };
+
+        const idFixo = c.inscricaoId || NOMES_FIXOS[c.nomeCoro] || NOMES_FIXOS[(c.nomeCoro||'').replace(/\s*\(.*?\)\s*/g,'').trim()];
+        const repertorioFixo = idFixo ? REPERTORIOS_FIXOS[idFixo] : null;
+
+        const obras = (repertorioFixo && repertorioFixo.length ? repertorioFixo : null)
+          || (inscricaoOriginal?.obrasRepertorio?.length ? inscricaoOriginal.obrasRepertorio : null)
           || c.obrasRepertorio
-          || (c.livre && (c.nomeCoro || '').toLowerCase().includes('coros institucionais') ? repertorioAbertura : []);
+          || ((c.nomeCoro||'').toLowerCase().includes('coros institucionais') ? REPERTORIOS_FIXOS['900000006'] : []);
 
         const fixoBadge = c.anfitriao
           ? '<span class="text-[10px] font-bold uppercase tracking-wide text-gold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0">Coro Anfitrião</span>'
