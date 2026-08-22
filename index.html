@@ -1576,45 +1576,31 @@
 
       <!-- ===== SUB-ABA: ENSAIOS ===== -->
       <div id="adminSubviewEnsaios" class="hidden">
-        <div class="mb-6">
-          <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Agendamento de Ensaios</h2>
-          <p class="text-sm text-gray-500">Cadastre horários disponíveis. Os maestros agendam pelo link único.</p>
-        </div>
-
-        <!-- Formulário cadastro -->
-        <div class="card-soft p-5 mb-6">
-          <h3 class="font-semibold text-sm mb-4" style="color:var(--azul-petroleo)">Adicionar Horário Disponível</h3>
-          <div class="grid sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label class="label-field">Data *</label>
-              <input type="date" id="ensaioData" class="input-field">
-            </div>
-            <div>
-              <label class="label-field">Local *</label>
-              <input type="text" id="ensaioLocal" class="input-field" placeholder="Ex: Sala 3 - Basileu França">
-            </div>
-            <div>
-              <label class="label-field">Horário de Início *</label>
-              <input type="time" id="ensaioInicio" class="input-field">
-            </div>
-            <div>
-              <label class="label-field">Horário de Término *</label>
-              <input type="time" id="ensaioTermino" class="input-field">
-            </div>
-            <div class="sm:col-span-2">
-              <label class="label-field">Observação (opcional)</label>
-              <input type="text" id="ensaioObs" class="input-field" placeholder="Ex: Ensaio geral com todos os coros">
-            </div>
+        <div class="mb-6 flex items-start justify-between flex-wrap gap-3">
+          <div>
+            <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Agenda de Ensaios — ENCoros 2026</h2>
+            <p class="text-sm text-gray-500">Eventos puxados automaticamente da Google Agenda do ENCoros.</p>
           </div>
-          <button id="btnAdicionarEnsaio" class="btn-gold px-6 py-2.5 rounded-full text-sm font-bold">+ Adicionar Horário</button>
-          <span id="ensaioMsg" class="ml-4 text-sm"></span>
+          <button id="btnAtualizarEnsaios" class="btn-gold px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2">
+            🔄 Atualizar agenda
+          </button>
         </div>
 
-        <!-- Lista de horários -->
-        <div id="ensaiosLista" class="space-y-3"></div>
-        <div id="ensaiosEmpty" class="hidden text-center py-12 text-gray-400">
-          <p>Nenhum horário cadastrado ainda.</p>
+        <!-- Filtro de período -->
+        <div class="card-soft p-4 mb-5 flex flex-wrap gap-3 items-center">
+          <label class="text-sm font-semibold" style="color:var(--azul-petroleo)">Filtrar período:</label>
+          <input type="date" id="ensaioFiltroInicio" class="input-field" style="max-width:160px" value="2026-09-03"/>
+          <span class="text-sm text-gray-400">até</span>
+          <input type="date" id="ensaioFiltroFim" class="input-field" style="max-width:160px" value="2026-09-07"/>
+          <button onclick="renderEnsaiosGcal()" class="px-4 py-2 text-sm font-semibold rounded-lg text-white" style="background:var(--azul-petroleo)">Filtrar</button>
         </div>
+
+        <!-- Relatório por dia -->
+        <div id="ensaiosLista" class="space-y-4"></div>
+        <div id="ensaiosEmpty" class="hidden text-center py-12 text-gray-400">
+          <p>Nenhum evento encontrado no período selecionado.</p>
+        </div>
+        <div id="ensaiosErro" class="hidden text-center py-8 text-red-500 text-sm"></div>
       </div>
 
       <!-- ===== SUB-ABA: TÉCNICO ===== -->
@@ -5408,84 +5394,153 @@
 
   // ══════════════════════════════════════════════════════════════════
   // MÓDULO DE ENSAIOS
-  // Coleção Firestore: encoros2026_ensaios
   // ══════════════════════════════════════════════════════════════════
-  const COL_ENSAIOS = 'encoros2026_ensaios';
+  // ENSAIOS — Google Calendar iCal
+  // ══════════════════════════════════════════════════════════════════
+  const GCAL_ICAL_URL = 'https://calendar.google.com/calendar/ical/encorosgoiania%40gmail.com/private-49d2a96f3734421a3be916901cba131e/basic.ics';
+  // Proxy para evitar CORS — usando allorigins
+  const GCAL_PROXY = 'https://api.allorigins.win/get?url=' + encodeURIComponent(GCAL_ICAL_URL);
+
+  let gcalEventos = [];
 
   async function carregarEnsaios(){
-    const lista = document.getElementById('ensaiosLista');
-    const empty = document.getElementById('ensaiosEmpty');
+    const lista   = document.getElementById('ensaiosLista');
+    const empty   = document.getElementById('ensaiosEmpty');
+    const erro    = document.getElementById('ensaiosErro');
     if(!lista) return;
-    lista.innerHTML = '<p class="text-sm text-gray-400">Carregando...</p>';
+    lista.innerHTML = '<p class="text-sm text-gray-400 py-6 text-center">🔄 Carregando agenda do Google...</p>';
+    empty.classList.add('hidden');
+    erro.classList.add('hidden');
     try{
-      const snap = await getDocs(query(collection(db, COL_ENSAIOS), orderBy('data'), orderBy('inicio')));
+      const res  = await fetch(GCAL_PROXY);
+      const json = await res.json();
+      const ical = json.contents;
+      gcalEventos = parseIcal(ical);
+      renderEnsaiosGcal();
+    } catch(e){
       lista.innerHTML = '';
-      if(snap.empty){ empty.classList.remove('hidden'); return; }
-      empty.classList.add('hidden');
-      snap.docs.forEach(d => {
-        const e = d.data();
-        const disponivel = e.status === 'disponivel';
-        const div = document.createElement('div');
-        div.className = 'flex items-center justify-between gap-4 border rounded-xl px-5 py-4 ' + (disponivel ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200 opacity-60');
-        div.innerHTML = `
-          <div>
-            <div class="font-semibold text-sm" style="color:var(--azul-petroleo)">${e.data} &nbsp;·&nbsp; ${e.inicio} – ${e.termino}</div>
-            <div class="text-xs text-gray-500 mt-0.5">${e.local}${e.obs ? ' — ' + e.obs : ''}</div>
-            ${!disponivel ? '<div class="text-xs font-semibold text-green-700 mt-1">✓ Agendado por: ' + (e.maestroNome||'—') + '</div>' : ''}
-          </div>
-          <div class="flex items-center gap-3 shrink-0">
-            <span class="text-xs font-bold px-3 py-1 rounded-full ${disponivel ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">${disponivel ? 'Disponível' : 'Agendado'}</span>
-            <button data-id="${d.id}" class="btnExcluirEnsaio text-xs text-red-500 border border-red-200 rounded-full px-3 py-1 hover:bg-red-50 transition">Excluir</button>
-            <button data-id="${d.id}" class="btnCopiarLinkEnsaio text-xs font-semibold border rounded-full px-3 py-1 hover:bg-amber-50 transition" style="border-color:var(--dourado);color:var(--azul-petroleo)">🔗 Link Maestro</button>
-          </div>`;
-        lista.appendChild(div);
-      });
-
-      // Listeners
-      lista.querySelectorAll('.btnExcluirEnsaio').forEach(btn => {
-        btn.addEventListener('click', async function(){
-          if(!confirm('Excluir este horário?')) return;
-          await deleteDoc(doc(db, COL_ENSAIOS, this.dataset.id));
-          carregarEnsaios();
-        });
-      });
-
-      lista.querySelectorAll('.btnCopiarLinkEnsaio').forEach(btn => {
-        btn.addEventListener('click', function(){
-          const link = location.origin + location.pathname + '?ensaio=' + this.dataset.id;
-          navigator.clipboard.writeText(link).then(() => alert('Link copiado!\n\n' + link));
-        });
-      });
-    }catch(e){
-      lista.innerHTML = '<p class="text-sm text-red-500">Erro ao carregar: ' + e.message + '</p>';
+      erro.textContent = '❌ Erro ao carregar agenda: ' + e.message + '. Verifique se a agenda está pública.';
+      erro.classList.remove('hidden');
     }
   }
 
-  // Adicionar horário
-  const btnAdicionarEnsaio = document.getElementById('btnAdicionarEnsaio');
-  if(btnAdicionarEnsaio){
-    btnAdicionarEnsaio.addEventListener('click', async function(){
-      const data = document.getElementById('ensaioData').value;
-      const local = document.getElementById('ensaioLocal').value.trim();
-      const inicio = document.getElementById('ensaioInicio').value;
-      const termino = document.getElementById('ensaioTermino').value;
-      const obs = document.getElementById('ensaioObs').value.trim();
-      const msg = document.getElementById('ensaioMsg');
-      if(!data || !local || !inicio || !termino){ msg.textContent = 'Preencha data, local, início e término.'; msg.style.color='#dc2626'; return; }
-      msg.textContent = 'Salvando...'; msg.style.color = '#888';
-      try{
-        await addDoc(collection(db, COL_ENSAIOS), { data, local, inicio, termino, obs, status: 'disponivel', criadoEm: new Date().toISOString() });
-        msg.textContent = '✓ Horário adicionado!'; msg.style.color = '#16a34a';
-        document.getElementById('ensaioData').value = '';
-        document.getElementById('ensaioLocal').value = '';
-        document.getElementById('ensaioInicio').value = '';
-        document.getElementById('ensaioTermino').value = '';
-        document.getElementById('ensaioObs').value = '';
-        carregarEnsaios();
-        setTimeout(() => msg.textContent = '', 3000);
-      }catch(e){ msg.textContent = 'Erro: ' + e.message; msg.style.color='#dc2626'; }
+  function parseIcal(ical){
+    const eventos = [];
+    const blocos  = ical.split('BEGIN:VEVENT');
+    blocos.shift(); // remove cabeçalho
+    blocos.forEach(bloco => {
+      const get = (campo) => {
+        const regex = new RegExp(campo + '[^:]*:(.+)', 'i');
+        const m = bloco.match(regex);
+        return m ? m[1].replace(/\r/g,'').trim() : '';
+      };
+      const dtstart = get('DTSTART');
+      const dtend   = get('DTEND');
+      const summary = get('SUMMARY');
+      const location= get('LOCATION');
+      const desc    = get('DESCRIPTION');
+      if(!dtstart || !summary) return;
+      eventos.push({
+        titulo:    decodeIcalText(summary),
+        local:     decodeIcalText(location),
+        descricao: decodeIcalText(desc),
+        inicio:    parseIcalDate(dtstart),
+        fim:       parseIcalDate(dtend),
+      });
     });
+    // Ordenar por data/hora
+    eventos.sort((a,b) => a.inicio - b.inicio);
+    return eventos;
   }
+
+  function parseIcalDate(str){
+    if(!str) return null;
+    // Formato: 20260903T190000Z ou 20260903T190000 ou 20260903
+    str = str.replace('Z','');
+    if(str.includes('T')){
+      const [d, t] = str.split('T');
+      const year = d.slice(0,4), month = d.slice(4,6), day = d.slice(6,8);
+      const h = t.slice(0,2), m = t.slice(2,4), s = t.slice(4,6)||'00';
+      // Se vier em UTC (com Z original), converter para GMT-3
+      const isUTC = arguments[0] && arguments[0].endsWith('Z');
+      const dt = new Date(`${year}-${month}-${day}T${h}:${m}:${s}${isUTC ? 'Z' : '-03:00'}`);
+      return dt;
+    } else {
+      // Data sem hora (evento dia inteiro)
+      return new Date(str.slice(0,4)+'-'+str.slice(4,6)+'-'+str.slice(6,8)+'T00:00:00-03:00');
+    }
+  }
+
+  function decodeIcalText(str){
+    if(!str) return '';
+    return str
+      .replace(/\\n/g, '\n')
+      .replace(/\\,/g, ',')
+      .replace(/\\;/g, ';')
+      .replace(/\\\\/g, '\\')
+      .replace(/=C3=A7/gi,'ç').replace(/=C3=A3/gi,'ã').replace(/=C3=A9/gi,'é')
+      .replace(/=C3=A1/gi,'á').replace(/=C3=AD/gi,'í').replace(/=C3=B3/gi,'ó')
+      .replace(/=C3=BA/gi,'ú').replace(/=C3=B5/gi,'õ').replace(/=C3=AA/gi,'ê')
+      .replace(/=C3=B4/gi,'ô').replace(/=C3=A2/gi,'â').replace(/=C3=A0/gi,'à')
+      .trim();
+  }
+
+  window.renderEnsaiosGcal = function(){
+    const lista  = document.getElementById('ensaiosLista');
+    const empty  = document.getElementById('ensaiosEmpty');
+    if(!lista) return;
+
+    const filtroIni = document.getElementById('ensaioFiltroInicio')?.value;
+    const filtroFim = document.getElementById('ensaioFiltroFim')?.value;
+    const dtIni = filtroIni ? new Date(filtroIni + 'T00:00:00-03:00') : null;
+    const dtFim = filtroFim ? new Date(filtroFim + 'T23:59:59-03:00') : null;
+
+    const filtrados = gcalEventos.filter(e => {
+      if(!e.inicio) return false;
+      if(dtIni && e.inicio < dtIni) return false;
+      if(dtFim && e.inicio > dtFim) return false;
+      return true;
+    });
+
+    if(filtrados.length === 0){
+      lista.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    // Agrupar por dia
+    const porDia = {};
+    filtrados.forEach(e => {
+      const diaKey = e.inicio.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric', timeZone:'America/Sao_Paulo' });
+      if(!porDia[diaKey]) porDia[diaKey] = [];
+      porDia[diaKey].push(e);
+    });
+
+    lista.innerHTML = Object.entries(porDia).map(([dia, evs]) => `
+      <div class="mb-6">
+        <div class="font-semibold text-sm px-4 py-2 rounded-lg mb-3 capitalize"
+             style="background:#eaf0f3;color:var(--azul-petroleo);border-left:4px solid var(--dourado)">
+          📅 ${dia}
+        </div>
+        <div class="space-y-2">
+          ${evs.map(e => `
+            <div class="flex items-start gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4">
+              <div class="text-sm font-bold shrink-0 pt-0.5" style="color:var(--dourado);min-width:110px">
+                ${e.inicio ? e.inicio.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}) : '—'}
+                ${e.fim ? ' – ' + e.fim.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}) : ''}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm" style="color:var(--azul-petroleo)">${e.titulo}</div>
+                ${e.local ? `<div class="text-xs text-gray-500 mt-0.5">📍 ${e.local}</div>` : ''}
+                ${e.descricao ? `<div class="text-xs text-gray-400 mt-1 whitespace-pre-line">${e.descricao}</div>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`).join('');
+  };
+
+  document.getElementById('btnAtualizarEnsaios')?.addEventListener('click', carregarEnsaios);
 
 
 
