@@ -2966,20 +2966,9 @@
 
         // Busca o repertório completo na inscrição original, se houver
         const inscricaoOriginal = c.inscricaoId ? todasInscricoes.find(i => i.id === c.inscricaoId) : null;
-        // Busca obras: (1) inscrição original via inscricaoId, (2) obras embutidas no item livre
-        // (3) hardcode para o Concerto de Abertura dos Coros Institucionais
-        const repertorioAbertura = [
-          { nomeObra: 'Zadok the Priest', compositor: 'Handel', duracao: "6'" },
-          { nomeObra: 'Cantique de J. Racine', compositor: 'Fauré', duracao: "6'" },
-          { nomeObra: 'Sanctus', compositor: 'Gounod', duracao: "6'" },
-          { nomeObra: 'Sereniteit', compositor: 'Jean Douliez', duracao: "4'" },
-          { nomeObra: 'Aurora (a cappella)', compositor: 'J. Douliez', duracao: "3'30\"" },
-          { nomeObra: 'Invocação Pátria', compositor: 'Villa-Lobos', duracao: "5'" },
-          { nomeObra: 'Ave Maria', compositor: 'Jean-Baptiste Fauré', duracao: "4'" },
-          { nomeObra: 'Pregões de Goiás', compositor: 'M. A. Veiga', arranjador: 'J. Douliez', duracao: "3'" },
-          { nomeObra: 'Magnificat-Alleluia', compositor: 'Villa-Lobos', duracao: "7'40\"" },
-        ];
-        const obras = (inscricaoOriginal?.obrasRepertorio)
+        const seedInstitucional = c.inscricaoId ? COROS_INSTITUCIONAIS_SEED.find(s => s.id === c.inscricaoId) : null;
+        const obras = (inscricaoOriginal?.obrasRepertorio?.length ? inscricaoOriginal.obrasRepertorio : null)
+          || (seedInstitucional?.obrasRepertorio?.length ? seedInstitucional.obrasRepertorio : null)
           || c.obrasRepertorio
           || (c.livre && (c.nomeCoro || '').toLowerCase().includes('coros institucionais') ? repertorioAbertura : []);
 
