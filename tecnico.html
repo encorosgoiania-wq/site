@@ -1155,10 +1155,10 @@ function renderEstrutura(d){
     </div>`).join('') || '<p style="color:#aaa;font-style:italic;font-size:.85rem;">Nenhuma informação cadastrada.</p>';
 }
 
-function toggleEstruturaForm(){
+window.toggleEstruturaForm = function(){
   const f = document.getElementById('estruturaForm');
   f.style.display = f.style.display === 'none' ? 'block' : 'none';
-}
+};
 
 async function salvarEstrutura(){
   const dados = {
@@ -1287,20 +1287,22 @@ function renderCoroCard(coro, r){
       </div>`;
   }
 
-  const linhas = [
-    ['Estantes de partitura', r.estantes > 0 ? `${r.estantes} estante(s)` : 'Não precisa', r.estantes > 0 ? 'it-alerta' : 'it-ok'],
-    ['Microfone(s) para solo', r.micSolo > 0 ? `${r.micSolo} microfone(s)` : 'Não precisa', r.micSolo > 0 ? 'it-alerta' : 'it-ok'],
-    ['Piano', labelInstr(r.piano), r.piano !== 'nao' ? 'it-alerta' : 'it-ok'],
-    ['Teclado', labelInstr(r.teclado), r.teclado !== 'nao' ? 'it-alerta' : 'it-ok'],
-    ['Bateria', r.bateria === 'sim' ? `⚠️ Sim — montagem: ${r.bateriaMontagem || 'não informado'}` : 'Não', r.bateria === 'sim' ? 'it-alerta' : 'it-ok'],
-    ['Percussão', r.percussao === 'sim' ? `⚠️ Sim (${r.percussaoQuais||'—'}) — montagem: ${r.percussaoMontagem||'não informado'}` : 'Não', r.percussao === 'sim' ? 'it-alerta' : 'it-ok'],
-    ['Outro instrumento', r.outroInstr === 'sim' ? `Sim: ${r.outroInstrQuais||'—'}` : 'Não', r.outroInstr === 'sim' ? 'it-alerta' : 'it-ok'],
-    ['Base instrumental / playback', r.playback === 'sim' ? `Sim: ${r.playbackConexao||'—'}` : 'Não', r.playback === 'sim' ? 'it-alerta' : 'it-ok'],
-    ['Cubo / caixa de som', r.cubo === 'sim' ? `Sim: ${r.cuboEquipamento||'—'}` : 'Não', r.cubo === 'sim' ? 'it-alerta' : 'it-ok'],
-    ['Músicos convidados', r.musicos === 'sim' ? `Sim: ${r.musicosQtd||'?'} músico(s) — ${r.musicosInstr||'—'}` : 'Não', r.musicos === 'sim' ? 'it-alerta' : 'it-ok'],
-    ['Cabos', labelCabos(r.cabos, r.cabosObs), r.cabos === 'nao' ? 'it-alerta' : 'it-ok'],
-    ['Observações', r.obsGerais || '—', ''],
-  ];
+  const todasLinhas = [
+    r.estantes > 0    ? ['Estantes de partitura', `${r.estantes} estante(s)`] : null,
+    r.micSolo > 0     ? ['Microfone(s) para solo', `${r.micSolo} microfone(s)`] : null,
+    r.piano !== 'nao' && r.piano ? ['Piano', labelInstr(r.piano)] : null,
+    r.teclado !== 'nao' && r.teclado ? ['Teclado', labelInstr(r.teclado)] : null,
+    r.bateria === 'sim' ? ['⚠️ Bateria', `Por conta do coral — montagem: ${r.bateriaMontagem || 'não informado'}`] : null,
+    r.percussao === 'sim' ? ['⚠️ Percussão', `${r.percussaoQuais||'—'} — montagem: ${r.percussaoMontagem||'não informado'}`] : null,
+    r.outroInstr === 'sim' ? ['Outro instrumento', r.outroInstrQuais||'—'] : null,
+    r.playback === 'sim' ? ['Base instrumental / playback', r.playbackConexao||'—'] : null,
+    r.cubo === 'sim'  ? ['Cubo / caixa de som', r.cuboEquipamento||'—'] : null,
+    r.musicos === 'sim' ? ['Músicos convidados', `${r.musicosQtd||'?'} músico(s) — ${r.musicosInstr||'—'}`] : null,
+    r.cabos === 'nao' || r.cabos === 'parcial' ? ['⚠️ Cabos', labelCabos(r.cabos, r.cabosObs)] : null,
+    r.obsGerais ? ['Observações', r.obsGerais] : null,
+  ].filter(Boolean);
+
+  const linhas = todasLinhas;
 
   const resp = r.nomeResponsavel ? `<span style="font-size:.75rem;opacity:.7;margin-left:8px;">por ${r.nomeResponsavel}</span>` : '';
 
@@ -1311,10 +1313,12 @@ function renderCoroCard(coro, r){
         ${nomeBtn}
       </div>
       <div class="coro-corpo">
-        ${linhas.map(([l,v,cls]) => `
+        ${linhas.length === 0
+          ? '<p class="sem-resposta" style="color:#27ae60;">✅ Sem necessidades especiais informadas.</p>'
+          : linhas.map(([l,v]) => `
           <div class="item-tec">
             <span class="it-label">${l}</span>
-            <span class="it-val ${cls||''}">${v}</span>
+            <span class="it-val it-alerta">${v}</span>
           </div>`).join('')}
       </div>
     </div>`;
