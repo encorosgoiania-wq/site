@@ -1318,6 +1318,9 @@
         <button type="button" id="adminTabEnsaios" class="admin-subtab px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 transition">
           Ensaios
         </button>
+        <button type="button" id="adminTabTecnico" class="admin-subtab px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 transition">
+          Técnico
+        </button>
       </div>
 
       <!-- ===== SUB-ABA: INSCRIÇÕES ===== -->
@@ -1611,6 +1614,38 @@
         <div id="ensaiosLista" class="space-y-3"></div>
         <div id="ensaiosEmpty" class="hidden text-center py-12 text-gray-400">
           <p>Nenhum horário cadastrado ainda.</p>
+        </div>
+      </div>
+
+      <!-- ===== SUB-ABA: TÉCNICO ===== -->
+      <div id="adminSubviewTecnico" class="hidden">
+        <div class="card-soft p-5 sm:p-6 mb-6 border-2" style="border-color:var(--azul-petroleo)">
+          <h2 class="text-sm font-bold mb-1" style="color:var(--azul-petroleo)">🎛️ Necessidades Técnicas</h2>
+          <p class="text-xs text-gray-500 mb-4">Formulário para os maestros informarem suas necessidades técnicas de palco. Compartilhe o link público com os grupos.</p>
+          <div class="flex flex-wrap gap-3 items-center">
+            <a href="tecnico.html" target="_blank"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition hover:opacity-80"
+               style="background:var(--azul-petroleo)">
+              🔗 Link público (maestros)
+            </a>
+            <a href="tecnico.html?admin=1" target="_blank"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition hover:opacity-80"
+               style="background:var(--dourado);color:#1a1a1a">
+              📊 Ver relatório técnico
+            </a>
+            <button onclick="copiarLinkTecnico()"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-gray-300 bg-white text-gray-700 transition hover:bg-gray-50">
+              📋 Copiar link para maestros
+            </button>
+          </div>
+          <div id="msgCopiarTecnico" class="hidden text-xs text-green-600 mt-2 font-semibold">✅ Link copiado!</div>
+        </div>
+
+        <div class="card-soft p-5 sm:p-6" style="border:1px solid #e5e7eb;">
+          <p class="text-sm text-gray-500 text-center py-8">
+            O relatório completo com todas as respostas está disponível na página dedicada.<br>
+            <a href="tecnico.html?admin=1" target="_blank" class="font-semibold underline" style="color:var(--azul-petroleo)">Abrir relatório técnico →</a>
+          </p>
         </div>
       </div>
 
@@ -5917,7 +5952,9 @@
   const adminSubviewBlog = document.getElementById('adminSubviewBlog');
   const adminSubviewFichas = document.getElementById('adminSubviewFichas');
   const adminSubviewEnsaios = document.getElementById('adminSubviewEnsaios');
+  const adminSubviewTecnico = document.getElementById('adminSubviewTecnico');
   const adminTabEnsaios = document.getElementById('adminTabEnsaios');
+  const adminTabTecnico = document.getElementById('adminTabTecnico');
 
 
   const ADMIN_ABAS = {
@@ -5925,7 +5962,8 @@
     cronograma: { botao: adminTabCronograma, painel: adminSubviewCronograma },
     blog: { botao: adminTabBlog, painel: adminSubviewBlog },
     fichas: { botao: adminTabFichas, painel: adminSubviewFichas },
-    ensaios: { botao: adminTabEnsaios, painel: adminSubviewEnsaios }
+    ensaios: { botao: adminTabEnsaios, painel: adminSubviewEnsaios },
+    tecnico: { botao: adminTabTecnico, painel: adminSubviewTecnico }
   };
 
   function setAdminSubview(tab){
@@ -5947,12 +5985,14 @@
     if(tab === 'cronograma') renderCronogramaAdmin();
     if(tab === 'blog') renderAdminBlog();
     if(tab === 'fichas'){ injetarBotoesFichasExport(); renderAdminFichas(); }
+    if(tab === 'ensaios') carregarEnsaios();
   }
 
   adminTabInscricoes.addEventListener('click', () => setAdminSubview('inscricoes'));
   adminTabCronograma.addEventListener('click', () => setAdminSubview('cronograma'));
   adminTabBlog.addEventListener('click', () => setAdminSubview('blog'));
   adminTabFichas.addEventListener('click', () => setAdminSubview('fichas'));
+  if(adminTabEnsaios) adminTabEnsaios.addEventListener('click', () => setAdminSubview('ensaios'));
 
   // ======================================================================
   // GESTÃO DE CRONOGRAMA — montagem de blocos de apresentação por dia
