@@ -1288,18 +1288,18 @@ function renderCoroCard(coro, r){
   }
 
   const todasLinhas = [
-    r.estantes > 0    ? ['Estantes de partitura', `${r.estantes} estante(s)`] : null,
-    r.micSolo > 0     ? ['Microfone(s) para solo', `${r.micSolo} microfone(s)`] : null,
-    r.piano !== 'nao' && r.piano ? ['Piano', labelInstr(r.piano)] : null,
-    r.teclado !== 'nao' && r.teclado ? ['Teclado', labelInstr(r.teclado)] : null,
-    r.bateria === 'sim' ? ['⚠️ Bateria', `Por conta do coral — montagem: ${r.bateriaMontagem || 'não informado'}`] : null,
-    r.percussao === 'sim' ? ['⚠️ Percussão', `${r.percussaoQuais||'—'} — montagem: ${r.percussaoMontagem||'não informado'}`] : null,
-    r.outroInstr === 'sim' ? ['Outro instrumento', r.outroInstrQuais||'—'] : null,
-    r.playback === 'sim' ? ['Base instrumental / playback', r.playbackConexao||'—'] : null,
-    r.cubo === 'sim'  ? ['Cubo / caixa de som', r.cuboEquipamento||'—'] : null,
-    r.musicos === 'sim' ? ['Músicos convidados', `${r.musicosQtd||'?'} músico(s) — ${r.musicosInstr||'—'}`] : null,
-    r.cabos === 'nao' || r.cabos === 'parcial' ? ['⚠️ Cabos', labelCabos(r.cabos, r.cabosObs)] : null,
-    r.obsGerais ? ['Observações', r.obsGerais] : null,
+    (r.estantes > 0)                          ? ['Estantes de partitura', `${r.estantes} estante(s)`] : null,
+    (r.micSolo > 0)                           ? ['Microfone(s) para solo', `${r.micSolo} microfone(s)`] : null,
+    (r.piano && r.piano !== 'nao')            ? ['Piano', labelInstr(r.piano)] : null,
+    (r.teclado && r.teclado !== 'nao')        ? ['Teclado', labelInstr(r.teclado)] : null,
+    (r.bateria === 'sim')                     ? ['⚠️ Bateria', `Por conta do coral — montagem: ${r.bateriaMontagem || 'não informado'}`] : null,
+    (r.percussao === 'sim')                   ? ['⚠️ Percussão', `${r.percussaoQuais||'—'} — montagem: ${r.percussaoMontagem||'não informado'}`] : null,
+    (r.outroInstr === 'sim')                  ? ['Outro instrumento', r.outroInstrQuais||'—'] : null,
+    (r.playback === 'sim')                    ? ['Base instrumental / playback', r.playbackConexao||'—'] : null,
+    (r.cubo === 'sim')                        ? ['Cubo / caixa de som', r.cuboEquipamento||'—'] : null,
+    (r.musicos === 'sim')                     ? ['Músicos convidados', `${r.musicosQtd||'?'} músico(s) — ${r.musicosInstr||'—'}`] : null,
+    (r.cabos === 'nao' || r.cabos === 'parcial') ? ['⚠️ Cabos', labelCabos(r.cabos, r.cabosObs)] : null,
+    (r.obsGerais)                             ? ['Observações', r.obsGerais] : null,
   ].filter(Boolean);
 
   const linhas = todasLinhas;
@@ -1477,6 +1477,16 @@ function toLocalDatetime(dt){
   const pad = n => String(n).padStart(2,'0');
   return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
 }
+
+// Expor funções chamadas por onclick inline no escopo global
+window.salvarPrazo        = salvarPrazo;
+window.salvarEstrutura    = salvarEstrutura;
+window.abrirModal         = abrirModal;
+window.fecharModal        = fecharModal;
+window.salvarEdicaoModal  = salvarEdicaoModal;
+window.fazerLogin         = fazerLogin;
+window.enviarFormulario   = enviarFormulario;
+window.imprimirRelatorio  = imprimirRelatorio;
 </script>
 </body>
 </html>
