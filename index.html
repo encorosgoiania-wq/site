@@ -5398,8 +5398,7 @@
   // ENSAIOS — Google Calendar iCal
   // ══════════════════════════════════════════════════════════════════
   const GCAL_ICAL_URL = 'https://calendar.google.com/calendar/ical/encorosgoiania%40gmail.com/private-49d2a96f3734421a3be916901cba131e/basic.ics';
-  // Proxy para evitar CORS — usando allorigins
-  const GCAL_PROXY = 'https://api.allorigins.win/get?url=' + encodeURIComponent(GCAL_ICAL_URL);
+  const GCAL_PROXY = 'https://corsproxy.io/?' + encodeURIComponent(GCAL_ICAL_URL);
 
   let gcalEventos = [];
 
@@ -5413,8 +5412,8 @@
     erro.classList.add('hidden');
     try{
       const res  = await fetch(GCAL_PROXY);
-      const json = await res.json();
-      const ical = json.contents;
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const ical = await res.text();
       gcalEventos = parseIcal(ical);
       renderEnsaiosGcal();
     } catch(e){
@@ -5427,61 +5426,51 @@
   function parseIcal(ical){
     const eventos = [];
     const blocos  = ical.split('BEGIN:VEVENT');
-    blocos.shift(); // remove cabeçalho
+    blocos.shift();
     blocos.forEach(bloco => {
       const get = (campo) => {
-        const regex = new RegExp(campo + '[^:]*:(.+)', 'i');
+        const regex = new RegExp(campo + '[^:]*:([\\s\\S]*?)(?=\\r?\\n[A-Z])', 'i');
         const m = bloco.match(regex);
-        return m ? m[1].replace(/\r/g,'').trim() : '';
+        if(!m) return '';
+        // juntar linhas dobradas (iCal fold: linha começa com espaço)
+        return m[1].replace(/\r?\n[ \t]/g,'').replace(/\r/g,'').trim();
       };
       const dtstart = get('DTSTART');
       const dtend   = get('DTEND');
       const summary = get('SUMMARY');
-      const location= get('LOCATION');
+      const loc     = get('LOCATION');
       const desc    = get('DESCRIPTION');
       if(!dtstart || !summary) return;
       eventos.push({
         titulo:    decodeIcalText(summary),
-        local:     decodeIcalText(location),
+        local:     decodeIcalText(loc),
         descricao: decodeIcalText(desc),
         inicio:    parseIcalDate(dtstart),
         fim:       parseIcalDate(dtend),
+        dtRaw:     dtstart
       });
     });
-    // Ordenar por data/hora
     eventos.sort((a,b) => a.inicio - b.inicio);
     return eventos;
   }
 
   function parseIcalDate(str){
     if(!str) return null;
-    // Formato: 20260903T190000Z ou 20260903T190000 ou 20260903
-    str = str.replace('Z','');
-    if(str.includes('T')){
-      const [d, t] = str.split('T');
-      const year = d.slice(0,4), month = d.slice(4,6), day = d.slice(6,8);
-      const h = t.slice(0,2), m = t.slice(2,4), s = t.slice(4,6)||'00';
-      // Se vier em UTC (com Z original), converter para GMT-3
-      const isUTC = arguments[0] && arguments[0].endsWith('Z');
-      const dt = new Date(`${year}-${month}-${day}T${h}:${m}:${s}${isUTC ? 'Z' : '-03:00'}`);
-      return dt;
+    const isUTC = str.endsWith('Z');
+    const s = str.replace('Z','');
+    if(s.includes('T')){
+      const d = s.slice(0,8), t = s.slice(9,15)||s.slice(9);
+      const iso = `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}T${t.slice(0,2)}:${t.slice(2,4)}:${t.slice(4,6)||'00'}${isUTC?'Z':'-03:00'}`;
+      return new Date(iso);
     } else {
-      // Data sem hora (evento dia inteiro)
-      return new Date(str.slice(0,4)+'-'+str.slice(4,6)+'-'+str.slice(6,8)+'T00:00:00-03:00');
+      return new Date(`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}T00:00:00-03:00`);
     }
   }
 
   function decodeIcalText(str){
     if(!str) return '';
     return str
-      .replace(/\\n/g, '\n')
-      .replace(/\\,/g, ',')
-      .replace(/\\;/g, ';')
-      .replace(/\\\\/g, '\\')
-      .replace(/=C3=A7/gi,'ç').replace(/=C3=A3/gi,'ã').replace(/=C3=A9/gi,'é')
-      .replace(/=C3=A1/gi,'á').replace(/=C3=AD/gi,'í').replace(/=C3=B3/gi,'ó')
-      .replace(/=C3=BA/gi,'ú').replace(/=C3=B5/gi,'õ').replace(/=C3=AA/gi,'ê')
-      .replace(/=C3=B4/gi,'ô').replace(/=C3=A2/gi,'â').replace(/=C3=A0/gi,'à')
+      .replace(/\\n/g,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\')
       .trim();
   }
 
@@ -5492,13 +5481,13 @@
 
     const filtroIni = document.getElementById('ensaioFiltroInicio')?.value;
     const filtroFim = document.getElementById('ensaioFiltroFim')?.value;
-    const dtIni = filtroIni ? new Date(filtroIni + 'T00:00:00-03:00') : null;
-    const dtFim = filtroFim ? new Date(filtroFim + 'T23:59:59-03:00') : null;
 
     const filtrados = gcalEventos.filter(e => {
       if(!e.inicio) return false;
-      if(dtIni && e.inicio < dtIni) return false;
-      if(dtFim && e.inicio > dtFim) return false;
+      // comparar só a parte da data no fuso de Brasília
+      const dataEvento = e.inicio.toLocaleDateString('sv-SE', {timeZone:'America/Sao_Paulo'}); // 'sv-SE' = formato YYYY-MM-DD
+      if(filtroIni && dataEvento < filtroIni) return false;
+      if(filtroFim && dataEvento > filtroFim) return false;
       return true;
     });
 
