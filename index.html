@@ -5424,23 +5424,31 @@
   // ══════════════════════════════════════════════════════════════════
   // ENSAIOS — Google Calendar iCal
   // ══════════════════════════════════════════════════════════════════
-  const GCAL_ICAL_URL = 'https://calendar.google.com/calendar/ical/encorosgoiania%40gmail.com/private-49d2a96f3734421a3be916901cba131e/basic.ics';
-  const GCAL_PROXIES = [
-    'https://corsproxy.io/?' + encodeURIComponent(GCAL_ICAL_URL),
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent(GCAL_ICAL_URL),
-    'https://thingproxy.freeboard.io/fetch/' + GCAL_ICAL_URL,
+  const GCAL_ICAL_URLS = [
+    'https://calendar.google.com/calendar/ical/encorosgoiania%40gmail.com/private-49d2a96f3734421a3be916901cba131e/basic.ics',
+    'https://calendar.google.com/calendar/ical/encorosgoiania%40gmail.com/private-c621ea0d8d4498dd840984c9de4ce9d9/basic.ics',
+  ];
+  const GCAL_PROXIES_BASE = [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url=',
+    'https://thingproxy.freeboard.io/fetch/',
   ];
 
   async function fetchComFallback(){
-    for(const proxy of GCAL_PROXIES){
-      try{
-        const res = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
-        if(!res.ok) continue;
-        const text = await res.text();
-        if(text.includes('BEGIN:VCALENDAR')) return text;
-      } catch(e){ continue; }
+    let textoFinal = '';
+    for(const icalUrl of GCAL_ICAL_URLS){
+      for(const proxy of GCAL_PROXIES_BASE){
+        try{
+          const url = proxy.endsWith('/') ? proxy + icalUrl : proxy + encodeURIComponent(icalUrl);
+          const res = await fetch(url, {signal: AbortSignal.timeout(8000)});
+          if(!res.ok) continue;
+          const text = await res.text();
+          if(text.includes('BEGIN:VCALENDAR')){ textoFinal += '\n' + text; break; }
+        } catch(e){ continue; }
+      }
     }
-    throw new Error('Todos os proxies falharam. Verifique se a agenda está pública.');
+    if(!textoFinal) throw new Error('Todos os proxies falharam. Verifique se a agenda está pública.');
+    return textoFinal;
   }
 
   let gcalEventos = [];
@@ -5487,13 +5495,14 @@
       eventos.push({
         titulo:    decodeIcalText(summary),
         local:     decodeIcalText(loc),
-        descricao: decodeIcalText(desc),
+        descricao: filtrarDescricao(decodeIcalText(desc)),
         inicio:    inicioDate,
         fim:       fimDate,
         dtRaw:     dtstart
       });
     });
     eventos.sort((a,b) => (a.inicio - b.inicio) || (a.titulo||'').localeCompare(b.titulo||'','pt-BR'));
+    console.log('iCal parseado:', eventos.length, 'eventos', eventos.map(e => e.titulo + ' ' + e.dtRaw));
     return eventos;
   }
 
@@ -5519,7 +5528,15 @@
       .trim();
   }
 
-  window.renderEnsaiosGcal = function(){
+  function filtrarDescricao(desc){
+    if(!desc) return '';
+    // Remove texto padrão enviado aos maestros (a partir de "Olá, maestro")
+    const corte = desc.indexOf('Olá\\, maestro') !== -1 
+      ? desc.indexOf('Olá\\, maestro')
+      : desc.indexOf('Olá, maestro');
+    const texto = corte > 0 ? desc.substring(0, corte) : desc;
+    return texto.replace(/\\n/g,'\n').trim();
+  }
     const lista  = document.getElementById('ensaiosLista');
     const empty  = document.getElementById('ensaiosEmpty');
     if(!lista) return;
