@@ -1223,40 +1223,41 @@ let todasRespostas = {};
 async function carregarRelatorio(){
   document.getElementById('relatorioDias').innerHTML = '<div class="loader">Carregando...</div>';
   try {
-    // coros inscritos
-    const snapCoros = await db.collection(COL_INSCRICOES).get();
-    todosOsCoros = [];
-    snapCoros.forEach(doc => {
-      const d = doc.data();
-      if(d.nomeCoro && d.status === 'Aprovado' && d.modalidade === 'Presencial'){
-        todosOsCoros.push({ id: doc.id, ...d });
-      }
-    });
-    // fixos
-    const fixos = [
-      { id:'900000001', nomeCoro:'Coral Sinfônico da UFG (CSUFG)', nomeRegente:'Organização', diaApresentacao:'quinta', isInstitucional:true },
-      { id:'900000002', nomeCoro:'Coro Sinfônico Jovem de Goiás (CSJG)', nomeRegente:'Weber Assis', diaApresentacao:'sabado', isInstitucional:true },
-      { id:'900000003', nomeCoro:'Coro Juvenil de Goiânia', nomeRegente:'Eliseu Ferreira', diaApresentacao:'sexta', isInstitucional:true },
-      { id:'900000004', nomeCoro:'Onix Brasil Vocal Internacional', nomeRegente:'Paulo Sergio Motta', diaApresentacao:'sexta', isInstitucional:true },
-      { id:'900000005', nomeCoro:'Coro Sinfônico de Goiânia', nomeRegente:'Ângelo Dias', diaApresentacao:'sabado', isInstitucional:true },
-      { id:'900000006', nomeCoro:'Concerto de Abertura — Coros Institucionais', nomeRegente:'Ângelo Dias', diaApresentacao:'quinta', isInstitucional:true },
-    ];
-    fixos.forEach(f => { if(!todosOsCoros.find(c => c.id === f.id)) todosOsCoros.push(f); });
+    // Puxar cronograma primeiro — é a fonte da verdade
+    const snapCron = await db.collection('encoros2026_cronograma').get();
+    const cronPorDia = {};
+    snapCron.forEach(docDia => { cronPorDia[docDia.id] = docDia.data(); });
 
-    // puxar ordem do cronograma do Firestore
-    const ordemCronograma = {}; // { coroId: posicaoGlobal }
-    try {
-      const snapCron = await db.collection('encoros2026_cronograma').get();
-      snapCron.forEach(docDia => {
-        const dia = docDia.data();
-        const itens = dia.itens || [];
-        itens.forEach((item, idx) => {
-          // item pode ser fixo (nomeCoro) ou livre (inscricaoId)
-          const id = item.inscricaoId || item.coroId || null;
-          if(id) ordemCronograma[id] = (DIAS_ORDEM.indexOf(docDia.id) * 1000) + idx;
-        });
+    // Puxar inscrições para ter nomes/regentes dos amadores
+    const snapCoros = await db.collection(COL_INSCRICOES).get();
+    const inscricoes = {};
+    snapCoros.forEach(doc => { inscricoes[doc.id] = { id: doc.id, ...doc.data() }; });
+
+    // Fixos hardcoded
+    const FIXOS = {
+      '900000001': { id:'900000001', nomeCoro:'Coral Sinfônico da UFG (CSUFG)', nomeRegente:'Organização', diaApresentacao:'quinta', isInstitucional:true },
+      '900000002': { id:'900000002', nomeCoro:'Coro Sinfônico Jovem de Goiás (CSJG)', nomeRegente:'Weber Assis', diaApresentacao:'sabado', isInstitucional:true },
+      '900000003': { id:'900000003', nomeCoro:'Coro Juvenil de Goiânia', nomeRegente:'Eliseu Ferreira', diaApresentacao:'sexta', isInstitucional:true },
+      '900000004': { id:'900000004', nomeCoro:'Onix Brasil Vocal Internacional', nomeRegente:'Paulo Sergio Motta', diaApresentacao:'sexta', isInstitucional:true },
+      '900000005': { id:'900000005', nomeCoro:'Coro Sinfônico de Goiânia', nomeRegente:'Ângelo Dias', diaApresentacao:'sabado', isInstitucional:true },
+      '900000006': { id:'900000006', nomeCoro:'Concerto de Abertura — Coros Institucionais', nomeRegente:'Ângelo Dias', diaApresentacao:'quinta', isInstitucional:true },
+    };
+
+    // Montar lista de coros na ordem do cronograma
+    todosOsCoros = [];
+    DIAS_ORDEM.forEach(diaId => {
+      const dia = cronPorDia[diaId];
+      if(!dia || !dia.coros) return;
+      dia.coros.forEach(item => {
+        const id = item.inscricaoId;
+        if(!id) return;
+        const coro = FIXOS[id] || inscricoes[id];
+        if(!coro) return;
+        // evitar duplicatas
+        if(todosOsCoros.find(c => c.id === id)) return;
+        todosOsCoros.push({ ...coro, diaApresentacao: diaId, _ordemCron: todosOsCoros.length });
       });
-    } catch(e){ /* cronograma indisponível, usa ordem alfabética */ }
+    });
 
     // respostas técnicas
     const snapTec = await db.collection(COL_TECNICO).get();
@@ -1266,13 +1267,6 @@ async function carregarRelatorio(){
         const coroId = doc.id.replace('tecnico_','');
         todasRespostas[coroId] = doc.data();
       }
-    });
-
-    // injeta ordem no objeto de cada coro
-    todosOsCoros.forEach(c => {
-      c._ordemCron = ordemCronograma[c.id] !== undefined
-        ? ordemCronograma[c.id]
-        : (DIAS_ORDEM.indexOf(c.diaApresentacao) * 1000) + 999;
     });
 
     renderRelatorio();
