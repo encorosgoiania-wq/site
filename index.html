@@ -5529,13 +5529,16 @@
 
   function filtrarDescricao(desc){
     if(!desc) return '';
-    // Remove texto padrão enviado aos maestros (a partir de "Olá, maestro")
-    const corte = desc.indexOf('Olá\\, maestro') !== -1 
-      ? desc.indexOf('Olá\\, maestro')
-      : desc.indexOf('Olá, maestro');
-    const texto = corte > 0 ? desc.substring(0, corte) : desc;
-    return texto.replace(/\\n/g,'\n').trim();
+    const marcadores = ['Olá, maestro', 'Olá\\, maestro', 'Para mantermos a nossa programação'];
+    let corte = desc.length;
+    for(const m of marcadores){
+      const idx = desc.indexOf(m);
+      if(idx !== -1 && idx < corte) corte = idx;
+    }
+    return desc.substring(0, corte).trim();
   }
+
+  window.renderEnsaiosGcal = function(){
     const lista  = document.getElementById('ensaiosLista');
     const empty  = document.getElementById('ensaiosEmpty');
     if(!lista) return;
