@@ -275,7 +275,7 @@
             <p class="text-sm text-gray-600">Em Artes Basileu França, instituição co-realizadora e formativa do encontro.</p>
             <div class="mt-4 pt-4 border-t border-gray-100">
               <span class="text-[10px] font-bold uppercase tracking-wide text-gold bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 inline-block mb-2">Coro Anfitrião · Sábado</span>
-              <p class="text-sm font-semibold" style="color:var(--azul-petroleo)">Coro Jovem de Goiás - Basileu (CSJGOIÁS)</p>
+              <p class="text-sm font-semibold" style="color:var(--azul-petroleo)">Coro Sinfônico Jovem de Goiás (CSJG)</p>
             </div>
           </div>
           <div class="card-soft p-6">
@@ -2007,7 +2007,7 @@
   // vinculação com inscrições e cronogramas já salvos.
   const NOMES_COMPLETOS_COROS = {
     'CSUFG': 'Coral Sinfônico da UFG',
-    'CSJGOIÁS': 'Coro Jovem de Goiás - Basileu',
+    'CSJG': 'Coro Sinfônico Jovem de Goiás',
     'CJGOIÂNIA': 'Coro Juvenil de Goiânia',
     'CSGOIÂNIA': 'Coro Sinfônico de Goiânia',
     'Onix Brasil Vocal Internacional': 'Onix Brasil Vocal Internacional'
@@ -2066,10 +2066,10 @@
       horario: 'Início às 19h30',
       horarioInicioMinutos: 19 * 60 + 30, // 19:30
       titulo: 'Concerto Coral — Noite de Sábado',
-      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do Coro Jovem de Goiás - Basileu (CSJGOIÁS), do Coro Juvenil de Goiânia (CJGOIÂNIA) e do Onix Brasil Vocal Internacional.',
-      fixos: ['Coro Jovem de Goiás - Basileu (CSJGOIÁS)', 'Coro Juvenil de Goiânia (CJGOIÂNIA)', 'Onix Brasil Vocal Internacional'],
+      descricao: 'Apresentações de coros amadores e independentes, com participação fixa do Coro Sinfônico Jovem de Goiás (CSJG), do Coro Juvenil de Goiânia (CJGOIÂNIA) e do Onix Brasil Vocal Internacional.',
+      fixos: ['Coro Sinfônico Jovem de Goiás (CSJG)', 'Coro Juvenil de Goiânia (CJGOIÂNIA)', 'Onix Brasil Vocal Internacional'],
       corosFixos: [
-        { nomeCoro: 'CSJGOIÁS', duracaoMinutos: 20, anfitriao: true },
+        { nomeCoro: 'CSJG', duracaoMinutos: 20, anfitriao: true },
         { nomeCoro: 'CJGOIÂNIA', duracaoMinutos: 20, anfitriao: false },
         { nomeCoro: 'Onix Brasil Vocal Internacional', duracaoMinutos: 15, anfitriao: true }
       ],
@@ -2236,7 +2236,7 @@
 
   // ======================================================================
   // COROS INSTITUCIONAIS FIXOS — seed automático de inscrições
-  // CSUFG, CSJGOIÁS, CJGOIÂNIA, CSGOIÂNIA e o Onix Brasil Vocal Internacional
+  // CSUFG, CSJG, CJGOIÂNIA, CSGOIÂNIA e o Onix Brasil Vocal Internacional
   // são o corpo estável do evento: já têm dia, horário e vaga garantidos,
   // sem precisar passar pelo processo normal de inscrição/aprovação.
   // Por isso, cada um recebe automaticamente um registro de inscrição com
@@ -2260,14 +2260,21 @@
     },
     {
       id: '900000002',
-      nomeCoro: 'Coro Jovem de Goiás - Basileu (CSJGOIÁS)',
-      nomeRegente: 'Organização VII ENCoros',
+      nomeCoro: 'Coro Sinfônico Jovem de Goiás (CSJG)',
+      nomeRegente: 'Weber Assis',
       diaApresentacao: 'sabado',
       duracaoMinutos: 20,
       isInstitucional: true,
       cidadeEstado: 'Goiânia - GO',
       historicoCoro: '',
-      obrasRepertorio: []
+      obrasRepertorio: [
+        { nomeObra: 'Le Jardin Féérique', compositor: 'Maurice Ravel', arranjador: '', duracaoObra: "2'50\"" },
+        { nomeObra: 'Le Fleurs Et Les Arbres', compositor: 'Camille Saint-Saëns', arranjador: '', duracaoObra: "1'34\"" },
+        { nomeObra: 'The Tyger', compositor: 'Emil Raberg', arranjador: '', duracaoObra: "3'33\"" },
+        { nomeObra: 'Cunhataiporã', compositor: 'Geraldo Espíndola', arranjador: 'Samuel Kerr', duracaoObra: "4'30\"" },
+        { nomeObra: 'A Correnteza', compositor: 'Tom Jobim e Luiz Bonfá', arranjador: 'Weber Assis', duracaoObra: "3'00\"" },
+        { nomeObra: 'Viento Norte', compositor: 'Carlos Guastavino', arranjador: '', duracaoObra: "2'28\"" }
+      ]
     },
     {
       id: '900000003',
@@ -4926,7 +4933,27 @@
   const btnRelatorioECAD = document.getElementById('btnRelatorioECAD');
   if(btnRelatorioECAD){
     btnRelatorioECAD.addEventListener('click', function(){
-      const lista = getInscricoes().filter(i => !i.isInstitucional && i.obrasRepertorio && i.obrasRepertorio.length > 0);
+      const repertorioAberturaECAD = [
+        { nomeObra: 'Zadok the Priest', compositor: 'Handel', arranjador: '', duracaoObra: "6'" },
+        { nomeObra: 'Cantique de J. Racine', compositor: 'Fauré', arranjador: '', duracaoObra: "6'" },
+        { nomeObra: 'Sanctus', compositor: 'Gounod', arranjador: '', duracaoObra: "6'" },
+        { nomeObra: 'Sereniteit', compositor: 'Jean Douliez', arranjador: '', duracaoObra: "4'" },
+        { nomeObra: 'Aurora (a cappella)', compositor: 'J. Douliez', arranjador: '', duracaoObra: "3'30\"" },
+        { nomeObra: 'Invocação Pátria', compositor: 'Villa-Lobos', arranjador: '', duracaoObra: "5'" },
+        { nomeObra: 'Ave Maria', compositor: 'Jean-Baptiste Fauré', arranjador: '', duracaoObra: "4'" },
+        { nomeObra: 'Pregões de Goiás', compositor: 'M. A. Veiga', arranjador: 'J. Douliez', duracaoObra: "3'" },
+        { nomeObra: 'Magnificat-Alleluia', compositor: 'Villa-Lobos', arranjador: '', duracaoObra: "7'40\"" }
+      ];
+      const entradaAbertura = {
+        nomeCoro: 'Concerto de Abertura — Coros Institucionais',
+        nomeRegente: 'Ângelo Dias',
+        cidadeEstado: 'Goiânia - GO',
+        diaApresentacao: 'quinta',
+        duracaoTotalRepertorio: 60,
+        obrasRepertorio: repertorioAberturaECAD,
+        isInstitucional: true
+      };
+      const lista = [entradaAbertura, ...getInscricoes().filter(i => i.obrasRepertorio && i.obrasRepertorio.length > 0 && !(i.isInstitucional && (i.nomeCoro||'').toLowerCase().includes('coros institucionais')))];
 
       if(lista.length === 0){
         alert('Nenhum coro enviou o repertório ainda (Etapa 2 pendente para todos).');
@@ -6378,7 +6405,7 @@
 
       // Botões de comunicação (WhatsApp/E-mail).
       // Para coros com inscrição real: usa os dados da inscrição (telefone, e-mail, link Etapa 2).
-      // Para coros fixos institucionais (CSUFG, CSJGOIÁS etc.) sem inscrição no sistema:
+      // Para coros fixos institucionais (CSUFG, CSJG etc.) sem inscrição no sistema:
       // usa os dados do COROS_INSTITUCIONAIS_SEED como fallback, gerando botão sem número/e-mail
       // (admin preenche na hora ao abrir o WhatsApp/e-mail).
       let botoesComunicacao = '';
