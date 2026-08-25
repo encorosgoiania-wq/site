@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VII ENCoros 2026 — Encontro Nacional de Coros de Goiânia</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -4995,119 +4996,135 @@
 
       const diasOrdem = ['quinta','sexta','sabado','domingo','segunda'];
       const diasLabel = {quinta:'Quinta-feira, 04/09',sexta:'Sexta-feira, 04/09',sabado:'Sábado, 05/09',domingo:'Domingo, 06/09',segunda:'Segunda-feira, 07/09'};
+      const diasAbas  = {quinta:'Qui 04-09',sexta:'Sex 05-09',sabado:'Sab 06-09',domingo:'Dom 07-09',segunda:'Seg 08-09'};
 
-      // ── CSV ─────────────────────────────────────────────────────────────
-      const linhasCSV = [['Dia','Coro','Regente','Cidade','Obra','Compositor','Arranjador','Duração (min)']];
-      lista.forEach(item => {
-        (item.obrasRepertorio || []).forEach(o => {
-          linhasCSV.push([
-            diasLabel[item.diaApresentacao] || item.diaApresentacao || '—',
-            item.nomeCoro || '',
-            item.nomeRegente || '',
-            item.cidadeEstado || '',
-            o.nomeObra || '',
-            o.compositor || '',
-            o.arranjador || '',
-            o.duracaoObra || ''
-          ]);
-        });
-      });
-      const csv = linhasCSV.map(row => row.map(cell => '"' + String(cell).replace(/"/g,'""') + '"').join(',')).join('\n');
-      const blobCsv = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-      const urlCsv = URL.createObjectURL(blobCsv);
-      const linkCsv = document.createElement('a');
-      linkCsv.href = urlCsv;
-      linkCsv.download = 'encoros2026_relatorio_ecad.csv';
-      document.body.appendChild(linkCsv);
-      linkCsv.click();
-      document.body.removeChild(linkCsv);
-      URL.revokeObjectURL(urlCsv);
+      // ── XLSX ─────────────────────────────────────────────────────────────
+      // Cores (hex sem #)
+      const COR_PETROLEO  = '0F2027';
+      const COR_PETROLEO2 = '1E4A56';
+      const COR_GOLD_BG   = 'F5E6A3';
+      const COR_GOLD_BD   = 'D4AF37';
+      const COR_BRANCO    = 'FFFFFF';
+      const COR_LINHA_PAR = 'F0F4F5';
 
-      // ── HTML IMPRIMÍVEL (abre em nova aba para Ctrl+P / Imprimir como PDF) ─
-      let secoesDia = '';
+      function cellStyle(bold, fontColor, bgColor, wrapText, hAlign){
+        return {
+          font:      { name:'Arial', sz: bold ? 10 : 9, bold: !!bold, color:{ rgb: fontColor || '000000' } },
+          fill:      bgColor ? { patternType:'solid', fgColor:{ rgb: bgColor } } : { patternType:'none' },
+          alignment: { horizontal: hAlign||'left', vertical:'top', wrapText: !!wrapText },
+          border: {
+            top:    { style:'thin', color:{ rgb:'BBBBBB' } },
+            bottom: { style:'thin', color:{ rgb:'BBBBBB' } },
+            left:   { style:'thin', color:{ rgb:'BBBBBB' } },
+            right:  { style:'thin', color:{ rgb:'BBBBBB' } }
+          }
+        };
+      }
+
+      function cellStyleNoBorder(bold, fontColor, bgColor, hAlign){
+        return {
+          font:      { name:'Arial', sz: bold ? 11 : 9, bold: !!bold, color:{ rgb: fontColor || '000000' } },
+          fill:      bgColor ? { patternType:'solid', fgColor:{ rgb: bgColor } } : { patternType:'none' },
+          alignment: { horizontal: hAlign||'left', vertical:'center', wrapText: true },
+          border: {
+            top:    { style:'medium', color:{ rgb: COR_GOLD_BD } },
+            bottom: { style:'medium', color:{ rgb: COR_GOLD_BD } },
+            left:   { style:'medium', color:{ rgb: COR_GOLD_BD } },
+            right:  { style:'medium', color:{ rgb: COR_GOLD_BD } }
+          }
+        };
+      }
+
+      const wb = XLSX.utils.book_new();
+
       diasOrdem.forEach(diaId => {
         const corosDia = lista.filter(i => i.diaApresentacao === diaId);
         if(corosDia.length === 0) return;
-        let tabelasCoros = '';
+
+        const ws = {};
+        const merges = [];
+        let r = 0; // linha atual (0-indexed)
+
+        // Larguras das colunas (em chars)
+        ws['!cols'] = [
+          { wch: 42 }, // Obra
+          { wch: 44 }, // Compositor
+          { wch: 34 }, // Arranjador
+          { wch: 12 }  // Duração
+        ];
+
+        // ── Cabeçalho do dia ──
+        const diaCell = XLSX.utils.encode_cell({r, c:0});
+        ws[diaCell] = {
+          v: (diasLabel[diaId]||diaId).toUpperCase(),
+          s: { font:{name:'Arial',sz:13,bold:true,color:{rgb:COR_BRANCO}},
+               fill:{patternType:'solid',fgColor:{rgb:COR_PETROLEO}},
+               alignment:{horizontal:'center',vertical:'center'} }
+        };
+        merges.push({ s:{r,c:0}, e:{r,c:3} });
+        r += 2; // linha em branco após cabeçalho do dia
+
         corosDia.forEach(item => {
           const obras = item.obrasRepertorio || [];
-          tabelasCoros += `
-            <div class="coro-bloco">
-              <div class="coro-header">
-                <strong>${item.nomeCoro}</strong>
-                <span class="coro-meta">${item.nomeRegente} · ${item.cidadeEstado} · ${item.duracaoTotalRepertorio || '?'} min total</span>
-              </div>
-              <table>
-                <thead>
-                  <tr><th>Obra</th><th>Compositor</th><th>Arranjador</th><th>Duração</th></tr>
-                </thead>
-                <tbody>
-                  ${obras.map(o => `
-                    <tr>
-                      <td>${o.nomeObra || '—'}</td>
-                      <td>${o.compositor || '—'}</td>
-                      <td>${o.arranjador || '—'}</td>
-                      <td>${o.duracaoObra ? o.duracaoObra + ' min' : '—'}</td>
-                    </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>`;
+
+          // ── Cabeçalho do coro ──
+          const coroCell = XLSX.utils.encode_cell({r, c:0});
+          ws[coroCell] = {
+            v: `${item.nomeCoro || '—'}   |   Regente: ${item.nomeRegente || '—'}   |   ${item.cidadeEstado || '—'}`,
+            s: cellStyleNoBorder(true, COR_PETROLEO, COR_GOLD_BG, 'left')
+          };
+          merges.push({ s:{r,c:0}, e:{r,c:3} });
+          r++;
+
+          // ── Cabeçalhos das colunas ──
+          ['Obra','Compositor','Arranjador','Duração'].forEach((h, c) => {
+            ws[XLSX.utils.encode_cell({r, c})] = {
+              v: h,
+              s: cellStyle(true, COR_BRANCO, COR_PETROLEO2, false, 'center')
+            };
+          });
+          r++;
+
+          // ── Obras ──
+          obras.forEach((o, idx) => {
+            const bg = idx % 2 === 0 ? COR_LINHA_PAR : COR_BRANCO;
+            const vals = [
+              o.nomeObra   || '—',
+              o.compositor || '—',
+              o.arranjador || '—',
+              o.duracaoObra|| '—'
+            ];
+            vals.forEach((v, c) => {
+              ws[XLSX.utils.encode_cell({r, c})] = {
+                v,
+                s: cellStyle(false, '1a1a1a', bg, true, c === 3 ? 'center' : 'left')
+              };
+            });
+            r++;
+          });
+
+          r++; // espaço entre coros
         });
-        secoesDia += `<div class="dia-secao"><h2>${diasLabel[diaId] || diaId}</h2>${tabelasCoros}</div>`;
+
+        // Range da sheet
+        ws['!ref'] = XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r, c:3} });
+        ws['!merges'] = merges;
+
+        XLSX.utils.book_append_sheet(wb, ws, diasAbas[diaId] || diaId);
       });
 
-      // Seção geral (todos por ordem alfabética)
-      let tabelaGeral = '<table><thead><tr><th>Dia</th><th>Coro</th><th>Regente</th><th>Obra</th><th>Compositor</th><th>Arranjador</th><th>Dur.</th></tr></thead><tbody>';
-      const listaOrdenadaGeral = [...lista].sort((a,b) => (a.nomeCoro||'').localeCompare(b.nomeCoro||''));
-      listaOrdenadaGeral.forEach(item => {
-        (item.obrasRepertorio || []).forEach((o, idx) => {
-          tabelaGeral += `<tr>
-            ${idx === 0 ? `<td rowspan="${item.obrasRepertorio.length}">${diasLabel[item.diaApresentacao]||'—'}</td><td rowspan="${item.obrasRepertorio.length}">${item.nomeCoro}</td><td rowspan="${item.obrasRepertorio.length}">${item.nomeRegente}</td>` : ''}
-            <td>${o.nomeObra||'—'}</td><td>${o.compositor||'—'}</td><td>${o.arranjador||'—'}</td><td>${o.duracaoObra?o.duracaoObra+' min':'—'}</td>
-          </tr>`;
-        });
-      });
-      tabelaGeral += '</tbody></table>';
+      // Download
+      const wbout = XLSX.write(wb, { bookType:'xlsx', type:'array', cellStyles:true });
+      const blob  = new Blob([wbout], { type:'application/octet-stream' });
+      const url   = URL.createObjectURL(blob);
+      const link  = document.createElement('a');
+      link.href     = url;
+      link.download = 'encoros2026_relatorio_ecad.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-      const totalObras = lista.reduce((acc, i) => acc + (i.obrasRepertorio||[]).length, 0);
-      const htmlRelatorio = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-        <title>Relatório ECAD — VII ENCoros 2026</title>
-        <style>
-          body{font-family:Arial,sans-serif;font-size:12px;color:#1a2326;margin:0;padding:24px}
-          h1{font-size:20px;color:#0F2027;margin-bottom:4px}
-          .subtitulo{color:#6b7280;font-size:12px;margin-bottom:24px}
-          h2{font-size:15px;color:#0F2027;border-bottom:2px solid #D4AF37;padding-bottom:4px;margin:28px 0 12px}
-          h3{font-size:13px;color:#333;margin:16px 0 4px}
-          .coro-bloco{margin-bottom:20px;padding:12px;border:1px solid #e5e7eb;border-radius:6px;page-break-inside:avoid}
-          .coro-header{margin-bottom:8px}
-          .coro-header strong{font-size:13px;color:#0F2027}
-          .coro-meta{display:block;font-size:11px;color:#6b7280;margin-top:2px}
-          table{width:100%;border-collapse:collapse;font-size:11px}
-          th{background:#f3f4f6;text-align:left;padding:5px 8px;border:1px solid #e5e7eb;font-weight:600}
-          td{padding:4px 8px;border:1px solid #e5e7eb;vertical-align:top}
-          .dia-secao{page-break-before:auto}
-          .resumo{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px;margin-bottom:24px;font-size:12px}
-          @media print{body{padding:12px}.no-print{display:none}}
-        </style>
-      </head><body>
-        <div class="no-print" style="margin-bottom:16px">
-          <button onclick="window.print()" style="background:#D4AF37;color:#0F2027;font-weight:bold;border:none;padding:10px 24px;border-radius:999px;cursor:pointer;font-size:13px">🖨️ Imprimir / Salvar como PDF</button>
-        </div>
-        <h1>Relatório ECAD — VII ENCoros 2026</h1>
-        <p class="subtitulo">03 a 07 de setembro de 2026 · Goiânia, Goiás · Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
-        <div class="resumo">
-          <strong>Resumo:</strong> ${lista.length} coro(s) com repertório informado · ${totalObras} obra(s) no total
-        </div>
-        <h2>Por Dia de Apresentação</h2>
-        ${secoesDia}
-        <h2 style="page-break-before:always">Listagem Geral (Ordem Alfabética)</h2>
-        ${tabelaGeral}
-      </body></html>`;
-
-      const blob = new Blob([htmlRelatorio], { type: 'text/html;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
     });
   }
 
