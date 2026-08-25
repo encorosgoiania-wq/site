@@ -196,7 +196,7 @@
         <a href="#" data-nav="admin" class="nav-trigger nav-link text-xs opacity-60 hover:opacity-100">Administração</a>
       </nav>
 
-      <button id="btn-instalar-pwa" onclick="acionarInstalacaoPWA()" title="Instalar app" class="hidden md:inline-flex items-center gap-2 text-white/70 hover:text-gold transition text-sm px-3 py-2 rounded-full border border-white/20 hover:border-gold/50" style="display:none">
+      <button id="btn-instalar-pwa" onclick="acionarInstalacaoPWA()" title="Instalar app" class="hidden items-center gap-2 text-white/70 hover:text-gold transition text-sm px-3 py-2 rounded-full border border-white/20 hover:border-gold/50">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
         <span id="btn-instalar-pwa-label">Instalar App</span>
       </button>
@@ -240,7 +240,7 @@
 
       <a href="#" data-nav="admin" class="nav-trigger nav-link px-2 py-3 opacity-60">Administração</a>
 
-      <button id="btn-instalar-pwa-mobile" onclick="acionarInstalacaoPWA()" class="nav-link w-full flex items-center gap-2 px-2 py-3 text-left" style="display:none">
+      <button id="btn-instalar-pwa-mobile" onclick="acionarInstalacaoPWA()" class="nav-link w-full hidden items-center gap-2 px-2 py-3 text-left">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
         <span>Instalar App</span>
       </button>
@@ -7174,15 +7174,15 @@
   function mostrarBotoes(){
     var b1 = document.getElementById('btn-instalar-pwa');
     var b2 = document.getElementById('btn-instalar-pwa-mobile');
-    if(b1) b1.style.display = 'inline-flex';
-    if(b2) b2.style.display = 'flex';
+    if(b1){ b1.classList.remove('hidden'); b1.classList.add('inline-flex'); }
+    if(b2){ b2.classList.remove('hidden'); b2.classList.add('flex'); }
   }
 
   function ocultarBotoes(){
     var b1 = document.getElementById('btn-instalar-pwa');
     var b2 = document.getElementById('btn-instalar-pwa-mobile');
-    if(b1) b1.style.display = 'none';
-    if(b2) b2.style.display = 'none';
+    if(b1){ b1.classList.add('hidden'); b1.classList.remove('inline-flex'); }
+    if(b2){ b2.classList.add('hidden'); b2.classList.remove('flex'); }
   }
 
   // Já está instalado — não mostra o botão
@@ -7193,7 +7193,7 @@
 
   // Android / Desktop: aguarda o prompt nativo
   window.addEventListener('beforeinstallprompt', function(e){
-    e.preventDefault();
+    // Não chama preventDefault() — deixa o Chrome mostrar o banner automático
     deferredPrompt = e;
     mostrarBotoes();
     var lbl = document.getElementById('btn-instalar-pwa-label');
