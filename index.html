@@ -363,6 +363,23 @@
       </div>
     </div>
 
+    <!-- BANNER APP PWA -->
+    <div class="bg-bg-claro py-10 px-6" style="background-color:var(--bg-claro)">
+      <div class="max-w-4xl mx-auto">
+        <div id="bloco-instalar-app" style="background:linear-gradient(135deg,#0F2027,#16323B);border:1.5px solid #D4AF37;border-radius:20px;padding:28px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#D4AF37;margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px;">📱 Aplicativo Gratuito</div>
+            <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:8px;">Acompanhe o ENCoros pelo celular</div>
+            <div style="font-size:15px;color:rgba(255,255,255,0.7);line-height:1.6;max-width:480px;">Programação, inscrições e novidades do VII ENCoros 2026 direto no seu celular ou computador. Gratuito, sem loja de aplicativos.</div>
+          </div>
+          <button id="btn-instalar-app-bloco" onclick="acionarInstalacaoPWA()" style="background:#D4AF37;color:#0F2027;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px;white-space:nowrap;display:flex;align-items:center;gap:10px;border:none;cursor:pointer;flex-shrink:0;box-shadow:0 4px 16px rgba(212,175,55,0.3);font-family:inherit;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <span id="btn-instalar-app-bloco-label">Instalar App Gratuito</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- CTA FINAL -->
     <div class="bg-bg-claro py-20" style="background-color:var(--bg-claro)">
       <div class="max-w-3xl mx-auto px-6 text-center">
@@ -7185,8 +7202,22 @@
     if(b2){ b2.classList.add('hidden'); b2.classList.remove('flex'); }
   }
 
-  // Já está instalado — não mostra o botão
-  if(isStandalone){ return; }
+  function mostrarInstalado(){
+    ocultarBotoes();
+    var bloco = document.getElementById('bloco-instalar-app');
+    if(bloco){
+      bloco.innerHTML =
+        '<div style="display:flex;align-items:center;gap:16px;width:100%;">' +
+        '<span style="font-size:36px;">✅</span>' +
+        '<div>' +
+        '<div style="font-weight:700;font-size:17px;color:#D4AF37;">App instalado com sucesso!</div>' +
+        '<div style="font-size:14px;color:rgba(255,255,255,0.7);margin-top:4px;">Abra o ícone ENCoros na sua área de trabalho para acessar.</div>' +
+        '</div></div>';
+    }
+  }
+
+  // Já está instalado — oculta tudo
+  if(isStandalone){ ocultarBotoes(); return; }
 
   // iOS: sempre mostra o botão (não tem beforeinstallprompt)
   if(isIOS){ mostrarBotoes(); return; }
@@ -7202,7 +7233,7 @@
 
   window.addEventListener('appinstalled', function(){
     deferredPrompt = null;
-    ocultarBotoes();
+    mostrarInstalado();
   });
 
   window.acionarInstalacaoPWA = function(){
