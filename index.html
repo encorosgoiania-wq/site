@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VII ENCoros 2026 — Encontro Nacional de Coros de Goiânia</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#0F2027"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="ENCoros 2026"/>
+<link rel="apple-touch-icon" href="logoencorosTransparente.png"/>
+<script>
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('./sw.js').catch(function(){});
+    });
+  }
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -183,6 +196,11 @@
         <a href="#" data-nav="admin" class="nav-trigger nav-link text-xs opacity-60 hover:opacity-100">Administração</a>
       </nav>
 
+      <button id="btn-instalar-pwa" onclick="acionarInstalacaoPWA()" title="Instalar app" class="hidden md:inline-flex items-center gap-2 text-white/70 hover:text-gold transition text-sm px-3 py-2 rounded-full border border-white/20 hover:border-gold/50" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        <span id="btn-instalar-pwa-label">Instalar App</span>
+      </button>
+
       <a href="#" data-nav="inscricao" class="nav-trigger hidden md:inline-flex btn-gold px-5 py-2.5 rounded-full text-sm">
         Inscrever meu Coro
       </a>
@@ -221,6 +239,11 @@
       </div>
 
       <a href="#" data-nav="admin" class="nav-trigger nav-link px-2 py-3 opacity-60">Administração</a>
+
+      <button id="btn-instalar-pwa-mobile" onclick="acionarInstalacaoPWA()" class="nav-link w-full flex items-center gap-2 px-2 py-3 text-left" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        <span>Instalar App</span>
+      </button>
     </div>
   </div>
 </header>
@@ -7123,6 +7146,83 @@
 
   iniciarApp();
 
+})();
+</script>
+
+<!-- ══ PWA — Modal iOS ══════════════════════════════════════════════════ -->
+<div id="modal-ios-pwa" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;">
+    <div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 24px;"></div>
+    <div style="font-weight:700;font-size:17px;margin-bottom:20px;color:#0F2027;">📱 Instalar app no iPhone</div>
+    <p style="margin:0 0 12px;font-size:14px;color:#374151;">1. Toque em <strong>compartilhar ⬆️</strong> na barra do Safari</p>
+    <p style="margin:0 0 12px;font-size:14px;color:#374151;">2. Toque em <strong>"Adicionar à Tela de Início"</strong></p>
+    <p style="margin:0 0 16px;font-size:14px;color:#374151;">3. Toque em <strong>Adicionar</strong></p>
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;font-size:13px;color:#92400e;margin-bottom:20px;line-height:1.5;">
+      ⚠️ Precisa estar no <strong>Safari</strong>. Se estiver no Chrome, copie o link e abra no Safari.
+    </div>
+    <button onclick="fecharModalIOS()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#D4AF37;color:#0F2027;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;">Entendido</button>
+  </div>
+</div>
+
+<!-- ══ PWA — Script de instalação ══════════════════════════════════════ -->
+<script>
+(function(){
+  var deferredPrompt = null;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  function mostrarBotoes(){
+    var b1 = document.getElementById('btn-instalar-pwa');
+    var b2 = document.getElementById('btn-instalar-pwa-mobile');
+    if(b1) b1.style.display = 'inline-flex';
+    if(b2) b2.style.display = 'flex';
+  }
+
+  function ocultarBotoes(){
+    var b1 = document.getElementById('btn-instalar-pwa');
+    var b2 = document.getElementById('btn-instalar-pwa-mobile');
+    if(b1) b1.style.display = 'none';
+    if(b2) b2.style.display = 'none';
+  }
+
+  // Já está instalado — não mostra o botão
+  if(isStandalone){ return; }
+
+  // iOS: sempre mostra o botão (não tem beforeinstallprompt)
+  if(isIOS){ mostrarBotoes(); return; }
+
+  // Android / Desktop: aguarda o prompt nativo
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    mostrarBotoes();
+    var lbl = document.getElementById('btn-instalar-pwa-label');
+    if(lbl) lbl.textContent = 'Instalar App';
+  });
+
+  window.addEventListener('appinstalled', function(){
+    deferredPrompt = null;
+    ocultarBotoes();
+  });
+
+  window.acionarInstalacaoPWA = function(){
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(r){
+        if(r.outcome === 'accepted') deferredPrompt = null;
+      });
+    } else if(isIOS){
+      document.getElementById('modal-ios-pwa').style.display = 'flex';
+    }
+  };
+
+  window.fecharModalIOS = function(){
+    document.getElementById('modal-ios-pwa').style.display = 'none';
+  };
+
+  document.getElementById('modal-ios-pwa').addEventListener('click', function(e){
+    if(e.target === this) fecharModalIOS();
+  });
 })();
 </script>
 
