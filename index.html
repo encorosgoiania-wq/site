@@ -2069,6 +2069,9 @@
   const NOMES_COMPLETOS_COROS = {
     'CSUFG': 'Coral Sinfônico da UFG',
     'CSJG': 'Coro Sinfônico Jovem de Goiás',
+    'CSJGOIÁS': 'Coro Sinfônico Jovem de Goiás',
+    'CSJGOIAS': 'Coro Sinfônico Jovem de Goiás',
+    'Coro Sinfônico Jovem de GOIÁS': 'Coro Sinfônico Jovem de Goiás',
     'CJGOIÂNIA': 'Coro Juvenil de Goiânia',
     'CSGOIÂNIA': 'Coro Sinfônico de Goiânia',
     'Onix Brasil Vocal Internacional': 'Onix Brasil Vocal Internacional'
@@ -2080,8 +2083,11 @@
   function nomeCompletoCoro(nomeOuSigla){
     const completo = NOMES_COMPLETOS_COROS[nomeOuSigla];
     if(!completo) return nomeOuSigla;
-    if(completo === nomeOuSigla) return nomeOuSigla; // Onix já é nome completo, sem sigla a mostrar
-    return completo + ' (' + nomeOuSigla + ')';
+    if(completo === nomeOuSigla) return nomeOuSigla;
+    // Variantes longas (ex: "CSJGOIÁS", "Coro Sinfônico Jovem de GOIÁS"): retorna só o nome correto
+    const siglasCurtas = ['CSUFG','CSJG','CJGOIÂNIA','CSGOIÂNIA'];
+    if(siglasCurtas.includes(nomeOuSigla)) return completo + ' (' + nomeOuSigla + ')';
+    return completo;
   }
 
   const PROGRAMACAO_DATA = [
@@ -2439,6 +2445,8 @@
     COROS_INSTITUCIONAIS_SEED.forEach(seed => {
       const idx = lista.findIndex(i => i.id === seed.id);
       if(idx >= 0){
+        // nomeCoro: só aplica o seed se o Firestore não tiver nome salvo
+        if(!lista[idx].nomeCoro) lista[idx].nomeCoro = seed.nomeCoro;
         if(!lista[idx].obrasRepertorio || lista[idx].obrasRepertorio.length === 0) lista[idx].obrasRepertorio = seed.obrasRepertorio;
         if(!lista[idx].historicoCoro) lista[idx].historicoCoro = seed.historicoCoro || '';
         if(!lista[idx].nomeRegente || lista[idx].nomeRegente === 'Organização VII ENCoros') lista[idx].nomeRegente = seed.nomeRegente;
@@ -2757,10 +2765,14 @@
             const h = c.horario || '';
             const isFixo = c.fixo || c.anfitriao || false;
             const bgRow = i % 2 === 0 ? '#ffffff' : '#f8f7f4';
+            // Busca nome atualizado da inscrição
+            const todasInsc = getInscricoes();
+            const insc = todasInsc.find(x => x.id === (c.inscricaoId || c.id));
+            const nomeAtualizado = (insc && insc.nomeCoro) ? insc.nomeCoro : (c.nomeCoro || c.nome || '');
             return `<tr style="background:${bgRow}">
               <td style="padding:9px 14px;font-size:12px;color:#888;width:72px;border-bottom:1px solid #ede8de;font-family:monospace">${h}</td>
               <td style="padding:9px 14px;font-size:13px;font-weight:700;color:#0F2027;border-bottom:1px solid #ede8de">
-                ${c.nomeCoro || c.nome || ''}
+                ${nomeAtualizado}
                 ${isFixo ? '<span style="font-size:10px;font-weight:600;color:#C5A059;margin-left:6px;letter-spacing:0.05em">ANFITRIÃO</span>' : ''}
               </td>
               <td style="padding:9px 14px;font-size:12px;color:#aaa;width:56px;text-align:right;border-bottom:1px solid #ede8de">${c.duracaoMinutos ? c.duracaoMinutos + 'min' : ''}</td>
@@ -6655,11 +6667,14 @@
         `;
       }
 
+      // Nome sempre atualizado: prefere o da inscrição vinculada
+      const nomeExibido = (inscricaoDoCoro && inscricaoDoCoro.id && inscricaoDoCoro.nomeCoro) ? inscricaoDoCoro.nomeCoro : c.nomeCoro;
+
       itensHtml.push(`
         <div class="cronograma-coro-item flex items-center gap-3 bg-white border-2 rounded-lg p-3 cursor-grab active:cursor-grabbing" style="border-color:#E5E7EB" draggable="true" data-idx="${idx}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-gray-300 shrink-0"><circle cx="8" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
           <span class="text-xs font-mono font-semibold text-gray-500 w-12 shrink-0">${horaInicio}</span>
-          <span class="text-sm font-semibold flex-1 truncate" style="color:var(--azul-petroleo)">${escapeHtml(c.nomeCoro)}</span>
+          <span class="text-sm font-semibold flex-1 truncate" style="color:var(--azul-petroleo)">${escapeHtml(nomeExibido)}</span>
           ${badgeFixo}
           ${c.livre ? '' : botoesComunicacao}
 
