@@ -5201,14 +5201,14 @@
       // ── CONFIG DOS DIAS ─────────────────────────────────────────────────
       const diasOrdem = ['quinta','sexta','sabado','domingo','segunda'];
       const diasLabel = {
-        quinta:  'Quinta-feira — 04/09',
-        sexta:   'Sexta-feira — 05/09',
-        sabado:  'Sábado — 06/09',
-        domingo: 'Domingo — 07/09',
-        segunda: 'Segunda-feira — 08/09 (Virtual)'
+        quinta:  'Quinta-feira — 03/09',
+        sexta:   'Sexta-feira — 04/09',
+        sabado:  'Sábado — 05/09',
+        domingo: 'Domingo — 06/09',
+        segunda: 'Segunda-feira — 07/09 (Virtual)'
       };
       const diasData = {
-        quinta:'04/09', sexta:'05/09', sabado:'06/09', domingo:'07/09', segunda:'08/09'
+        quinta:'03/09', sexta:'04/09', sabado:'05/09', domingo:'06/09', segunda:'07/09'
       };
 
       // ── HELPER: ordena coros por horário de apresentação ─────────────────
@@ -5381,26 +5381,36 @@
         // Monta lista na ordem do cronograma, enriquecendo com dados completos da inscrição
         let cursor = durAb;
         const todosEmOrdem = corosCron
-          .filter(c => !c.livre) // ignora slots livres/vazios
+          .filter(c => {
+            // Remove slots completamente vazios (sem nome E sem inscrição)
+            const temNome = !!(c.nomeCoro || c.nome || c.inscricaoId || c.id);
+            return temNome;
+          })
           .map(c => {
             const horarioCalc = minToHH(cursor);
             cursor += (c.duracaoMinutos || 15);
 
-            // Busca dados completos: primeiro nas inscrições, depois nos institucionais
-            const insc = lista.find(i => i.id === c.inscricaoId || i.id === c.id || i.nomeCoro === c.nomeCoro);
+            // Busca dados completos nas inscrições pelo inscricaoId ou nomeCoro
+            const insc = lista.find(i =>
+              (c.inscricaoId && (i.id === c.inscricaoId)) ||
+              (!c.inscricaoId && i.nomeCoro && c.nomeCoro &&
+               i.nomeCoro.toLowerCase().trim() === c.nomeCoro.toLowerCase().trim())
+            );
             if(insc){
               return { ...insc, _horarioCalc: horarioCalc, _duracaoMin: c.duracaoMinutos };
             }
-            // Coro fixo/institucional sem inscrição vinculada — usa dados do cronograma
+            // Item livre / institucional sem inscrição — usa dados do próprio cronograma
             return {
-              id: c.inscricaoId || c.id || c.nomeCoro,
-              nomeCoro: c.nomeCoro || c.nome || '—',
-              cidadeEstado: 'Goiânia - GO',
-              nomeRegente: '',
+              id: c.inscricaoId || c.id || c.nomeCoro || ('item_'+horarioCalc),
+              nomeCoro: c.nomeCoro || c.nome || c.titulo || '—',
+              cidadeEstado: c.cidadeEstado || 'Goiânia - GO',
+              nomeRegente: c.nomeRegente || '',
               isInstitucional: !!(c.fixo || c.anfitriao),
-              obrasRepertorio: [],
+              obrasRepertorio: c.obrasRepertorio || [],
+              historicoDescritivo: c.descricao || c.historico || null,
               _horarioCalc: horarioCalc,
-              _duracaoMin: c.duracaoMinutos
+              _duracaoMin: c.duracaoMinutos,
+              _itemLivre: true
             };
           });
 
