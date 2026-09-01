@@ -1622,9 +1622,14 @@
             <h2 class="font-serif-display text-xl mb-1" style="color:var(--azul-petroleo)">Agenda de Ensaios — ENCoros 2026</h2>
             <p class="text-sm text-gray-500">Eventos puxados automaticamente da Google Agenda do ENCoros.</p>
           </div>
-          <button id="btnAtualizarEnsaios" class="btn-gold px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2">
-            🔄 Atualizar agenda
-          </button>
+          <div class="flex gap-2 flex-wrap">
+            <button id="btnAtualizarEnsaios" class="btn-gold px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2">
+              🔄 Atualizar agenda
+            </button>
+            <button id="btnRelatorioEnsaios" class="px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2 border-2 transition" style="border-color:var(--azul-petroleo);color:var(--azul-petroleo);background:#fff">
+              🖨️ Relatório PDF
+            </button>
+          </div>
         </div>
 
         <!-- Filtro de período -->
@@ -1634,6 +1639,12 @@
           <span class="text-sm text-gray-400">até</span>
           <input type="date" id="ensaioFiltroFim" class="input-field" style="max-width:160px" value="2026-09-07"/>
           <button onclick="renderEnsaiosGcal()" class="px-4 py-2 text-sm font-semibold rounded-lg text-white" style="background:var(--azul-petroleo)">Filtrar</button>
+          <!-- atalhos rápidos -->
+          <div class="flex gap-2 flex-wrap ml-2">
+            <button onclick="filtroEnsaioRapido('este-mes')" class="px-3 py-1.5 text-xs font-semibold rounded-full border border-gray-300 hover:border-gold hover:text-gold transition">Este mês</button>
+            <button onclick="filtroEnsaioRapido('proximo-mes')" class="px-3 py-1.5 text-xs font-semibold rounded-full border border-gray-300 hover:border-gold hover:text-gold transition">Próximo mês</button>
+            <button onclick="filtroEnsaioRapido('evento')" class="px-3 py-1.5 text-xs font-semibold rounded-full border border-gold text-gold hover:bg-amber-50 transition">Semana do evento</button>
+          </div>
         </div>
 
         <!-- Relatório por dia -->
@@ -5213,9 +5224,37 @@
       // ID único para cada accordion de dados admin
       let _blocoSeq = 0;
 
-      function blocoCoroExecutivo(c, seq){
+      // ── Calcula horários individuais de cada coro a partir do cronograma ──
+      // Replica a lógica de minutosParaHHMM + cursor acumulado por dia
+      function calcularHorariosCronograma(diaId){
+        const DIAS_DATA = {
+          quinta:  { horarioInicioMinutos: 20*60 },
+          sexta:   { horarioInicioMinutos: 19*60+30 },
+          sabado:  { horarioInicioMinutos: 19*60+30 },
+          domingo: { horarioInicioMinutos: 11*60 },
+          segunda: { horarioInicioMinutos: 19*60 }
+        };
+        const cronDia = (cacheCronograma && cacheCronograma[diaId]) || {};
+        const coros   = cronDia.coros || [];
+        const horBaseMin = cronDia.horarioInicioMinutos ?? (DIAS_DATA[diaId]?.horarioInicioMinutos ?? 0);
+        const durAbertura = cronDia.duracaoAbertura ?? 10;
+        const minToHHMM = (min) => {
+          const total = min + horBaseMin;
+          return String(Math.floor(total/60)%24).padStart(2,'0') + ':' + String(total%60).padStart(2,'0');
+        };
+        let cursor = durAbertura;
+        const mapa = {}; // inscricaoId -> horario HH:MM
+        coros.forEach(c => {
+          const chave = c.inscricaoId || c.id || c.nomeCoro;
+          if(chave) mapa[chave] = minToHHMM(cursor);
+          cursor += (c.duracaoMinutos || 15);
+        });
+        return mapa;
+      }
+
+      function blocoCoroExecutivo(c, seq, horarioCalculado){
         const uid = 'adm_' + (++_blocoSeq);
-        const horario = c.horarioApresentacao || c.horario || null;
+        const horario = horarioCalculado || c.horarioApresentacao || c.horario || null;
         const pianista = c.nomePianista || c.pianista || null;
         const historico = c.historicoDescritivo || c.historico || null;
         const obras = c.obrasRepertorio || [];
@@ -5323,34 +5362,61 @@
 
       // ── SEÇÃO POR DIA ───────────────────────────────────────────────────
       function secaoDia(diaId, isFirst){
-        const coros = lista.filter(i => i.diaApresentacao === diaId);
-        if(coros.length === 0) return '';
+        // FONTE PRIMÁRIA: ordem exata do cronograma salvo no Firestore
+        const cronDia = (cacheCronograma && cacheCronograma[diaId]) || {};
+        const corosCron = cronDia.coros || [];
+        if(corosCron.length === 0) return '';
 
-        const institucionais = ordenarPorHorario(coros.filter(i => i.isInstitucional));
-        const amadores       = ordenarPorHorario(coros.filter(i => !i.isInstitucional));
-        const todos          = [...institucionais, ...amadores];
+        // Calcula horário de início de cada posição no cronograma
+        const DIAS_BASE = {
+          quinta:19*60+30, sexta:19*60+30, sabado:19*60+30, domingo:11*60, segunda:19*60
+        };
+        const horBaseMin = cronDia.horarioInicioMinutos ?? (DIAS_BASE[diaId] ?? 0);
+        const durAb = cronDia.duracaoAbertura ?? 10;
+        const minToHH = (min) => {
+          const t = min + horBaseMin;
+          return String(Math.floor(t/60)%24).padStart(2,'0') + ':' + String(t%60).padStart(2,'0');
+        };
+
+        // Monta lista na ordem do cronograma, enriquecendo com dados completos da inscrição
+        let cursor = durAb;
+        const todosEmOrdem = corosCron
+          .filter(c => !c.livre) // ignora slots livres/vazios
+          .map(c => {
+            const horarioCalc = minToHH(cursor);
+            cursor += (c.duracaoMinutos || 15);
+
+            // Busca dados completos: primeiro nas inscrições, depois nos institucionais
+            const insc = lista.find(i => i.id === c.inscricaoId || i.id === c.id || i.nomeCoro === c.nomeCoro);
+            if(insc){
+              return { ...insc, _horarioCalc: horarioCalc, _duracaoMin: c.duracaoMinutos };
+            }
+            // Coro fixo/institucional sem inscrição vinculada — usa dados do cronograma
+            return {
+              id: c.inscricaoId || c.id || c.nomeCoro,
+              nomeCoro: c.nomeCoro || c.nome || '—',
+              cidadeEstado: 'Goiânia - GO',
+              nomeRegente: '',
+              isInstitucional: !!(c.fixo || c.anfitriao),
+              obrasRepertorio: [],
+              _horarioCalc: horarioCalc,
+              _duracaoMin: c.duracaoMinutos
+            };
+          });
+
+        if(todosEmOrdem.length === 0) return '';
 
         const pageBreak = isFirst ? '' : 'page-break-before:always;';
 
         let html = `
           <div class="dia-bloco" style="${pageBreak}padding-top:${isFirst?'0':'32px'}">
-            <!-- Cabeçalho do dia -->
             <div style="background:#0F2027;border-radius:10px 10px 0 0;padding:16px 22px;-webkit-print-color-adjust:exact;print-color-adjust:exact">
               <div style="font-size:10px;letter-spacing:.25em;color:#D4AF37;text-transform:uppercase;font-weight:700">${diasLabel[diaId]||diaId}</div>
-              <div style="font-size:20px;font-weight:700;color:#fff;margin-top:4px;font-family:Georgia,serif">${todos.length} coro${todos.length!==1?'s':''} · ${diasData[diaId]||''}</div>
+              <div style="font-size:20px;font-weight:700;color:#fff;margin-top:4px;font-family:Georgia,serif">${todosEmOrdem.length} coro${todosEmOrdem.length!==1?'s':''} · ${diasData[diaId]||''}</div>
             </div>
             <div style="border:1px solid #ddd5c2;border-top:none;border-radius:0 0 10px 10px;padding:18px">`;
 
-        if(institucionais.length > 0){
-          html += `<div style="font-size:9px;letter-spacing:.2em;color:#7c3aed;text-transform:uppercase;font-weight:800;margin-bottom:14px;padding-bottom:6px;border-bottom:2px solid #ede9fe">Coros Institucionais / Fixos</div>`;
-          html += institucionais.map((c,i) => blocoCoroExecutivo(c,i+1)).join('');
-        }
-        if(amadores.length > 0){
-          if(institucionais.length > 0){
-            html += `<div style="font-size:9px;letter-spacing:.2em;color:#C5A059;text-transform:uppercase;font-weight:800;margin:22px 0 14px;padding-bottom:6px;border-bottom:2px solid #fef3c7">Coros Inscritos</div>`;
-          }
-          html += amadores.map((c,i) => blocoCoroExecutivo(c, institucionais.length+i+1)).join('');
-        }
+        html += todosEmOrdem.map((c,i) => blocoCoroExecutivo(c, i+1, c._horarioCalc)).join('');
 
         html += `</div></div>`;
         return html;
@@ -5720,7 +5786,238 @@
 
   document.getElementById('btnAtualizarEnsaios')?.addEventListener('click', carregarEnsaios);
 
+  // ── ATALHOS RÁPIDOS DE FILTRO DE ENSAIOS ────────────────────────────
+  window.filtroEnsaioRapido = function(tipo){
+    const ini = document.getElementById('ensaioFiltroInicio');
+    const fim = document.getElementById('ensaioFiltroFim');
+    if(!ini || !fim) return;
+    const hoje = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const fmt = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+    if(tipo === 'este-mes'){
+      ini.value = fmt(new Date(hoje.getFullYear(), hoje.getMonth(), 1));
+      fim.value = fmt(new Date(hoje.getFullYear(), hoje.getMonth()+1, 0));
+    } else if(tipo === 'proximo-mes'){
+      ini.value = fmt(new Date(hoje.getFullYear(), hoje.getMonth()+1, 1));
+      fim.value = fmt(new Date(hoje.getFullYear(), hoje.getMonth()+2, 0));
+    } else if(tipo === 'evento'){
+      ini.value = '2026-09-03';
+      fim.value = '2026-09-07';
+    }
+    renderEnsaiosGcal();
+  };
 
+  // ── RELATÓRIO PDF DE ENSAIOS ─────────────────────────────────────────
+  document.getElementById('btnRelatorioEnsaios')?.addEventListener('click', function(){
+    const btn = this;
+    try {
+      const filtroIni = document.getElementById('ensaioFiltroInicio')?.value || '';
+      const filtroFim = document.getElementById('ensaioFiltroFim')?.value || '';
+
+      if(!gcalEventos || gcalEventos.length === 0){
+        alert('Nenhum dado carregado. Clique em "Atualizar agenda" primeiro.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Gerando...';
+
+      // Filtrar eventos pelo período selecionado
+      const filtrados = gcalEventos.filter(e => {
+        if(!e.inicio) return false;
+        const dataEvento = e.inicio.toLocaleDateString('sv-SE', {timeZone:'America/Sao_Paulo'});
+        if(filtroIni && dataEvento < filtroIni) return false;
+        if(filtroFim && dataEvento > filtroFim) return false;
+        return true;
+      });
+
+      if(filtrados.length === 0){
+        alert('Nenhum ensaio encontrado no período selecionado.');
+        return;
+      }
+
+      // Calcular estatísticas resumo
+      let totalMinutos = 0;
+      const coros = new Set();
+      filtrados.forEach(e => {
+        if(e.inicio && e.fim){
+          totalMinutos += (e.fim - e.inicio) / 60000;
+        }
+        if(e.titulo) coros.add(e.titulo.split('—')[0].split('-')[0].trim());
+      });
+      const totalHoras = (totalMinutos / 60).toFixed(1).replace(/\.0$/,'');
+
+      // Agrupar por dia
+      const porDia = {};
+      filtrados.forEach(e => {
+        const diaKey = e.inicio.toLocaleDateString('sv-SE', {timeZone:'America/Sao_Paulo'});
+        if(!porDia[diaKey]) porDia[diaKey] = [];
+        porDia[diaKey].push(e);
+      });
+
+      // Formatar label de data
+      function labelDia(isoDate){
+        const [y,m,d] = isoDate.split('-');
+        const dt = new Date(+y, +m-1, +d);
+        return dt.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+      }
+
+      // Detectar status pelo título/descrição
+      function detectarStatus(e){
+        const t = (e.titulo + ' ' + e.descricao).toLowerCase();
+        if(t.includes('bloqueado') || t.includes('bloqueio') || t.includes('blocked')) return {label:'Bloqueado', cor:'#dc2626', bg:'#fee2e2'};
+        if(t.includes('concluído') || t.includes('concluido') || t.includes('realizado')) return {label:'Concluído', cor:'#16a34a', bg:'#dcfce7'};
+        return {label:'Confirmado', cor:'#0369a1', bg:'#e0f2fe'};
+      }
+
+      // Extrair maestro/coro do título e descrição
+      function extrairInfo(e){
+        // Título costuma vir como "Nome do Coro — Maestro Fulano" ou "Nome do Coro"
+        const partes = e.titulo.split(/[—–-]/);
+        const nomeCoro   = partes[0]?.trim() || e.titulo;
+        const nomeMaestro = partes[1]?.trim() || '';
+        // Tenta pegar maestro da descrição se não veio no título
+        const matchMaestro = e.descricao?.match(/regente[:\s]+([^
+]+)/i) ||
+                              e.descricao?.match(/maestro[:\s]+([^
+]+)/i);
+        const maestro = nomeMaestro || (matchMaestro ? matchMaestro[1].trim() : '—');
+        return { nomeCoro, maestro };
+      }
+
+      // Formatar hora
+      function fmtHora(d){ return d ? d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}) : '—'; }
+
+      // Gerar HTML dos dias
+      const corpoHtml = Object.keys(porDia).sort().map((diaKey, idx) => {
+        const evs = porDia[diaKey];
+        const pageBreak = idx === 0 ? '' : 'page-break-before:always;padding-top:32px;';
+        const blocosEvs = evs.map(e => {
+          const status = detectarStatus(e);
+          const {nomeCoro, maestro} = extrairInfo(e);
+          return `
+            <tr style="border-bottom:1px solid #ede8de">
+              <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#D4AF37;white-space:nowrap;vertical-align:top">
+                ${fmtHora(e.inicio)}<br>
+                <span style="font-size:11px;font-weight:400;color:#aaa">${fmtHora(e.fim)}</span>
+              </td>
+              <td style="padding:10px 14px;vertical-align:top">
+                <div style="font-size:14px;font-weight:700;color:#0F2027">${nomeCoro}</div>
+                ${maestro && maestro !== '—' ? '<div style="font-size:11px;color:#777;margin-top:2px">🎵 Regente: ' + maestro + '</div>' : ''}
+              </td>
+              <td style="padding:10px 14px;font-size:12px;color:#555;vertical-align:top">
+                ${e.local ? '<span style="font-size:12px">📍 ' + e.local + '</span>' : '<span style="color:#ccc">—</span>'}
+              </td>
+              <td style="padding:10px 14px;vertical-align:top;text-align:center">
+                <span style="background:${status.bg};color:${status.cor};font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap">${status.label}</span>
+              </td>
+            </tr>`;
+        }).join('');
+
+        return `
+          <div class="dia-bloco" style="${pageBreak}">
+            <div style="background:#16323B;border-radius:10px 10px 0 0;padding:14px 20px;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+              <div style="font-size:10px;letter-spacing:.22em;color:#D4AF37;text-transform:uppercase;font-weight:700">Agenda de Ensaios</div>
+              <div style="font-size:18px;font-weight:800;color:#fff;margin-top:4px;font-family:Georgia,serif;text-transform:capitalize">${labelDia(diaKey)}</div>
+            </div>
+            <div style="border:1px solid #ddd5c2;border-top:none;border-radius:0 0 10px 10px;overflow:hidden">
+              <table style="width:100%;border-collapse:collapse">
+                <thead>
+                  <tr style="background:#f5f0e8;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+                    <th style="padding:8px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#888;font-weight:700;text-align:left;width:90px">Horário</th>
+                    <th style="padding:8px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#888;font-weight:700;text-align:left">Coro / Regente</th>
+                    <th style="padding:8px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#888;font-weight:700;text-align:left">Local / Sala</th>
+                    <th style="padding:8px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#888;font-weight:700;text-align:center;width:100px">Status</th>
+                  </tr>
+                </thead>
+                <tbody>${blocosEvs}</tbody>
+              </table>
+            </div>
+          </div>`;
+      }).join('');
+
+      // Formatar período para exibição
+      const periodoLabel = filtroIni && filtroFim
+        ? new Date(filtroIni + 'T12:00:00').toLocaleDateString('pt-BR') + ' a ' + new Date(filtroFim + 'T12:00:00').toLocaleDateString('pt-BR')
+        : 'Todos os períodos';
+
+      const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Relatório de Ensaios — VII ENCoros 2026</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,'Segoe UI',Arial,sans-serif; background:#fafaf8; color:#1a1a1a; }
+  .topo { background:#0F2027; padding:28px 40px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .divisor { height:4px; background:linear-gradient(90deg,#D4AF37,#C5A059); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .page { max-width:920px; margin:0 auto; padding:32px 28px; }
+  .resumo { display:flex; gap:14px; margin-bottom:32px; }
+  .resumo-card { flex:1; background:#fff; border:1px solid #e0d8c8; border-radius:10px; padding:14px 16px; text-align:center; }
+  .resumo-num { font-size:26px; font-weight:800; color:#0F2027; }
+  .resumo-label { font-size:10px; color:#999; text-transform:uppercase; letter-spacing:.1em; margin-top:3px; }
+  .btn-print { display:flex; align-items:center; gap:10px; margin:0 auto 32px; padding:12px 36px; background:#0F2027; color:#D4AF37; border:none; border-radius:999px; font-size:14px; font-weight:700; cursor:pointer; }
+  .dia-bloco { margin-bottom:28px; }
+  @media print {
+    body { background:#fff; }
+    .btn-print { display:none !important; }
+    .resumo { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .topo, .divisor { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+    div[style*="background:#16323B"], div[style*="background:#0F2027"],
+    tr[style*="background:#f5f0e8"] { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+    .page { padding:12px; max-width:100%; }
+    .dia-bloco { page-break-before:always; page-break-inside:avoid; }
+    .dia-bloco:first-child { page-break-before:auto; }
+  }
+</style>
+</head>
+<body>
+  <div class="topo">
+    <div style="max-width:920px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
+      <div>
+        <div style="font-size:10px;letter-spacing:.3em;color:#D4AF37;text-transform:uppercase;font-weight:700;margin-bottom:6px">VII Encontro Nacional de Coros · Goiânia 2026</div>
+        <div style="font-size:28px;font-weight:800;color:#fff;font-family:Georgia,serif;line-height:1.1">Relatório de Reservas de Ensaios</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:8px">Período: ${periodoLabel} · Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:rgba(255,255,255,.35);flex-shrink:0">
+        <div>encorosgoiania@gmail.com</div>
+        <div>(62) 99154-6757</div>
+      </div>
+    </div>
+  </div>
+  <div class="divisor"></div>
+  <div class="page">
+    <button class="btn-print" onclick="window.print()">🖨️ &nbsp; Imprimir / Salvar como PDF</button>
+    <div class="resumo">
+      <div class="resumo-card"><div class="resumo-num">${filtrados.length}</div><div class="resumo-label">Ensaios Agendados</div></div>
+      <div class="resumo-card"><div class="resumo-num">${totalHoras}h</div><div class="resumo-label">Total de Horas</div></div>
+      <div class="resumo-card"><div class="resumo-num">${coros.size}</div><div class="resumo-label">Coros Atendidos</div></div>
+      <div class="resumo-card"><div class="resumo-num">${Object.keys(porDia).length}</div><div class="resumo-label">Dias com Ensaios</div></div>
+    </div>
+    ${corpoHtml}
+  </div>
+</body>
+</html>`;
+
+      const dataStr = new Date().toISOString().slice(0,10);
+      const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'encoros2026_ensaios_' + dataStr + '.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+    } catch(err) {
+      console.error('Erro ao gerar relatório de ensaios:', err);
+      alert('Erro ao gerar relatório: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🖨️ Relatório PDF';
+    }
+  });
 
   // ── PÁGINA PÚBLICA DO MAESTRO (acesso via ?ensaio=ID) ──────────────
   const urlEnsaioId = new URLSearchParams(location.search).get('ensaio');
