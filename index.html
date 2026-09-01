@@ -5877,10 +5877,8 @@
         const nomeCoro   = partes[0]?.trim() || e.titulo;
         const nomeMaestro = partes[1]?.trim() || '';
         // Tenta pegar maestro da descrição se não veio no título
-        const matchMaestro = e.descricao?.match(/regente[:\s]+([^
-]+)/i) ||
-                              e.descricao?.match(/maestro[:\s]+([^
-]+)/i);
+        const matchMaestro = e.descricao?.match(/regente[: ]+([^\n]+)/i) ||
+                              e.descricao?.match(/maestro[: ]+([^\n]+)/i);
         const maestro = nomeMaestro || (matchMaestro ? matchMaestro[1].trim() : '—');
         return { nomeCoro, maestro };
       }
