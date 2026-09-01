@@ -5187,159 +5187,196 @@
       const lista = getInscricoes();
       if(!lista || lista.length === 0){ alert('Nenhuma inscrição encontrada.'); return; }
 
+      // ── CONFIG DOS DIAS ─────────────────────────────────────────────────
       const diasOrdem = ['quinta','sexta','sabado','domingo','segunda'];
       const diasLabel = {
-        quinta: 'Quinta-feira — 04/09',
-        sexta: 'Sexta-feira — 04/09',
-        sabado: 'Sábado — 05/09',
-        domingo: 'Domingo — 06/09',
-        segunda: 'Segunda-feira — 07/09 (Virtual)'
+        quinta:  'Quinta-feira — 04/09',
+        sexta:   'Sexta-feira — 05/09',
+        sabado:  'Sábado — 06/09',
+        domingo: 'Domingo — 07/09',
+        segunda: 'Segunda-feira — 08/09 (Virtual)'
+      };
+      const diasData = {
+        quinta:'04/09', sexta:'05/09', sabado:'06/09', domingo:'07/09', segunda:'08/09'
       };
 
-      const statusColor = { Aprovado:'#16a34a', Pendente:'#d97706', Rejeitado:'#dc2626' };
-
-      function linkHtml(url, label){
-        if(!url) return '<span style="color:#ccc">—</span>';
-        return `<a href="${url}" style="color:#C5A059;word-break:break-all">${label || url}</a>`;
+      // ── HELPER: ordena coros por horário de apresentação ─────────────────
+      function ordenarPorHorario(arr){
+        return [...arr].sort((a, b) => {
+          const ha = (a.horarioApresentacao || a.horario || '99:99').replace(':','');
+          const hb = (b.horarioApresentacao || b.horario || '99:99').replace(':','');
+          return ha.localeCompare(hb);
+        });
       }
 
-      function secaoDia(diaId){
+      // ── HELPER: bloco de um coro (executivo, sem dados administrativos) ──
+      function blocoCoroExecutivo(c, seq){
+        const horario = c.horarioApresentacao || c.horario || null;
+        const pianista = c.nomePianista || c.pianista || null;
+        const historico = c.historicoDescritivo || c.historico || null;
+        const obras = c.obrasRepertorio || [];
+
+        const horarioHtml = horario
+          ? `<div style="display:inline-block;background:#D4AF37;color:#0F2027;font-size:22px;font-weight:800;padding:6px 20px;border-radius:8px;letter-spacing:.03em;font-family:Georgia,serif">${horario}</div>`
+          : `<div style="display:inline-block;background:#e5e7eb;color:#6b7280;font-size:14px;font-weight:600;padding:6px 16px;border-radius:8px">Horário a definir</div>`;
+
+        const obrasHtml = obras.length > 0
+          ? `<table style="width:100%;border-collapse:collapse;margin-top:8px">
+              <thead>
+                <tr style="background:#0F2027">
+                  <th style="padding:6px 10px;font-size:10px;text-align:center;color:#D4AF37;font-weight:700;width:32px">#</th>
+                  <th style="padding:6px 12px;font-size:10px;text-align:left;color:#D4AF37;font-weight:700">Obra</th>
+                  <th style="padding:6px 12px;font-size:10px;text-align:left;color:#D4AF37;font-weight:700">Compositor</th>
+                  <th style="padding:6px 12px;font-size:10px;text-align:left;color:#D4AF37;font-weight:700">Arranjador</th>
+                  <th style="padding:6px 10px;font-size:10px;text-align:right;color:#D4AF37;font-weight:700;white-space:nowrap">Dur.</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${obras.map((o, i) => `
+                  <tr style="background:${i%2===0?'#fff':'#f9f7f3'};border-bottom:1px solid #ede8de">
+                    <td style="padding:6px 10px;font-size:11px;color:#aaa;text-align:center;font-weight:600">${i+1}</td>
+                    <td style="padding:6px 12px;font-size:13px;color:#0F2027;font-weight:700">${o.nomeObra||'—'}</td>
+                    <td style="padding:6px 12px;font-size:12px;color:#444">${o.compositor||'—'}</td>
+                    <td style="padding:6px 12px;font-size:12px;color:#777">${o.arranjador||'—'}</td>
+                    <td style="padding:6px 10px;font-size:12px;color:#555;text-align:right;white-space:nowrap">${o.duracaoMinutos ? o.duracaoMinutos+' min' : '—'}</td>
+                  </tr>`).join('')}
+              </tbody>
+              ${c.duracaoTotalRepertorio ? `
+              <tfoot>
+                <tr style="background:#f0ece2">
+                  <td colspan="4" style="padding:6px 12px;font-size:11px;color:#888;font-weight:600;text-align:right">Duração total</td>
+                  <td style="padding:6px 10px;font-size:13px;font-weight:800;color:#0F2027;text-align:right;white-space:nowrap">${parseFloat(c.duracaoTotalRepertorio).toFixed(1).replace(/\.0$/,'')} min</td>
+                </tr>
+              </tfoot>` : ''}
+            </table>`
+          : '<p style="font-size:12px;color:#bbb;font-style:italic;margin:8px 0 0">Repertório não informado</p>';
+
+        return `
+          <div style="margin-bottom:24px;border:1px solid #ddd5c2;border-radius:12px;overflow:hidden;break-inside:avoid;page-break-inside:avoid">
+            <!-- Cabeçalho do coro -->
+            <div style="background:#16323B;padding:14px 18px">
+              <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                <div style="flex:0 0 auto">${horarioHtml}</div>
+                <div style="flex:1;min-width:180px">
+                  <div style="font-size:18px;font-weight:800;color:#fff;font-family:Georgia,serif;line-height:1.2">${escapeHtml(nomeCompletoCoro(c.nomeCoro)||'—')}</div>
+                  <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:3px">${escapeHtml(c.cidadeEstado||'')}</div>
+                </div>
+              </div>
+            </div>
+            <!-- Regente e Pianista -->
+            <div style="background:#fafaf8;padding:10px 18px;border-bottom:1px solid #ede8de;display:flex;gap:32px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#999;font-weight:700">Regente</div>
+                <div style="font-size:14px;font-weight:700;color:#0F2027;margin-top:2px">${escapeHtml(c.nomeRegente||'—')}</div>
+              </div>
+              <div>
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#999;font-weight:700">Pianista Acompanhante</div>
+                <div style="font-size:14px;font-weight:${pianista?'700':'400'};color:${pianista?'#0F2027':'#bbb'};margin-top:2px">${pianista ? escapeHtml(pianista) : '—'}</div>
+              </div>
+            </div>
+            ${historico ? `
+            <!-- Histórico -->
+            <div style="background:#fffdf7;padding:10px 18px;border-bottom:1px solid #ede8de">
+              <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#999;font-weight:700;margin-bottom:4px">Histórico do Coro</div>
+              <div style="font-size:12px;color:#444;line-height:1.6">${escapeHtml(historico)}</div>
+            </div>` : ''}
+            <!-- Repertório -->
+            <div style="padding:12px 18px;background:#fff">
+              <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#999;font-weight:700;margin-bottom:4px">Repertório ECAD</div>
+              ${obrasHtml}
+            </div>
+          </div>`;
+      }
+
+      // ── SEÇÃO POR DIA ───────────────────────────────────────────────────
+      function secaoDia(diaId, isFirst){
         const coros = lista.filter(i => i.diaApresentacao === diaId);
         if(coros.length === 0) return '';
 
-        const institucionais = coros.filter(i => i.isInstitucional);
-        const amadores = coros.filter(i => !i.isInstitucional);
+        const institucionais = ordenarPorHorario(coros.filter(i => i.isInstitucional));
+        const amadores       = ordenarPorHorario(coros.filter(i => !i.isInstitucional));
+        const todos          = [...institucionais, ...amadores];
 
-        function blocosCoros(arr){
-          return arr.map((c, idx) => {
-            const obras = (c.obrasRepertorio || []);
-            const obrasHtml = obras.length > 0
-              ? `<table style="width:100%;border-collapse:collapse;margin-top:6px">
-                  <tr style="background:#f0ece2">
-                    <th style="padding:5px 10px;font-size:11px;text-align:left;color:#666;font-weight:600">Obra</th>
-                    <th style="padding:5px 10px;font-size:11px;text-align:left;color:#666;font-weight:600">Compositor</th>
-                    <th style="padding:5px 10px;font-size:11px;text-align:left;color:#666;font-weight:600">Arranjador</th>
-                    <th style="padding:5px 10px;font-size:11px;text-align:right;color:#666;font-weight:600">Min</th>
-                  </tr>
-                  ${obras.map((o,i) => `
-                    <tr style="background:${i%2===0?'#fff':'#f9f7f3'}">
-                      <td style="padding:5px 10px;font-size:12px;color:#0F2027;font-weight:600">${o.nomeObra||'—'}</td>
-                      <td style="padding:5px 10px;font-size:12px;color:#555">${o.compositor||'—'}</td>
-                      <td style="padding:5px 10px;font-size:12px;color:#888">${o.arranjador||'—'}</td>
-                      <td style="padding:5px 10px;font-size:12px;color:#888;text-align:right">${o.duracaoMinutos||'—'}</td>
-                    </tr>`).join('')}
-                  ${c.duracaoTotalRepertorio ? `<tr style="background:#f0ece2"><td colspan="3" style="padding:5px 10px;font-size:11px;color:#888;font-weight:600">Total</td><td style="padding:5px 10px;font-size:12px;font-weight:700;color:#0F2027;text-align:right">${parseFloat(c.duracaoTotalRepertorio).toFixed(2).replace(/\.?0+$/,"")} min</td></tr>` : ''}
-                </table>`
-              : '<p style="font-size:12px;color:#bbb;font-style:italic;margin:6px 0 0">Repertório não informado</p>';
-
-            const etapaBadge = c.etapa === 'completo'
-              ? '<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid #86efac">✓ Completo</span>'
-              : '<span style="background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid #fcd34d">Falta Etapa 2</span>';
-
-            const instBadge = c.isInstitucional
-              ? '<span style="background:#ede9fe;color:#7c3aed;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid #c4b5fd;margin-left:4px">Institucional</span>'
-              : '';
-
-            const linkVideo = c.linkVideo || '';
-            const linkDrive = c.linkDrive || '';
-            const linkInsta = c.instagram || (c.redesSociaisCoro && c.redesSociaisCoro.instagram) || '';
-            const linkConf = `${location.origin}${location.pathname}?confirmar=${c.id}`;
-
-            return `
-              <div style="margin-bottom:16px;border:1px solid #e0d8c8;border-radius:10px;overflow:hidden;break-inside:avoid">
-                <div style="background:#0F2027;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
-                  <div>
-                    <span style="font-size:15px;font-weight:700;color:#fff">${c.nomeCoro||'—'}${instBadge}</span>
-                    <span style="font-size:12px;color:rgba(255,255,255,0.6);margin-left:10px">${c.nomeRegente||''}</span>
-                  </div>
-                  <div style="display:flex;gap:8px;align-items:center">
-                    ${etapaBadge}
-                    <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:${statusColor[c.status]||'#aaa'}22;color:${statusColor[c.status]||'#aaa'};border:1px solid ${statusColor[c.status]||'#aaa'}55">${c.status||'—'}</span>
-                  </div>
-                </div>
-                <div style="padding:10px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#fafaf8;border-bottom:1px solid #ede8de;font-size:12px">
-                  <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Cidade</span><br><strong>${c.cidadeEstado||'—'}</strong></div>
-                  <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">E-mail</span><br>${linkHtml('mailto:'+c.emailRegente, c.emailRegente||'—')}</div>
-                  <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">WhatsApp</span><br><strong>${c.telefoneRegente||'—'}</strong></div>
-                  <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Modalidade</span><br><strong>${c.modalidade||'—'}</strong></div>
-                  <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Vídeo apresentação</span><br>${linkHtml(linkVideo,'Ver vídeo')}</div>
-                  <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Fotos (Drive)</span><br>${linkHtml(linkDrive,'Ver fotos')}</div>
-                  ${linkInsta ? `<div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Instagram</span><br>${linkHtml(linkInsta.startsWith('http') ? linkInsta : 'https://instagram.com/' + linkInsta.replace('@',''), linkInsta)}</div>` : ''}
-                  <div><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Link Etapa 2</span><br>${linkHtml(linkConf,'Link do regente')}</div>
-                  ${c.historicoDescritivo ? `<div style="grid-column:1/-1"><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Histórico</span><br>${c.historicoDescritivo}</div>` : ''}
-                </div>
-                <div style="padding:10px 16px;background:#fff">
-                  <span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Repertório ECAD</span>
-                  ${obrasHtml}
-                </div>
-              </div>`;
-          }).join('');
-        }
+        const pageBreak = isFirst ? '' : 'page-break-before:always;';
 
         let html = `
-          <div style="margin-bottom:32px">
-            <div style="background:#16323B;color:#fff;border-radius:8px 8px 0 0;padding:12px 18px;display:flex;justify-content:space-between;align-items:center">
-              <div>
-                <div style="font-size:10px;letter-spacing:.2em;color:#D4AF37;text-transform:uppercase;font-weight:700">${diasLabel[diaId]||diaId}</div>
-                <div style="font-size:18px;font-weight:700;margin-top:2px">${coros.length} coro(s) · ${coros.filter(i=>i.etapa==='completo').length} completo(s)</div>
-              </div>
+          <div class="dia-bloco" style="${pageBreak}padding-top:${isFirst?'0':'32px'}">
+            <!-- Cabeçalho do dia -->
+            <div style="background:#0F2027;border-radius:10px 10px 0 0;padding:16px 22px;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+              <div style="font-size:10px;letter-spacing:.25em;color:#D4AF37;text-transform:uppercase;font-weight:700">${diasLabel[diaId]||diaId}</div>
+              <div style="font-size:20px;font-weight:700;color:#fff;margin-top:4px;font-family:Georgia,serif">${todos.length} coro${todos.length!==1?'s':''} · ${diasData[diaId]||''}</div>
             </div>
-            <div style="border:1px solid #e0d8c8;border-top:none;border-radius:0 0 8px 8px;padding:14px">`;
+            <div style="border:1px solid #ddd5c2;border-top:none;border-radius:0 0 10px 10px;padding:18px">`;
 
         if(institucionais.length > 0){
-          html += `<div style="font-size:10px;letter-spacing:.15em;color:#7c3aed;text-transform:uppercase;font-weight:700;margin-bottom:10px">Coros Institucionais / Fixos</div>`;
-          html += blocosCoros(institucionais);
+          html += `<div style="font-size:9px;letter-spacing:.2em;color:#7c3aed;text-transform:uppercase;font-weight:800;margin-bottom:14px;padding-bottom:6px;border-bottom:2px solid #ede9fe">Coros Institucionais / Fixos</div>`;
+          html += institucionais.map((c,i) => blocoCoroExecutivo(c,i+1)).join('');
         }
         if(amadores.length > 0){
-          html += `<div style="font-size:10px;letter-spacing:.15em;color:#C5A059;text-transform:uppercase;font-weight:700;margin:${institucionais.length>0?'18px':0} 0 10px">Coros Amadores / Inscritos</div>`;
-          html += blocosCoros(amadores);
+          if(institucionais.length > 0){
+            html += `<div style="font-size:9px;letter-spacing:.2em;color:#C5A059;text-transform:uppercase;font-weight:800;margin:22px 0 14px;padding-bottom:6px;border-bottom:2px solid #fef3c7">Coros Inscritos</div>`;
+          }
+          html += amadores.map((c,i) => blocoCoroExecutivo(c, institucionais.length+i+1)).join('');
         }
 
         html += `</div></div>`;
         return html;
       }
 
-      const corpoHtml = diasOrdem.map(secaoDia).join('');
-      const total = lista.length;
-      const completos = lista.filter(i => i.etapa === 'completo').length;
-      const aprovados = lista.filter(i => i.status === 'Aprovado').length;
+      // ── MONTA CORPO COMPLETO ────────────────────────────────────────────
+      let corpoHtml = '';
+      let primeiroDia = true;
+      diasOrdem.forEach(diaId => {
+        const secao = secaoDia(diaId, primeiroDia);
+        if(secao){ corpoHtml += secao; primeiroDia = false; }
+      });
 
+      const total    = lista.length;
+      const aprovados = lista.filter(i => i.status === 'Aprovado').length;
+      const completos = lista.filter(i => i.etapa === 'completo').length;
+
+      // ── HTML FINAL ──────────────────────────────────────────────────────
       const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Relatório Completo — VII ENCoros 2026</title>
+<title>Relatório Executivo de Palco — VII ENCoros 2026</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: -apple-system, 'Segoe UI', sans-serif; background:#fafaf8; color:#1a1a1a; }
-  .topo { background:#0F2027; padding:28px 40px; }
-  .topo-titulo { font-size:28px; font-weight:700; color:#fff; font-family:Georgia,serif; }
-  .topo-sub { font-size:13px; color:rgba(255,255,255,.5); margin-top:6px; }
-  .divisor { height:4px; background:linear-gradient(90deg,#D4AF37,#C5A059); }
-  .page { max-width:900px; margin:0 auto; padding:32px 24px; }
-  .stats { display:flex; gap:16px; margin-bottom:28px; }
-  .stat { flex:1; background:#fff; border:1px solid #e0d8c8; border-radius:10px; padding:14px 18px; text-align:center; }
-  .stat-num { font-size:28px; font-weight:700; color:#0F2027; }
-  .stat-label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:.1em; margin-top:2px; }
-  .btn-print { display:flex; align-items:center; gap:8px; margin:0 auto 28px; padding:12px 32px; background:#0F2027; color:#D4AF37; border:none; border-radius:999px; font-size:14px; font-weight:700; cursor:pointer; }
+  body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; background:#fafaf8; color:#1a1a1a; }
+  .topo { background:#0F2027; padding:28px 40px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .divisor { height:4px; background:linear-gradient(90deg,#D4AF37,#C5A059); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .page { max-width:920px; margin:0 auto; padding:32px 28px; }
+  .stats { display:flex; gap:14px; margin-bottom:32px; }
+  .stat { flex:1; background:#fff; border:1px solid #e0d8c8; border-radius:10px; padding:14px 16px; text-align:center; }
+  .stat-num { font-size:26px; font-weight:800; color:#0F2027; }
+  .stat-label { font-size:10px; color:#999; text-transform:uppercase; letter-spacing:.1em; margin-top:3px; }
+  .btn-print { display:flex; align-items:center; gap:10px; margin:0 auto 32px; padding:12px 36px; background:#0F2027; color:#D4AF37; border:none; border-radius:999px; font-size:14px; font-weight:700; cursor:pointer; letter-spacing:.03em; }
+  .btn-print:hover { background:#16323B; }
   @media print {
     body { background:#fff; }
-    .btn-print { display:none; }
-    .topo, .divisor { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    div[style*="background:#0F2027"], div[style*="background:#16323B"] { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .page { padding:16px; }
+    .btn-print { display:none !important; }
+    .stats { display:none !important; }
+    .topo, .divisor,
+    div[style*="background:#0F2027"],
+    div[style*="background:#16323B"],
+    div[style*="background:#0F2027"],
+    thead tr { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+    .page { padding:12px; max-width:100%; }
+    .dia-bloco { page-break-before:always; }
+    .dia-bloco:first-child { page-break-before:auto; }
   }
 </style>
 </head>
 <body>
   <div class="topo">
-    <div style="max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end">
+    <div style="max-width:920px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
       <div>
-        <div style="font-size:10px;letter-spacing:.25em;color:#D4AF37;text-transform:uppercase;font-weight:700">VII Encontro Nacional de Coros</div>
-        <div class="topo-titulo">Relatório Completo de Inscrições</div>
-        <div class="topo-sub">03 a 07 de setembro de 2026 · Goiânia, GO · Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
+        <div style="font-size:10px;letter-spacing:.3em;color:#D4AF37;text-transform:uppercase;font-weight:700;margin-bottom:6px">VII Encontro Nacional de Coros</div>
+        <div style="font-size:30px;font-weight:800;color:#fff;font-family:Georgia,serif;line-height:1.1">Relatório Executivo de Palco</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:8px">03 a 07 de setembro de 2026 · Goiânia, GO · Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
       </div>
-      <div style="text-align:right;font-size:11px;color:rgba(255,255,255,.4)">
+      <div style="text-align:right;font-size:11px;color:rgba(255,255,255,.35);flex-shrink:0">
         <div>encorosgoiania@gmail.com</div>
         <div>(62) 99154-6757</div>
       </div>
@@ -5347,11 +5384,11 @@
   </div>
   <div class="divisor"></div>
   <div class="page">
-    <button class="btn-print" onclick="window.print()">🖨️ &nbsp;Imprimir / Salvar como PDF</button>
+    <button class="btn-print" onclick="window.print()">🖨️ &nbsp; Imprimir / Salvar como PDF</button>
     <div class="stats">
-      <div class="stat"><div class="stat-num">${total}</div><div class="stat-label">Total de inscrições</div></div>
+      <div class="stat"><div class="stat-num">${total}</div><div class="stat-label">Total de Inscrições</div></div>
       <div class="stat"><div class="stat-num">${aprovados}</div><div class="stat-label">Aprovados</div></div>
-      <div class="stat"><div class="stat-num">${completos}</div><div class="stat-label">Etapa 2 completa</div></div>
+      <div class="stat"><div class="stat-num">${completos}</div><div class="stat-label">Etapa 2 Completa</div></div>
       <div class="stat"><div class="stat-num">${total - completos}</div><div class="stat-label">Aguardando Etapa 2</div></div>
     </div>
     ${corpoHtml}
@@ -5359,13 +5396,12 @@
 </body>
 </html>`;
 
-      // Baixar como arquivo HTML (links clicáveis preservados)
       const dataStr = new Date().toISOString().slice(0,10);
       const blob = new Blob([html], {type:'text/html;charset=utf-8'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'encoros2026_relatorio_' + dataStr + '.html';
+      a.download = 'encoros2026_relatorio_palco_' + dataStr + '.html';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
