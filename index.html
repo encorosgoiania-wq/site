@@ -5210,7 +5210,11 @@
       }
 
       // ── HELPER: bloco de um coro (executivo, sem dados administrativos) ──
+      // ID único para cada accordion de dados admin
+      let _blocoSeq = 0;
+
       function blocoCoroExecutivo(c, seq){
+        const uid = 'adm_' + (++_blocoSeq);
         const horario = c.horarioApresentacao || c.horario || null;
         const pianista = c.nomePianista || c.pianista || null;
         const historico = c.historicoDescritivo || c.historico || null;
@@ -5251,6 +5255,33 @@
             </table>`
           : '<p style="font-size:12px;color:#bbb;font-style:italic;margin:8px 0 0">Repertório não informado</p>';
 
+        // Dados administrativos (recolhíveis na tela, ocultos na impressão)
+        const linkVideo = c.linkVideo || '';
+        const linkDrive = c.linkDrive || '';
+        const linkInsta = c.instagram || (c.redesSociaisCoro && c.redesSociaisCoro.instagram) || '';
+        const linkConf  = `${location.origin}${location.pathname}?confirmar=${c.id}`;
+        const etapaBadge = c.etapa === 'completo'
+          ? '<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid #86efac">✓ Completo</span>'
+          : '<span style="background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid #fcd34d">Falta Etapa 2</span>';
+        const statusColor = { Aprovado:'#16a34a', Pendente:'#d97706', Rejeitado:'#dc2626' };
+        const statusBadge = `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:${statusColor[c.status]||'#aaa'}22;color:${statusColor[c.status]||'#aaa'};border:1px solid ${statusColor[c.status]||'#aaa'}55">${c.status||'—'}</span>`;
+
+        function lnk(url, label){ return url ? `<a href="${url}" target="_blank" style="color:#C5A059;text-decoration:underline">${label}</a>` : '<span style="color:#ccc">—</span>'; }
+
+        const dadosAdminHtml = `
+          <div id="${uid}" style="display:none;background:#f5f0e8;border-top:1px solid #e0d8c8;padding:10px 18px" class="no-print">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px">
+              <div><span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:700">Status</span><br><div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">${etapaBadge} ${statusBadge}</div></div>
+              <div><span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:700">E-mail</span><br>${lnk('mailto:'+c.emailRegente, c.emailRegente||'—')}</div>
+              <div><span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:700">WhatsApp</span><br><strong>${c.telefoneRegente||'—'}</strong></div>
+              <div><span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:700">Modalidade</span><br><strong>${c.modalidade||'—'}</strong></div>
+              <div><span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:700">Vídeo Apresentação</span><br>${lnk(linkVideo,'Ver vídeo')}</div>
+              <div><span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:700">Fotos (Drive)</span><br>${lnk(linkDrive,'Ver fotos')}</div>
+              ${linkInsta ? `<div><span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:700">Instagram</span><br>${lnk(linkInsta.startsWith('http')?linkInsta:'https://instagram.com/'+linkInsta.replace('@',''), linkInsta)}</div>` : ''}
+              <div><span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:700">Link Etapa 2</span><br>${lnk(linkConf,'Link do regente')}</div>
+            </div>
+          </div>`;
+
         return `
           <div style="margin-bottom:24px;border:1px solid #ddd5c2;border-radius:12px;overflow:hidden;break-inside:avoid;page-break-inside:avoid">
             <!-- Cabeçalho do coro -->
@@ -5261,8 +5292,10 @@
                   <div style="font-size:18px;font-weight:800;color:#fff;font-family:Georgia,serif;line-height:1.2">${escapeHtml(nomeCompletoCoro(c.nomeCoro)||'—')}</div>
                   <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:3px">${escapeHtml(c.cidadeEstado||'')}</div>
                 </div>
+                <button class="no-print" onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${uid}'))" style="flex-shrink:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#D4AF37;font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px;cursor:pointer;letter-spacing:.04em">▼ dados</button>
               </div>
             </div>
+            ${dadosAdminHtml}
             <!-- Regente e Pianista -->
             <div style="background:#fafaf8;padding:10px 18px;border-bottom:1px solid #ede8de;display:flex;gap:32px;flex-wrap:wrap">
               <div>
@@ -5357,6 +5390,7 @@
     body { background:#fff; }
     .btn-print { display:none !important; }
     .stats { display:none !important; }
+    .no-print { display:none !important; }
     .topo, .divisor,
     div[style*="background:#0F2027"],
     div[style*="background:#16323B"],
