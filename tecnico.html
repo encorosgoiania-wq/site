@@ -1251,12 +1251,24 @@ async function carregarRelatorio(){
         if(!dia || !dia.coros) return;
         dia.coros.forEach(item => {
           try {
-            const id = item.inscricaoId || item.id || item.nomeCoro;
+            const inscId = item.inscricaoId;
+            // Tenta achar pelo inscricaoId primeiro
+            let coro = (inscId ? FIXOS[inscId] || inscricoes[inscId] : null);
+            // Se não achou, tenta pelo nomeCoro nos FIXOS
+            if(!coro && item.nomeCoro){
+              coro = Object.values(FIXOS).find(f => f.nomeCoro && (
+                f.nomeCoro.toLowerCase().includes(item.nomeCoro.toLowerCase()) ||
+                item.nomeCoro.toLowerCase().includes(f.nomeCoro.toLowerCase().split('(')[0].trim())
+              ));
+            }
+            // Se ainda não achou mas tem nome, usa os dados do próprio item
+            if(!coro && item.nomeCoro){
+              coro = { id: inscId || item.nomeCoro, nomeCoro: item.nomeCoro, nomeRegente: item.nomeRegente||'—', isInstitucional: !!(item.fixo||item.anfitriao) };
+            }
+            if(!coro) return;
+            const id = coro.id || inscId || item.nomeCoro;
             if(!id) return;
             if(todosOsCoros.find(c => c.id === id)) return;
-            const coro = FIXOS[item.inscricaoId] || inscricoes[item.inscricaoId]
-              || (item.nomeCoro ? { id, nomeCoro: item.nomeCoro, nomeRegente: item.nomeRegente||'—', diaApresentacao: diaId, isInstitucional: !!(item.fixo||item.anfitriao) } : null);
-            if(!coro) return;
             todosOsCoros.push({ ...coro, id, diaApresentacao: diaId, _ordemCron: todosOsCoros.length });
           } catch(e){}
         });
