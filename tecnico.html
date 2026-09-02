@@ -1234,13 +1234,19 @@ async function carregarRelatorio(){
     snapCoros.forEach(doc => { inscricoes[doc.id] = { id: doc.id, ...doc.data() }; });
 
     // Fixos hardcoded
+    const _F1 = { id:'900000001', nomeCoro:'Coral Sinfônico da UFG (CSUFG)', nomeRegente:'Organização', isInstitucional:true };
+    const _F2 = { id:'900000002', nomeCoro:'Coro Sinfônico Jovem de Goiás (CSJG)', nomeRegente:'Weber Assis', isInstitucional:true };
+    const _F3 = { id:'900000003', nomeCoro:'Coro Juvenil de Goiânia (CJGOIÂNIA)', nomeRegente:'Eliseu Ferreira', isInstitucional:true };
+    const _F4 = { id:'900000004', nomeCoro:'Onix Brasil Vocal Internacional', nomeRegente:'Paulo Sergio Motta', isInstitucional:true };
+    const _F5 = { id:'900000005', nomeCoro:'Coro Sinfônico de Goiânia (CSGOIÂNIA)', nomeRegente:'Ângelo Dias', isInstitucional:true };
+    const _F6 = { id:'900000006', nomeCoro:'Concerto de Abertura — Coros Institucionais', nomeRegente:'Weber Assis', isInstitucional:true };
     const FIXOS = {
-      '900000001': { id:'900000001', nomeCoro:'Coral Sinfônico da UFG (CSUFG)', nomeRegente:'Organização', diaApresentacao:'quinta', isInstitucional:true },
-      '900000002': { id:'900000002', nomeCoro:'Coro Sinfônico Jovem de Goiás (CSJG)', nomeRegente:'Weber Assis', diaApresentacao:'sabado', isInstitucional:true },
-      '900000003': { id:'900000003', nomeCoro:'Coro Juvenil de Goiânia', nomeRegente:'Eliseu Ferreira', diaApresentacao:'sexta', isInstitucional:true },
-      '900000004': { id:'900000004', nomeCoro:'Onix Brasil Vocal Internacional', nomeRegente:'Paulo Sergio Motta', diaApresentacao:'sexta', isInstitucional:true },
-      '900000005': { id:'900000005', nomeCoro:'Coro Sinfônico de Goiânia', nomeRegente:'Ângelo Dias', diaApresentacao:'sabado', isInstitucional:true },
-      '900000006': { id:'900000006', nomeCoro:'Concerto de Abertura — Coros Institucionais', nomeRegente:'Ângelo Dias', diaApresentacao:'quinta', isInstitucional:true },
+      '900000001':_F1, 'CSUFG':_F1,
+      '900000002':_F2, 'CSJG':_F2, 'CSJGOIÁS':_F2,
+      '900000003':_F3, 'CJGOIÂNIA':_F3,
+      '900000004':_F4, 'Onix Brasil Vocal Internacional':_F4,
+      '900000005':_F5, 'CSGOIÂNIA':_F5,
+      '900000006':_F6, 'Concerto de Abertura - Coros Institucionais':_F6,
     };
 
     // Montar lista de coros na ordem do cronograma
@@ -1260,20 +1266,6 @@ async function carregarRelatorio(){
           } catch(e){}
         });
       } catch(e){}
-    });
-
-    // Garantir que os coros fixos estejam na lista, independente do cronograma
-    const FIXOS_GARANTIDOS = [
-      { id:'900000001', nomeCoro:'Coral Sinfônico da UFG (CSUFG)', nomeRegente:'Organização', diaApresentacao:'quinta', isInstitucional:true },
-      { id:'900000002', nomeCoro:'Coro Sinfônico Jovem de Goiás (CSJG)', nomeRegente:'Weber Assis', diaApresentacao:'sabado', isInstitucional:true },
-      { id:'900000003', nomeCoro:'Coro Juvenil de Goiânia', nomeRegente:'Eliseu Ferreira', diaApresentacao:'sexta', isInstitucional:true },
-      { id:'900000004', nomeCoro:'Onix Brasil Vocal Internacional', nomeRegente:'Paulo Sergio Motta', diaApresentacao:'sexta', isInstitucional:true },
-      { id:'900000005', nomeCoro:'Coro Sinfônico de Goiânia', nomeRegente:'Ângelo Dias', diaApresentacao:'domingo', isInstitucional:true },
-      { id:'900000006', nomeCoro:'Concerto de Abertura — Coros Institucionais', nomeRegente:'Weber Assis', diaApresentacao:'quinta', isInstitucional:true },
-    ];
-    FIXOS_GARANTIDOS.forEach(f => {
-      if(!todosOsCoros.find(c => c.id === f.id))
-        todosOsCoros.push({ ...f, _ordemCron: todosOsCoros.length });
     });
 
     // respostas técnicas
