@@ -1251,12 +1251,13 @@ async function carregarRelatorio(){
         if(!dia || !dia.coros) return;
         dia.coros.forEach(item => {
           try {
-            const id = item.inscricaoId;
+            const id = item.inscricaoId || item.id || item.nomeCoro;
             if(!id) return;
-            const coro = FIXOS[id] || inscricoes[id];
-            if(!coro) return;
             if(todosOsCoros.find(c => c.id === id)) return;
-            todosOsCoros.push({ ...coro, diaApresentacao: diaId, _ordemCron: todosOsCoros.length });
+            const coro = FIXOS[item.inscricaoId] || inscricoes[item.inscricaoId]
+              || (item.nomeCoro ? { id, nomeCoro: item.nomeCoro, nomeRegente: item.nomeRegente||'—', diaApresentacao: diaId, isInstitucional: !!(item.fixo||item.anfitriao) } : null);
+            if(!coro) return;
+            todosOsCoros.push({ ...coro, id, diaApresentacao: diaId, _ordemCron: todosOsCoros.length });
           } catch(e){}
         });
       } catch(e){}
