@@ -1251,28 +1251,29 @@ async function carregarRelatorio(){
         if(!dia || !dia.coros) return;
         dia.coros.forEach(item => {
           try {
-            const inscId = item.inscricaoId;
-            // Tenta achar pelo inscricaoId primeiro
-            let coro = (inscId ? FIXOS[inscId] || inscricoes[inscId] : null);
-            // Se não achou, tenta pelo nomeCoro nos FIXOS
-            if(!coro && item.nomeCoro){
-              coro = Object.values(FIXOS).find(f => f.nomeCoro && (
-                f.nomeCoro.toLowerCase().includes(item.nomeCoro.toLowerCase()) ||
-                item.nomeCoro.toLowerCase().includes(f.nomeCoro.toLowerCase().split('(')[0].trim())
-              ));
-            }
-            // Se ainda não achou mas tem nome, usa os dados do próprio item
-            if(!coro && item.nomeCoro){
-              coro = { id: inscId || item.nomeCoro, nomeCoro: item.nomeCoro, nomeRegente: item.nomeRegente||'—', isInstitucional: !!(item.fixo||item.anfitriao) };
-            }
-            if(!coro) return;
-            const id = coro.id || inscId || item.nomeCoro;
+            const id = item.inscricaoId;
             if(!id) return;
+            const coro = FIXOS[id] || inscricoes[id];
+            if(!coro) return;
             if(todosOsCoros.find(c => c.id === id)) return;
-            todosOsCoros.push({ ...coro, id, diaApresentacao: diaId, _ordemCron: todosOsCoros.length });
+            todosOsCoros.push({ ...coro, diaApresentacao: diaId, _ordemCron: todosOsCoros.length });
           } catch(e){}
         });
       } catch(e){}
+    });
+
+    // Garantir que os coros fixos estejam na lista, independente do cronograma
+    const FIXOS_GARANTIDOS = [
+      { id:'900000001', nomeCoro:'Coral Sinfônico da UFG (CSUFG)', nomeRegente:'Organização', diaApresentacao:'quinta', isInstitucional:true },
+      { id:'900000002', nomeCoro:'Coro Sinfônico Jovem de Goiás (CSJG)', nomeRegente:'Weber Assis', diaApresentacao:'sabado', isInstitucional:true },
+      { id:'900000003', nomeCoro:'Coro Juvenil de Goiânia', nomeRegente:'Eliseu Ferreira', diaApresentacao:'sexta', isInstitucional:true },
+      { id:'900000004', nomeCoro:'Onix Brasil Vocal Internacional', nomeRegente:'Paulo Sergio Motta', diaApresentacao:'sexta', isInstitucional:true },
+      { id:'900000005', nomeCoro:'Coro Sinfônico de Goiânia', nomeRegente:'Ângelo Dias', diaApresentacao:'domingo', isInstitucional:true },
+      { id:'900000006', nomeCoro:'Concerto de Abertura — Coros Institucionais', nomeRegente:'Weber Assis', diaApresentacao:'quinta', isInstitucional:true },
+    ];
+    FIXOS_GARANTIDOS.forEach(f => {
+      if(!todosOsCoros.find(c => c.id === f.id))
+        todosOsCoros.push({ ...f, _ordemCron: todosOsCoros.length });
     });
 
     // respostas técnicas
