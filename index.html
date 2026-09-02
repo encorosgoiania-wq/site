@@ -5380,37 +5380,85 @@
 
         // Monta lista na ordem do cronograma, enriquecendo com dados completos da inscrição
         let cursor = durAb;
+        // Mapa de repertórios fixos hardcoded (mesmo do cronograma público)
+        const REPS_FIXOS_REL = {
+          '900000001': [],
+          '900000002': (COROS_INSTITUCIONAIS_SEED.find(s=>s.id==='900000002')?.obrasRepertorio)||[],
+          '900000003': (COROS_INSTITUCIONAIS_SEED.find(s=>s.id==='900000003')?.obrasRepertorio)||[],
+          '900000004': (COROS_INSTITUCIONAIS_SEED.find(s=>s.id==='900000004')?.obrasRepertorio)||[],
+          '900000005': (COROS_INSTITUCIONAIS_SEED.find(s=>s.id==='900000005')?.obrasRepertorio)||[],
+          '900000006': [
+            { nomeObra: 'Zadok the Priest', compositor: 'Handel', arranjador: '' },
+            { nomeObra: 'Cantique de J. Racine', compositor: 'Fauré', arranjador: '' },
+            { nomeObra: 'Sanctus', compositor: 'Gounod', arranjador: '' },
+            { nomeObra: 'Sereniteit', compositor: 'Jean Douliez', arranjador: '' },
+            { nomeObra: 'Aurora (a cappella)', compositor: 'J. Douliez', arranjador: '' },
+            { nomeObra: 'Invocação Pátria', compositor: 'Villa-Lobos', arranjador: '' },
+            { nomeObra: 'Ave Maria', compositor: 'Jean-Baptiste Fauré', arranjador: '' },
+            { nomeObra: 'Pregões de Goiás', compositor: 'M. A. Veiga', arranjador: 'J. Douliez' },
+            { nomeObra: 'Magnificat-Alleluia', compositor: 'Villa-Lobos', arranjador: '' },
+          ]
+        };
+        const NOMES_FIXOS_REL = {
+          'CSUFG':'900000001','Coral Sinfônico da UFG':'900000001',
+          'CSJGOIÁS':'900000002','CSJG':'900000002','Coro Sinfônico Jovem de Goiás':'900000002','Coro Sinfônico Jovem de GOIÁS':'900000002',
+          'CJGOIÂNIA':'900000003','Coro Juvenil de Goiânia':'900000003',
+          'Onix Brasil Vocal Internacional':'900000004',
+          'CSGOIÂNIA':'900000005','Coro Sinfônico de Goiânia':'900000005',
+        };
+
         const todosEmOrdem = corosCron
-          .filter(c => {
-            // Remove slots completamente vazios (sem nome E sem inscrição)
-            const temNome = !!(c.nomeCoro || c.nome || c.inscricaoId || c.id);
-            return temNome;
-          })
+          .filter(c => !!(c.nomeCoro || c.nome || c.inscricaoId || c.id))
           .map(c => {
             const horarioCalc = minToHH(cursor);
             cursor += (c.duracaoMinutos || 15);
 
-            // Busca dados completos nas inscrições pelo inscricaoId ou nomeCoro
+            // 1) Busca nas inscrições pelo inscricaoId
             const insc = lista.find(i =>
-              (c.inscricaoId && (i.id === c.inscricaoId)) ||
+              (c.inscricaoId && i.id === c.inscricaoId) ||
               (!c.inscricaoId && i.nomeCoro && c.nomeCoro &&
                i.nomeCoro.toLowerCase().trim() === c.nomeCoro.toLowerCase().trim())
             );
             if(insc){
-              return { ...insc, _horarioCalc: horarioCalc, _duracaoMin: c.duracaoMinutos };
+              // Enriquece com repertório fixo se a inscrição não tem obras
+              const idFixo = NOMES_FIXOS_REL[insc.nomeCoro] || NOMES_FIXOS_REL[(insc.nomeCoro||'').replace(/\s*\(.*?\)\s*/g,'').trim()];
+              const repertorioFixo = idFixo ? REPS_FIXOS_REL[idFixo] : null;
+              const obras = (insc.obrasRepertorio?.length ? insc.obrasRepertorio : null) || repertorioFixo || [];
+              const seed = COROS_INSTITUCIONAIS_SEED.find(s => s.id === insc.id);
+              return {
+                ...insc,
+                obrasRepertorio: obras,
+                nomeRegente: insc.nomeRegente || seed?.nomeRegente || '',
+                nomePianista: insc.nomePianista || insc.pianoAcompanhador || seed?.pianoAcompanhador || null,
+                historicoDescritivo: insc.historicoDescritivo || insc.historicoCoro || seed?.historicoCoro || null,
+                _horarioCalc: horarioCalc,
+                _duracaoMin: c.duracaoMinutos
+              };
             }
-            // Item livre / institucional sem inscrição — usa dados do próprio cronograma
+
+            // 2) Sem inscrição vinculada — busca no seed institucional por nome
+            const idFixo = c.inscricaoId || NOMES_FIXOS_REL[c.nomeCoro] || NOMES_FIXOS_REL[(c.nomeCoro||'').replace(/\s*\(.*?\)\s*/g,'').trim()];
+            const seed = idFixo ? COROS_INSTITUCIONAIS_SEED.find(s => s.id === idFixo) : null;
+            const repertorioFixo = idFixo ? (REPS_FIXOS_REL[idFixo] || []) : [];
+            // Concerto de abertura: detecta pelo nome
+            const isConcertoAbertura = (c.nomeCoro||'').toLowerCase().includes('coros institucionais') || (c.nomeCoro||'').toLowerCase().includes('concerto de abertura');
+            const obras = (c.obrasRepertorio?.length ? c.obrasRepertorio : null)
+              || (seed?.obrasRepertorio?.length ? seed.obrasRepertorio : null)
+              || (isConcertoAbertura ? REPS_FIXOS_REL['900000006'] : [])
+              || repertorioFixo;
+
             return {
-              id: c.inscricaoId || c.id || c.nomeCoro || ('item_'+horarioCalc),
-              nomeCoro: c.nomeCoro || c.nome || c.titulo || '—',
-              cidadeEstado: c.cidadeEstado || 'Goiânia - GO',
-              nomeRegente: c.nomeRegente || '',
-              isInstitucional: !!(c.fixo || c.anfitriao),
-              obrasRepertorio: c.obrasRepertorio || [],
-              historicoDescritivo: c.descricao || c.historico || null,
+              id: idFixo || c.inscricaoId || c.id || c.nomeCoro || ('item_'+horarioCalc),
+              nomeCoro: seed?.nomeCoro || c.nomeCoro || c.nome || c.titulo || '—',
+              cidadeEstado: seed?.cidadeEstado || 'Goiânia - GO',
+              nomeRegente: seed?.nomeRegente || c.nomeRegente || '',
+              nomePianista: seed?.pianoAcompanhador || null,
+              isInstitucional: !!(c.fixo || c.anfitriao || seed),
+              obrasRepertorio: obras || [],
+              historicoDescritivo: seed?.historicoCoro || c.descricao || null,
               _horarioCalc: horarioCalc,
               _duracaoMin: c.duracaoMinutos,
-              _itemLivre: true
+              _itemLivre: !seed
             };
           });
 
@@ -5506,16 +5554,13 @@
 </body>
 </html>`;
 
-      const dataStr = new Date().toISOString().slice(0,10);
+      // Abre em nova aba (permite Ctrl+P / Salvar como PDF direto no browser)
       const blob = new Blob([html], {type:'text/html;charset=utf-8'});
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'encoros2026_relatorio_palco_' + dataStr + '.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const aba = window.open(url, '_blank');
+      // Revoga após 60s para liberar memória
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      if(!aba) alert('Pop-up bloqueado. Permita pop-ups para este site e tente novamente.');
     });
   }
 
@@ -5631,6 +5676,8 @@
   const GCAL_PROXIES_BASE = [
     'https://corsproxy.io/?',
     'https://api.allorigins.win/raw?url=',
+    'https://api.codetabs.com/v1/proxy?quest=',
+    'https://cors.eu.org/',
     'https://thingproxy.freeboard.io/fetch/',
   ];
 
@@ -6007,16 +6054,12 @@
 </body>
 </html>`;
 
-      const dataStr = new Date().toISOString().slice(0,10);
+      // Abre em nova aba (permite Ctrl+P / Salvar como PDF direto no browser)
       const blob = new Blob([html], {type:'text/html;charset=utf-8'});
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'encoros2026_ensaios_' + dataStr + '.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const aba = window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      if(!aba) alert('Pop-up bloqueado. Permita pop-ups para este site e tente novamente.');
 
     } catch(err) {
       console.error('Erro ao gerar relatório de ensaios:', err);
