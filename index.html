@@ -2539,9 +2539,9 @@
     try {
       await Promise.all(promessas);
     } finally {
-      // Libera onSnapshot 3s após o save — tempo suficiente para o eco do
+      // Libera onSnapshot 8s após o save — tempo suficiente para o eco do
       // Firestore chegar e ser ignorado, sem bloquear updates legítimos.
-      setTimeout(() => { cronogramaEditandoAtivo = false; }, 3000);
+      setTimeout(() => { cronogramaEditandoAtivo = false; }, 8000);
     }
   }
 
